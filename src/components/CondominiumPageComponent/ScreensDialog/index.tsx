@@ -21,12 +21,19 @@ import AddScreens from "./AddScreens";
 import EditScreens from "./EditScreens";
 import { Rss } from "../../../types/rss.type";
 import { Banner } from "../../../types/banner.type";
+import { useAuthContext } from "../../../context/AuthContext";
+import { Permission } from "../../../types/users.type";
+import { CondominiumMessage } from "../../../types/condominium-message.type";
 
 type ScreenDialogProp = {
   condominium: Condominium;
   setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
   rss: Rss[];
   banner: Banner[];
+  condominiumMesseger: CondominiumMessage[];
+  setCondominiumMesseger: React.Dispatch<
+    React.SetStateAction<CondominiumMessage[]>
+  >;
 };
 
 const Transition = forwardRef(function Transition(
@@ -43,12 +50,18 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
   setCondominium,
   rss,
   banner,
+  condominiumMesseger,
+  setCondominiumMesseger,
 }) => {
   const {
     setOpenDialogCreateScreens,
     openDialogCreateScreens,
     checkboxScreens,
+    setCheckboxScreens,
+    setCheckboxCondominium,
   } = useControlerButtonPagesContext();
+
+  const { user } = useAuthContext();
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -60,6 +73,8 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
 
   const handleCloseDialog = () => {
     setOpenDialogCreateScreens(false);
+    setCheckboxScreens([]);
+    setCheckboxCondominium([]);
   };
 
   const handleCloseAlertSucess = () => {
@@ -100,7 +115,9 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
             <TabContext value={value}>
               <TabList onChange={handleChangeTab}>
                 <Tab label="Lista de telas" value="1" />
-                <Tab label="Cadastro de telas" value="2" />
+                {user?.permission === Permission.ADMIN && (
+                  <Tab label="Cadastro de telas" value="2" />
+                )}
                 {checkboxScreens.length === 1 && (
                   <Tab label="Editar de telas" value="3" />
                 )}
@@ -115,6 +132,7 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
                     setCondominium={setCondominium}
                     rss={rss}
                     banner={banner}
+                    condominiumMesseger={condominiumMesseger}
                   />
                 }
               </TabPanel>
@@ -125,6 +143,8 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
                     condominium={condominium}
                     rss={rss}
                     banner={banner}
+                    condominiumMesseger={condominiumMesseger}
+                    setCondominiumMesseger={setCondominiumMesseger}
                   />
                 }
               </TabPanel>

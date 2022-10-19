@@ -46,7 +46,7 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
   banner,
   setBanner,
 }) => {
-  const { openDialogEditBanner, setOpenDialogEditBanner } =
+  const { openDialogEditBanner, setOpenDialogEditBanner, setCheckboxBanner } =
     useControlerButtonPagesContext();
 
   const theme = useTheme();
@@ -86,6 +86,7 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
 
   const handleCloseDialog = () => {
     setOpenDialogEditBanner(false);
+    setCheckboxBanner([]);
   };
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {

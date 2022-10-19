@@ -11,6 +11,7 @@ import {
   LogoutRounded,
   AdUnitsRounded,
   Menu,
+  CommentRounded,
 } from "@mui/icons-material";
 import {
   AppBar,
@@ -30,17 +31,18 @@ import {
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useAuthContext } from "../../context/AuthContext";
+import { Permission } from "../../types/users.type";
 
 type LayoutPageProps = {
   children: React.ReactNode;
 };
 
-const AppBarLayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
+const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const router = useRouter();
   const match = router.pathname;
-  const { singOut } = useAuthContext();
+  const { singOut, user } = useAuthContext();
   const [openSettings, setOpenSettings] = useState(false);
   const [openRegistration, setOpenRegistration] = useState(
     match > "/registration" ? true : false
@@ -145,40 +147,61 @@ const AppBarLayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                 </ListItemButton>
                 <ListItemButton
                   sx={{ pl: 4 }}
-                  selected={match === "/registration/user"}
-                  onClick={() => router.push("/registration/user")}
+                  selected={match === "/registration/condominium-messeger"}
+                  onClick={() =>
+                    router.push("/registration/condominium-messeger")
+                  }
                 >
                   <ListItemIcon>
-                    <PersonAddAlt1Rounded
-                      fontSize="small"
-                      sx={{ color: "#111" }}
-                    />
+                    <CommentRounded fontSize="small" sx={{ color: "#111" }} />
                   </ListItemIcon>
-                  <ListItemText primary="Usuário" />
+                  <ListItemText primary="Mensagem" />
                 </ListItemButton>
+                {user?.permission !== Permission.ZELADOR && (
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    selected={match === "/registration/user"}
+                    onClick={() => router.push("/registration/user")}
+                  >
+                    <ListItemIcon>
+                      <PersonAddAlt1Rounded
+                        fontSize="small"
+                        sx={{ color: "#111" }}
+                      />
+                    </ListItemIcon>
+                    <ListItemText primary="Usuário" />
+                  </ListItemButton>
+                )}
               </Collapse>
-              <ListItemButton onClick={handleOpenSettings}>
-                <ListItemIcon>
-                  <Settings sx={{ color: "#111" }} />
-                </ListItemIcon>
-                <ListItemText primary="Configurações" />
-                {openSettings ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-              <Collapse in={openSettings}>
-                <ListItemButton sx={{ pl: 4 }}>
-                  <ListItemIcon></ListItemIcon>
-                  <ListItemText primary="Tela inical" />
+              {user?.permission !== Permission.ZELADOR && (
+                <>
+                  <ListItemButton onClick={handleOpenSettings}>
+                    <ListItemIcon>
+                      <Settings sx={{ color: "#111" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Configurações" />
+                    {openSettings ? <ExpandLess /> : <ExpandMore />}
+                  </ListItemButton>
+                  <Collapse in={openSettings}>
+                    <ListItemButton sx={{ pl: 4 }}>
+                      <ListItemIcon></ListItemIcon>
+                      <ListItemText primary="Tela inical" />
+                    </ListItemButton>
+                  </Collapse>
+                </>
+              )}
+
+              {user?.permission !== Permission.ZELADOR && (
+                <ListItemButton
+                  selected={match === "/profile"}
+                  onClick={() => router.push("/profile")}
+                >
+                  <ListItemIcon>
+                    <Person2Rounded sx={{ color: "#111" }} />
+                  </ListItemIcon>
+                  <ListItemText primary="Meu perfil" />
                 </ListItemButton>
-              </Collapse>
-              <ListItemButton
-                selected={match === "/profile"}
-                onClick={() => router.push("/profile")}
-              >
-                <ListItemIcon>
-                  <Person2Rounded sx={{ color: "#111" }} />
-                </ListItemIcon>
-                <ListItemText primary="Meu perfil" />
-              </ListItemButton>
+              )}
             </List>
           </Box>
         </Box>
@@ -191,4 +214,4 @@ const AppBarLayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
   );
 };
 
-export default AppBarLayoutPage;
+export default LayoutPage;

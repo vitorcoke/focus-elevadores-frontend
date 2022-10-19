@@ -7,21 +7,33 @@ import {
   useTheme,
 } from "@mui/material";
 import produce from "immer";
+import { useAuthContext } from "../../context/AuthContext";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { api } from "../../service";
 import { Banner } from "../../types/banner.type";
+import { CondominiumMessage } from "../../types/condominium-message.type";
 import { Condominium } from "../../types/condominium.type";
 import { Rss } from "../../types/rss.type";
-import { User } from "../../types/users.type";
+import { Permission, User } from "../../types/users.type";
 
 type BaseMainLayoutPageProps = {
   children: React.ReactNode;
   title: string;
-  page: "condominium" | "rss" | "user" | "banner" | "profile";
+  page:
+    | "condominium"
+    | "rss"
+    | "user"
+    | "banner"
+    | "profile"
+    | "dashboard"
+    | "condominium-messeger";
   setCondominium?: React.Dispatch<React.SetStateAction<Condominium[]>>;
   setRss?: React.Dispatch<React.SetStateAction<Rss[]>>;
   setBanner?: React.Dispatch<React.SetStateAction<Banner[]>>;
   setUser?: React.Dispatch<React.SetStateAction<User[]>>;
+  setCondominiumMesseger?: React.Dispatch<
+    React.SetStateAction<CondominiumMessage[]>
+  >;
 };
 
 const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
@@ -32,15 +44,19 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
   setRss,
   setBanner,
   setUser,
+  setCondominiumMesseger,
 }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
+  const { user } = useAuthContext();
 
   const {
     checkboxCondominium,
     checkboxRss,
     checkboxBanner,
     checkboxUser,
+    checkboxCondominiumMessenger,
+    setCheckboxCondominiumMessenger,
     setCheckboxCondominium,
     setCheckboxRss,
     setCheckboxBanner,
@@ -54,6 +70,8 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     setOpenDialogEditBanner,
     setOpenDialogCreateUser,
     setOpenDialogEditUser,
+    setOpenDialogCreateCondominiumMessenger,
+    setOpenDialogEditCondominiumMessenger,
   } = useControlerButtonPagesContext();
 
   const handleDeleteCondominium = () => {
@@ -61,6 +79,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
       checkboxCondominium.map(async (id) => {
         await api.delete(`/condominium/${id}`);
         await api.delete(`/screens/condominium_id/${id}`);
+        await api.delete(`/users/condominium/${id}`);
         setCondominium &&
           setCondominium((prev) =>
             produce(prev, (draft) => {
@@ -96,6 +115,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     try {
       checkboxBanner.map(async (id) => {
         await api.delete(`/banner/${id}`);
+        await api.delete(`/screens/banner/${id}`);
         setBanner &&
           setBanner((prev) =>
             produce(prev, (draft) => {
@@ -126,6 +146,23 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     }
   };
 
+  const handleDeleteCondominiumMessenger = () => {
+    try {
+      checkboxCondominiumMessenger.map(async (id) => {
+        await api.delete(`/condominium-message/${id}`);
+        setCondominiumMesseger &&
+          setCondominiumMesseger((prev) =>
+            produce(prev, (draft) => {
+              let index = draft.findIndex((item) => item._id === id);
+              draft.splice(index, 1);
+            })
+          );
+      });
+    } catch {
+      console.log("error");
+    }
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={3}>
       <Typography variant="h4">{title}</Typography>
@@ -137,40 +174,48 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           display="flex"
           justifyContent="space-between"
           gap={2}
+          visibility={
+            user?.permission !== Permission.ADMIN &&
+            checkboxCondominium.length === 0
+              ? "hidden"
+              : "visible"
+          }
         >
-          <Box display="flex" gap={2}>
-            <Button
-              variant="contained"
-              onClick={() => setOpenDialogCreateCondominium(true)}
-              size={smDown ? "small" : "medium"}
-            >
-              Novo
-            </Button>
+          {user?.permission === Permission.ADMIN && (
+            <Box display="flex" gap={2}>
+              <Button
+                variant="contained"
+                onClick={() => setOpenDialogCreateCondominium(true)}
+                size={smDown ? "small" : "medium"}
+              >
+                Novo
+              </Button>
 
-            {checkboxCondominium.length > 0 && (
-              <>
-                <Button
-                  variant="contained"
-                  onClick={() =>
-                    checkboxCondominium.length > 1
-                      ? (alert("Altera um condominio por vez"),
-                        setCheckboxCondominium([]))
-                      : setOpenDialogEditCondominium(true)
-                  }
-                  size={smDown ? "small" : "medium"}
-                >
-                  Alterar
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleDeleteCondominium}
-                  size={smDown ? "small" : "medium"}
-                >
-                  Excluir
-                </Button>
-              </>
-            )}
-          </Box>
+              {checkboxCondominium.length > 0 && (
+                <>
+                  <Button
+                    variant="contained"
+                    onClick={() =>
+                      checkboxCondominium.length > 1
+                        ? (alert("Altera um condominio por vez"),
+                          setCheckboxCondominium([]))
+                        : setOpenDialogEditCondominium(true)
+                    }
+                    size={smDown ? "small" : "medium"}
+                  >
+                    Alterar
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleDeleteCondominium}
+                    size={smDown ? "small" : "medium"}
+                  >
+                    Excluir
+                  </Button>
+                </>
+              )}
+            </Box>
+          )}
 
           {checkboxCondominium.length > 0 && (
             <Button
@@ -291,6 +336,46 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                   Alterar
                 </Button>
                 <Button variant="contained" onClick={handleDeleteUser}>
+                  Excluir
+                </Button>
+              </>
+            )}
+          </Box>
+        </Box>
+      )}
+      {page === "condominium-messeger" && (
+        <Box
+          component={Paper}
+          p={2}
+          display="flex"
+          justifyContent="space-between"
+          gap={2}
+        >
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              onClick={() => setOpenDialogCreateCondominiumMessenger(true)}
+            >
+              Novo
+            </Button>
+
+            {checkboxCondominiumMessenger.length > 0 && (
+              <>
+                <Button
+                  variant="contained"
+                  onClick={() =>
+                    checkboxCondominiumMessenger.length > 1
+                      ? (alert("Altera um condominio por vez"),
+                        setCheckboxCondominiumMessenger([]))
+                      : setOpenDialogEditCondominiumMessenger(true)
+                  }
+                >
+                  Alterar
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleDeleteCondominiumMessenger}
+                >
                   Excluir
                 </Button>
               </>

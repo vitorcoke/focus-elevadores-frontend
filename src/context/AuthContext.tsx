@@ -75,7 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const singOut = () => {
     destroyCookie(undefined, "focus-elevador-token");
     destroyCookie(undefined, "focus-elevador-refreshToken");
-    Router.push("/");
+    Router.replace("/");
   };
 
   return (

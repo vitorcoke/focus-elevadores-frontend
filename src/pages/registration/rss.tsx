@@ -5,6 +5,7 @@ import { useState } from "react";
 import AddRss from "../../components/RssPageComponent/AddRssDialog";
 import EditRss from "../../components/RssPageComponent/EditRssDialog";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
 import { getAPIClient } from "../../service";
@@ -65,7 +66,7 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
   );
 };
 
-export default Rss;
+export default withAllPermission(Rss);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);

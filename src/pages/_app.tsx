@@ -9,6 +9,7 @@ import { Router } from "next/router";
 
 import "../styles/nprogress.css";
 import "../styles/global.css";
+import Head from "next/head";
 
 Router.events.on("routeChangeStart", () => Nprogress.start());
 Router.events.on("routeChangeComplete", () => Nprogress.done());
@@ -20,6 +21,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   LicenseInfo.setLicenseKey(KEY);
   return (
     <>
+      <Head>
+        <title>Minha Portaria</title>
+      </Head>
       <CssBaseline />
       <AuthProvider>
         <AppThemeProvider>

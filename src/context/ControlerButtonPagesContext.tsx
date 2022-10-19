@@ -39,6 +39,12 @@ type ControlerButtonPagesContextData = {
   setOpenDialogCreateUser: Dispatch<SetStateAction<boolean>>;
   openDialogEditUser: boolean;
   setOpenDialogEditUser: Dispatch<SetStateAction<boolean>>;
+  checkboxCondominiumMessenger: GridRowId[];
+  setCheckboxCondominiumMessenger: Dispatch<SetStateAction<GridRowId[]>>;
+  openDialogCreateCondominiumMessenger: boolean;
+  setOpenDialogCreateCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
+  openDialogEditCondominiumMessenger: boolean;
+  setOpenDialogEditCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
 };
 
 const ControlerButtonPagesContext = createContext(
@@ -63,6 +69,14 @@ const ControlerButtonPagesProvider: React.FC<
   const [openDialogEditBanner, setOpenDialogEditBanner] = useState(false);
   const [openDialogCreateUser, setOpenDialogCreateUser] = useState(false);
   const [openDialogEditUser, setOpenDialogEditUser] = useState(false);
+  const [
+    openDialogCreateCondominiumMessenger,
+    setOpenDialogCreateCondominiumMessenger,
+  ] = useState(false);
+  const [
+    openDialogEditCondominiumMessenger,
+    setOpenDialogEditCondominiumMessenger,
+  ] = useState(false);
   const [checkboxCondominium, setCheckboxCondominium] = useState<GridRowId[]>(
     []
   );
@@ -70,6 +84,8 @@ const ControlerButtonPagesProvider: React.FC<
   const [checkboxRss, setCheckboxRss] = useState<GridRowId[]>([]);
   const [checkboxBanner, setCheckboxBanner] = useState<GridRowId[]>([]);
   const [checkboxUser, setCheckboxUser] = useState<GridRowId[]>([]);
+  const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] =
+    useState<GridRowId[]>([]);
 
   return (
     <ControlerButtonPagesContext.Provider
@@ -102,6 +118,12 @@ const ControlerButtonPagesProvider: React.FC<
         setOpenDialogCreateUser,
         openDialogEditUser,
         setOpenDialogEditUser,
+        checkboxCondominiumMessenger,
+        setCheckboxCondominiumMessenger,
+        openDialogCreateCondominiumMessenger,
+        setOpenDialogCreateCondominiumMessenger,
+        openDialogEditCondominiumMessenger,
+        setOpenDialogEditCondominiumMessenger,
       }}
     >
       {children}

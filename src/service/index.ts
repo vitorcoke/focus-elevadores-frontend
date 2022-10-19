@@ -8,7 +8,7 @@ export const getAPIClient = (ctx?: any) => {
     const {'focus-elevador-token': token, 'focus-elevador-refreshToken': refresh_token} = parseCookies(ctx)
     
     const axiosInstance = axios.create({
-        baseURL: 'http://localhost:3333'
+        baseURL: 'http://192.168.9.130:3333'
     })
 
     if(token){

@@ -14,12 +14,14 @@ import {
   Select,
   MenuItem,
   Autocomplete,
+  Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { api } from "../../../../service";
 import { Banner } from "../../../../types/banner.type";
 import { City } from "../../../../types/city.type";
+import { CondominiumMessage } from "../../../../types/condominium-message.type";
 import { Condominium } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { State } from "../../../../types/state.type";
@@ -29,6 +31,7 @@ type AddScreensProps = {
   setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
   rss: Rss[];
   banner: Banner[];
+  condominiumMesseger: CondominiumMessage[];
 };
 
 const AddScreens: React.FC<AddScreensProps> = ({
@@ -36,6 +39,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
   setCondominium,
   rss,
   banner,
+  condominiumMesseger,
 }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("md"));
@@ -44,6 +48,9 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [validity, setValidity] = useState("");
   const [source_rss, setSource_rss] = useState<string[]>([]);
   const [newBanner, setNewBanner] = useState("");
+  const [newCondominiumMesseger, setNewCondominiumMesseger] = useState("");
+  const [starttime, setStarttime] = useState<Date>();
+  const [endtime, setEndtime] = useState<Date>();
   const [state, setState] = useState<State[]>([]);
   const [city, setCity] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
@@ -81,15 +88,24 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     try {
+      if (newCondominiumMesseger) {
+        await api.patch(`/condominium-message/${newCondominiumMesseger}`, {
+          starttime,
+          endtime,
+        });
+      }
+
       const screenUpdate = await api.post("/screens", {
         name,
         validity,
         source_rss,
         banner: newBanner,
         condominium_id: condominium._id,
+        condominium_message: newCondominiumMesseger,
         state: stateValue,
         city: cityValue,
       });
+
       setCondominium((old) => [
         ...old.map((item) =>
           item._id === screenUpdate.data.condominium_id
@@ -147,6 +163,55 @@ const AddScreens: React.FC<AddScreensProps> = ({
             <TextField {...params} label="Banner" fullWidth />
           )}
         />
+        <Box
+          display="flex"
+          flexDirection="column"
+          gap={3}
+          border="1px solid #ab120e"
+          borderRadius="8px"
+          p={3}
+        >
+          <Autocomplete
+            options={condominiumMesseger}
+            getOptionLabel={(option) => option.name}
+            fullWidth
+            onChange={(event, newValue) => {
+              setNewCondominiumMesseger(newValue ? newValue._id : "");
+            }}
+            renderInput={(params) => (
+              <TextField {...params} label="Mensagem" fullWidth />
+            )}
+          />
+          <Box
+            display="flex"
+            gap={2}
+            width="100%"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <TextField
+              required={!!newCondominiumMesseger}
+              label="Data Inicial"
+              type="datetime-local"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(e) => setStarttime(new Date(e.target.value))}
+              fullWidth
+            />
+            <Typography>ATÉ</Typography>
+            <TextField
+              required={!!newCondominiumMesseger}
+              label="Data Final"
+              type="datetime-local"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              onChange={(e) => setEndtime(new Date(e.target.value))}
+              fullWidth
+            />
+          </Box>
+        </Box>
 
         <Box display="flex" gap={3} width="100%">
           <Autocomplete

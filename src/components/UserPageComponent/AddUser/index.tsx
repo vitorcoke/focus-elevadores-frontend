@@ -1,6 +1,7 @@
 import {
   Alert,
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -26,11 +27,16 @@ import {
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState } from "react";
-import { User } from "../../../types/users.type";
+import { Permission, User } from "../../../types/users.type";
 import { api } from "../../../service";
+import { Condominium } from "../../../types/condominium.type";
+import { useAuthContext } from "../../../context/AuthContext";
+import { Screen } from "../../../types/screens.type";
 
 type AddUserProps = {
   setUser: React.Dispatch<React.SetStateAction<User[]>>;
+  condominium: Condominium[];
+  screens: Screen[];
 };
 
 const Transition = forwardRef(function Transition(
@@ -42,9 +48,10 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AddUser: React.FC<AddUserProps> = ({ setUser }) => {
+const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
+  const { user } = useAuthContext();
   const { openDialogCreateUser, setOpenDialogCreateUser } =
     useControlerButtonPagesContext();
 
@@ -55,6 +62,8 @@ const AddUser: React.FC<AddUserProps> = ({ setUser }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [condominium_id, setCondominium_id] = useState<string[]>([]);
+  const [screen_id, setScreen_id] = useState<string[]>([]);
   const [permission, setPermission] = useState("");
 
   const handleCloseAlertSucess = () => {
@@ -75,6 +84,8 @@ const AddUser: React.FC<AddUserProps> = ({ setUser }) => {
         username,
         email,
         password,
+        condominium_id,
+        screen_id,
         permission: parseInt(permission),
       });
       setUser((prev) => [...prev, user.data]);
@@ -153,6 +164,19 @@ const AddUser: React.FC<AddUserProps> = ({ setUser }) => {
                 />
               </Grid>
               <Grid item xs={12}>
+                <Autocomplete
+                  multiple
+                  options={condominium}
+                  getOptionLabel={(option) => option.name}
+                  onChange={(e, value) =>
+                    setCondominium_id(value.map((item) => item._id))
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Condomínio" />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12}>
                 <FormControl fullWidth required>
                   <InputLabel>Permissão</InputLabel>
                   <Select
@@ -163,10 +187,27 @@ const AddUser: React.FC<AddUserProps> = ({ setUser }) => {
                   >
                     <MenuItem value={0}>Zelador(a)</MenuItem>
                     <MenuItem value={1}>Sindico(a)</MenuItem>
-                    <MenuItem value={2}>Administrador(a)</MenuItem>
+                    {user?.permission !== Permission.SINDICO && (
+                      <MenuItem value={2}>Administrador(a)</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
               </Grid>
+              {permission == "0" && (
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={screens}
+                    getOptionLabel={(option) => option.name}
+                    onChange={(e, value) =>
+                      setScreen_id(value.map((item) => item._id))
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Telas" />
+                    )}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Box>
         </Box>

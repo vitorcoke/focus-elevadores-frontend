@@ -46,8 +46,11 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
 }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogEditCondominium, setOpenDialogEditCondominium } =
-    useControlerButtonPagesContext();
+  const {
+    openDialogEditCondominium,
+    setOpenDialogEditCondominium,
+    setCheckboxCondominium,
+  } = useControlerButtonPagesContext();
 
   const [editCondominium, seteditCondominium] = useState(condominium);
 
@@ -56,6 +59,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
 
   const handleCloseDialog = () => {
     setOpenDialogEditCondominium(false);
+    setCheckboxCondominium([]);
   };
 
   const handleCloseAlertSucess = () => {

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import AddBannerDialog from "../../components/BannerPageComponent/AddBannerDialog";
 import EditBannerDialog from "../../components/BannerPageComponent/EditBannerDialog";
+import { withAllPermission } from "../../hocs";
 
 type BannerProps = {
   initialBanner: Banner[];
@@ -72,7 +73,7 @@ const Banner: React.FC<BannerProps> = ({ initialBanner }) => {
   );
 };
 
-export default Banner;
+export default withAllPermission(Banner);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);

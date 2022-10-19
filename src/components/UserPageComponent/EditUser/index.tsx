@@ -1,6 +1,7 @@
 import {
   Alert,
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -25,12 +26,18 @@ import {
 } from "@mui/icons-material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState } from "react";
-import { User } from "../../../types/users.type";
+import { forwardRef, useState, useEffect } from "react";
+import { Permission, User } from "../../../types/users.type";
 import { api } from "../../../service";
+import { Condominium } from "../../../types/condominium.type";
+import { useAuthContext } from "../../../context/AuthContext";
+import { Screen } from "../../../types/screens.type";
 
 type EditUserProps = {
-  user: User;
+  userSelect: User;
+  condominium: Condominium[];
+  screens: Screen[];
+  setUser: React.Dispatch<React.SetStateAction<User[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -42,16 +49,22 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditUser: React.FC<EditUserProps> = ({ user }) => {
+const EditUser: React.FC<EditUserProps> = ({
+  userSelect,
+  condominium,
+  screens,
+  setUser,
+}) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogEditUser, setOpenDialogEditUser } =
+  const { user } = useAuthContext();
+  const { openDialogEditUser, setOpenDialogEditUser, setCheckboxUser } =
     useControlerButtonPagesContext();
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
 
-  const [editUser, setEditUser] = useState<User>(user);
+  const [editUser, setEditUser] = useState<User>(userSelect);
   const [password, setPassword] = useState("");
 
   const handleCloseAlertSucess = () => {
@@ -62,30 +75,52 @@ const EditUser: React.FC<EditUserProps> = ({ user }) => {
   };
   const handleCloseDialog = () => {
     setOpenDialogEditUser(false);
+    setCheckboxUser([]);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      password
-        ? await api.patch(`/users/${editUser._id}`, {
-            name: editUser.name,
-            username: editUser.username,
-            email: editUser.email,
-            password: password,
-            permission: editUser.permission,
-          })
-        : await api.patch(`/users/${editUser._id}`, {
-            name: editUser.name,
-            username: editUser.username,
-            email: editUser.email,
-            permission: editUser.permission,
-          });
-      setOpenAlertSucess(true);
+      if (password) {
+        const newUser = await api.patch(`/users/${editUser._id}`, {
+          name: editUser.name,
+          username: editUser.username,
+          email: editUser.email,
+          condominium_id: editUser.condominium_id,
+          screen_id: editUser.screen_id,
+          password: password,
+          permission: editUser.permission,
+        });
+        setUser((old) => {
+          const index = old.findIndex((user) => user._id === editUser._id);
+          old[index] = newUser.data;
+          return [...old];
+        });
+        setOpenAlertSucess(true);
+      } else {
+        const newUser = await api.patch(`/users/${editUser._id}`, {
+          name: editUser.name,
+          username: editUser.username,
+          email: editUser.email,
+          condominium_id: editUser.condominium_id,
+          screen_id: editUser.screen_id,
+          permission: editUser.permission,
+        });
+        setUser((old) => {
+          const index = old.findIndex((user) => user._id === editUser._id);
+          old[index] = newUser.data;
+          return [...old];
+        });
+        setOpenAlertSucess(true);
+      }
     } catch {
       setOpenAlertError(true);
     }
   };
+
+  useEffect(() => {
+    setEditUser(userSelect);
+  }, [userSelect]);
 
   return (
     <Dialog
@@ -161,6 +196,25 @@ const EditUser: React.FC<EditUserProps> = ({ user }) => {
                 />
               </Grid>
               <Grid item xs={12}>
+                <Autocomplete
+                  multiple
+                  options={condominium}
+                  getOptionLabel={(option) => option.name}
+                  value={condominium.filter((condominium) =>
+                    editUser.condominium_id.includes(condominium._id)
+                  )}
+                  onChange={(e, value) =>
+                    setEditUser({
+                      ...editUser,
+                      condominium_id: value.map((v) => v._id),
+                    })
+                  }
+                  renderInput={(params) => (
+                    <TextField {...params} label="Condomínios" />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12}>
                 <FormControl fullWidth>
                   <InputLabel>Permissão</InputLabel>
                   <Select
@@ -175,10 +229,33 @@ const EditUser: React.FC<EditUserProps> = ({ user }) => {
                   >
                     <MenuItem value={0}>Zelador(a)</MenuItem>
                     <MenuItem value={1}>Sindico(a)</MenuItem>
-                    <MenuItem value={2}>Administrador(a)</MenuItem>
+                    {user?.permission !== Permission.SINDICO && (
+                      <MenuItem value={2}>Administrador(a)</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
               </Grid>
+              {editUser.permission === Permission.ZELADOR && (
+                <Grid item xs={12}>
+                  <Autocomplete
+                    multiple
+                    options={screens}
+                    getOptionLabel={(option) => option.name}
+                    value={screens.filter((screen) =>
+                      editUser.screen_id.includes(screen._id)
+                    )}
+                    onChange={(e, value) =>
+                      setEditUser({
+                        ...editUser,
+                        screen_id: value.map((v) => v._id),
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Telas" />
+                    )}
+                  />
+                </Grid>
+              )}
             </Grid>
           </Box>
         </Box>

@@ -10,27 +10,34 @@ import AddCondominium from "../../components/CondominiumPageComponent/AddCondomi
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import EditCondominium from "../../components/CondominiumPageComponent/EditCondominiumDialog";
 import ScreensDialog from "../../components/CondominiumPageComponent/ScreensDialog/index";
-import { Screen } from "../../types/screens.type";
 import { Rss } from "../../types/rss.type";
 import { Banner } from "../../types/banner.type";
+import { withAllPermission } from "../../hocs";
+import { CondominiumMessage } from "../../types/condominium-message.type";
 
 type CondominiumProps = {
   initialCondominium: Condominium[];
   initialRss: Rss[];
   initialBanner: Banner[];
+  initialCondominiumMessege: CondominiumMessage[];
 };
 
 const Condominium: React.FC<CondominiumProps> = ({
   initialCondominium,
   initialRss,
   initialBanner,
+  initialCondominiumMessege,
 }) => {
   const { setCheckboxCondominium, checkboxCondominium } =
     useControlerButtonPagesContext();
   const [condominium, setCondominium] = useState(initialCondominium);
   const [rss, setRss] = useState(initialRss);
-  const [editCondominium, setEditCondominium] = useState<Condominium>();
   const [banner, setBanner] = useState(initialBanner);
+  const [condominiumMesseger, setCondominiumMesseger] = useState(
+    initialCondominiumMessege
+  );
+
+  const [editCondominium, setEditCondominium] = useState<Condominium>();
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", flex: 1 },
@@ -88,6 +95,8 @@ const Condominium: React.FC<CondominiumProps> = ({
             setCondominium={setCondominium}
             rss={rss}
             banner={banner}
+            condominiumMesseger={condominiumMesseger}
+            setCondominiumMesseger={setCondominiumMesseger}
           />
         </>
       )}
@@ -95,7 +104,7 @@ const Condominium: React.FC<CondominiumProps> = ({
   );
 };
 
-export default Condominium;
+export default withAllPermission(Condominium);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
@@ -104,16 +113,26 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const condominium = await api.get<Condominium[]>("/condominium?query=all");
     const rss = await api.get<Rss[]>("/source-rss");
     const banner = await api.get<Banner[]>("/banner");
+    const condominiumMessege = await api.get<CondominiumMessage[]>(
+      "/condominium-message"
+    );
+
     return {
       props: {
         initialCondominium: condominium.data,
         initialRss: rss.data,
         initialBanner: banner.data,
+        initialCondominiumMessege: condominiumMessege.data,
       },
     };
   } catch {
     return {
-      props: { initialCondominium: [] },
+      props: {
+        initialCondominium: [],
+        initialRss: [],
+        initialBanner: [],
+        initialCondominiumMesseger: [],
+      },
     };
   }
 };

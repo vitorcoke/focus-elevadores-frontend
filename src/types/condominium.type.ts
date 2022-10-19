@@ -1,4 +1,5 @@
 export type Condominium = {
+    id: any;
     _id: string,
     name: string,
     cnpj: string,

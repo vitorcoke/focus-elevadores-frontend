@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
+import { withAdminAndSindicoPermission } from "../hocs";
 import AppBarLayoutPage from "../layout/AppBar";
 import BaseMainLayoutPage from "../layout/BaseMain";
 import { api, getAPIClient } from "../service";
@@ -153,7 +154,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
   );
 };
 
-export default Profile;
+export default withAdminAndSindicoPermission(Profile);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);

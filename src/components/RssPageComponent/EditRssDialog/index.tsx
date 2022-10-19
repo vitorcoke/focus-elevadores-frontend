@@ -43,7 +43,7 @@ const Transition = forwardRef(function Transition(
 const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogEditRss, setOpenDialogEditRss } =
+  const { openDialogEditRss, setOpenDialogEditRss, setCheckboxRss } =
     useControlerButtonPagesContext();
 
   const [editRss, setEditRss] = useState<Rss>(rss);
@@ -60,11 +60,8 @@ const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
   };
   const handleCloseDialog = () => {
     setOpenDialogEditRss(false);
+    setCheckboxRss([]);
   };
-
-  useEffect(() => {
-    setEditRss(rss);
-  }, [rss]);
 
   const handleLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {
     let files = e.target.files;
@@ -87,6 +84,7 @@ const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
       }
     }
   };
+
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     let base64 = logotipo !== undefined && (await base64toFile(logotipo));
@@ -106,6 +104,10 @@ const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
       setOpenAlertError(true);
     }
   };
+
+  useEffect(() => {
+    setEditRss(rss);
+  }, [rss]);
 
   return (
     <Dialog

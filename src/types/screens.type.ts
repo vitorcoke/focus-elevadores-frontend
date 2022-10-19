@@ -5,7 +5,7 @@ export type Screen = {
     source_rss: string[],
     banner?: string,
     advertising?: string[],
-    condominium_message?: string[],
+    condominium_message?: string,
     condominium_id?: string,
     state: string,
     city: string,

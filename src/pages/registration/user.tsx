@@ -9,15 +9,26 @@ import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
 import AddUser from "../../components/UserPageComponent/AddUser";
 import EditUser from "../../components/UserPageComponent/EditUser";
+import { Condominium } from "../../types/condominium.type";
+import { withAdminAndSindicoPermission } from "../../hocs";
+import { Screen } from "../../types/screens.type";
 
 type UserProps = {
   initialUser: User[];
+  initialCondominium: Condominium[];
+  initialScreens: Screen[];
 };
 
-const User: React.FC<UserProps> = ({ initialUser }) => {
+const User: React.FC<UserProps> = ({
+  initialUser,
+  initialCondominium,
+  initialScreens,
+}) => {
   const { checkboxUser, setCheckboxUser } = useControlerButtonPagesContext();
 
+  const [condominium] = useState(initialCondominium);
   const [user, setUser] = useState(initialUser);
+  const [screens] = useState(initialScreens);
   const [editUser, setEditUser] = useState<User>();
 
   const columns: GridColDef[] = [
@@ -34,6 +45,8 @@ const User: React.FC<UserProps> = ({ initialUser }) => {
       username: user.username,
       email: user.email,
       permission: user.permission,
+      condominium_id: user.condominium_id,
+      screen_id: user.screen_id,
     };
   });
 
@@ -53,29 +66,48 @@ const User: React.FC<UserProps> = ({ initialUser }) => {
                 : setEditUser(undefined)
             }
           />
-          <AddUser setUser={setUser} />
-          {editUser && <EditUser user={editUser} />}
+          <AddUser
+            setUser={setUser}
+            condominium={condominium}
+            screens={screens}
+          />
+          {editUser && condominium && (
+            <EditUser
+              userSelect={editUser}
+              condominium={condominium}
+              screens={screens}
+              setUser={setUser}
+            />
+          )}
         </Box>
       </BaseMainLayoutPage>
     </LayoutPage>
   );
 };
 
-export default User;
+export default withAdminAndSindicoPermission(User);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const apiClient = getAPIClient(ctx);
   try {
-    const { data } = await apiClient.get<User>("/users");
+    const users = await apiClient.get<User[]>("/users");
+    const condominium = await apiClient.get<Condominium[]>(
+      "/condominium?query=all"
+    );
+    const screens = await apiClient.get<Screen[]>("/screens");
     return {
       props: {
-        initialUser: data,
+        initialUser: users.data,
+        initialCondominium: condominium.data,
+        initialScreens: screens.data,
       },
     };
   } catch {
     return {
       props: {
         initialUser: [],
+        initialCondominium: [],
+        initialScreens: [],
       },
     };
   }
