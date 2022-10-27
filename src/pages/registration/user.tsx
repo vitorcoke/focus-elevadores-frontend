@@ -44,6 +44,7 @@ const User: React.FC<UserProps> = ({
       name: user.name,
       username: user.username,
       email: user.email,
+      phone: user.phone,
       permission: user.permission,
       condominium_id: user.condominium_id,
       screen_id: user.screen_id,

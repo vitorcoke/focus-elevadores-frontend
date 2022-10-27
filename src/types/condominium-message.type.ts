@@ -8,4 +8,5 @@ export type CondominiumMessage = {
     starttime?: Date;
     endtime?: Date;
     jpg_file?: string;
+    type: string;
 }

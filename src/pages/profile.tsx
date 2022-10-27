@@ -12,10 +12,11 @@ import {
 import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { withAdminAndSindicoPermission } from "../hocs";
-import AppBarLayoutPage from "../layout/AppBar";
-import BaseMainLayoutPage from "../layout/BaseMain";
+import { PatternFormat } from "react-number-format";
 import { api, getAPIClient } from "../service";
 import { User } from "../types/users.type";
+import AppBarLayoutPage from "../layout/AppBar";
+import BaseMainLayoutPage from "../layout/BaseMain";
 
 type ProfileProps = {
   initialUser: User;
@@ -46,12 +47,14 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
             name: user.name,
             username: user.username,
             email: user.email,
+            phone: user.phone,
             password: password,
           })
         : await api.patch<User>(`/users/${user._id}`, {
             name: user.name,
             username: user.username,
             email: user.email,
+            phone: user.phone,
           });
       setOpenAlertSucess(true);
     } catch {
@@ -68,7 +71,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
           height="auto"
           display="flex"
           justifyContent="center"
-          p={3}
+          p={2.5}
           onSubmit={handleSubmit}
         >
           <Box width={smDown ? "100%" : "60%"} component={Paper} p={3}>
@@ -110,6 +113,21 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
                     })
                   }
                   fullWidth
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <PatternFormat
+                  label="Telefone"
+                  value={user.phone}
+                  customInput={TextField}
+                  onChange={(e) =>
+                    setUser({
+                      ...user,
+                      phone: e.target.value,
+                    })
+                  }
+                  fullWidth
+                  format="(##) #####-####"
                 />
               </Grid>
               <Grid item xs={12}>

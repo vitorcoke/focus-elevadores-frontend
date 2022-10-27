@@ -32,6 +32,7 @@ import { api } from "../../../service";
 import { Condominium } from "../../../types/condominium.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
+import { PatternFormat } from "react-number-format";
 
 type AddUserProps = {
   setUser: React.Dispatch<React.SetStateAction<User[]>>;
@@ -61,6 +62,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [condominium_id, setCondominium_id] = useState<string[]>([]);
   const [screen_id, setScreen_id] = useState<string[]>([]);
@@ -83,6 +85,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
         name,
         username,
         email,
+        phone,
         password,
         condominium_id,
         screen_id,
@@ -152,6 +155,16 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
                   label="Email"
                   fullWidth
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <PatternFormat
+                  required
+                  label="Telefone"
+                  format="(##) #####-####"
+                  fullWidth
+                  customInput={TextField}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>

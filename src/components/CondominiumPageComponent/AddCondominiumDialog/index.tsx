@@ -41,6 +41,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
     useControlerButtonPagesContext();
 
   const [name, setName] = useState("");
+  const [condominium_id_imodulo, setCondominiumIdImodulo] = useState<Number>();
   const [cnpj, setCnpj] = useState("");
   const [cep, setCep] = useState("");
   const [address, setAddress] = useState("");
@@ -83,6 +84,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
     try {
       const createCondominium = await api.post("/condominium", {
         name,
+        condominium_id_imodulo,
         cnpj,
         address,
         district,
@@ -133,7 +135,23 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
 
           <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={4}>
+                <TextField
+                  required
+                  label="ID"
+                  fullWidth
+                  type={"number"}
+                  sx={{
+                    "& input[type=number]::-webkit-inner-spin-button": {
+                      "-webkit-appearance": "none",
+                    },
+                  }}
+                  onChange={(e) =>
+                    setCondominiumIdImodulo(Number(e.target.value))
+                  }
+                />
+              </Grid>
+              <Grid item xs={8}>
                 <TextField
                   required
                   label="Nome"

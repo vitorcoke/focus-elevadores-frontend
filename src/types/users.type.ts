@@ -3,6 +3,7 @@ export type User = {
   name: string,
   username: string,
   email: string,
+  phone: string,
   condominium_id: string[],
   screen_id: string[],
   permission: number

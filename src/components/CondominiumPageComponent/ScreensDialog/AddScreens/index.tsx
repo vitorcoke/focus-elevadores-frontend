@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
+import produce from "immer";
 import { useEffect, useState } from "react";
 import { api } from "../../../../service";
 import { Banner } from "../../../../types/banner.type";
@@ -48,9 +49,9 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [validity, setValidity] = useState("");
   const [source_rss, setSource_rss] = useState<string[]>([]);
   const [newBanner, setNewBanner] = useState("");
-  const [newCondominiumMesseger, setNewCondominiumMesseger] = useState("");
-  const [starttime, setStarttime] = useState<Date>();
-  const [endtime, setEndtime] = useState<Date>();
+  const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([
+    { _id: "", starttime: new Date(), endtime: new Date() },
+  ]);
   const [state, setState] = useState<State[]>([]);
   const [city, setCity] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
@@ -89,9 +90,11 @@ const AddScreens: React.FC<AddScreensProps> = ({
     event.preventDefault();
     try {
       if (newCondominiumMesseger) {
-        await api.patch(`/condominium-message/${newCondominiumMesseger}`, {
-          starttime,
-          endtime,
+        newCondominiumMesseger.map(async (item) => {
+          await api.patch(`/condominium-message/${item._id}`, {
+            starttime: item.starttime,
+            endtime: item.endtime,
+          });
         });
       }
 
@@ -101,9 +104,10 @@ const AddScreens: React.FC<AddScreensProps> = ({
         source_rss,
         banner: newBanner,
         condominium_id: condominium._id,
-        condominium_message: newCondominiumMesseger,
+        condominium_message: newCondominiumMesseger.map((item) => item._id),
         state: stateValue,
         city: cityValue,
+        condominium_id_imodulo: condominium.condominium_id_imodulo,
       });
 
       setCondominium((old) => [
@@ -130,7 +134,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
       <Box
         component={"form"}
         p={3}
-        width={smDown ? "100%" : "35%"}
+        width={smDown ? "100%" : "45%"}
         display="flex"
         flexDirection="column"
         gap={3}
@@ -163,55 +167,100 @@ const AddScreens: React.FC<AddScreensProps> = ({
             <TextField {...params} label="Banner" fullWidth />
           )}
         />
-        <Box
-          display="flex"
-          flexDirection="column"
-          gap={3}
-          border="1px solid #ab120e"
-          borderRadius="8px"
-          p={3}
-        >
-          <Autocomplete
-            options={condominiumMesseger}
-            getOptionLabel={(option) => option.name}
-            fullWidth
-            onChange={(event, newValue) => {
-              setNewCondominiumMesseger(newValue ? newValue._id : "");
-            }}
-            renderInput={(params) => (
-              <TextField {...params} label="Mensagem" fullWidth />
-            )}
-          />
+        {newCondominiumMesseger.map((item, index) => (
           <Box
             display="flex"
-            gap={2}
-            width="100%"
-            alignItems="center"
-            justifyContent="center"
+            flexDirection="column"
+            gap={3}
+            border="1px solid #ab120e"
+            borderRadius="8px"
+            p={3}
+            key={index}
           >
-            <TextField
-              required={!!newCondominiumMesseger}
-              label="Data Inicial"
-              type="datetime-local"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              onChange={(e) => setStarttime(new Date(e.target.value))}
+            <Autocomplete
+              options={condominiumMesseger}
+              getOptionLabel={(option) => option.name}
               fullWidth
-            />
-            <Typography>ATÉ</Typography>
-            <TextField
-              required={!!newCondominiumMesseger}
-              label="Data Final"
-              type="datetime-local"
-              InputLabelProps={{
-                shrink: true,
+              onChange={(event, newValue) => {
+                setNewCondominiumMesseger((prev) =>
+                  produce(prev, (draft) => {
+                    draft[index]._id = newValue ? newValue._id : "";
+                  })
+                );
               }}
-              onChange={(e) => setEndtime(new Date(e.target.value))}
-              fullWidth
+              renderInput={(params) => (
+                <TextField {...params} label="Mensagem" fullWidth />
+              )}
             />
+            <Box
+              display="flex"
+              gap={2}
+              width="100%"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <TextField
+                required={!!newCondominiumMesseger}
+                label="Data Inicial"
+                type="datetime-local"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e) => {
+                  setNewCondominiumMesseger((prev) =>
+                    produce(prev, (draft) => {
+                      draft[index].starttime = new Date(e.target.value);
+                    })
+                  );
+                }}
+                fullWidth
+              />
+              <Typography>ATÉ</Typography>
+              <TextField
+                required={!!newCondominiumMesseger}
+                label="Data Final"
+                type="datetime-local"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={(e) => {
+                  setNewCondominiumMesseger((prev) =>
+                    produce(prev, (draft) => {
+                      draft[index].endtime = new Date(e.target.value);
+                    })
+                  );
+                }}
+                fullWidth
+              />
+            </Box>
+            <Box display="flex" gap={2} justifyContent="end">
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() =>
+                  newCondominiumMesseger.length > 1 &&
+                  setNewCondominiumMesseger(
+                    newCondominiumMesseger.filter((_, i) => i !== index)
+                  )
+                }
+              >
+                Excluir
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() =>
+                  setNewCondominiumMesseger((prev) => [
+                    ...prev,
+                    { _id: "", starttime: new Date(), endtime: new Date() },
+                  ])
+                }
+              >
+                Adicionar mais uma
+              </Button>
+            </Box>
           </Box>
-        </Box>
+        ))}
 
         <Box display="flex" gap={3} width="100%">
           <Autocomplete

@@ -2,3 +2,12 @@
     font-family: 'MyriadWeb';
     src: local('MyriadWeb'), url(../../public/fonts/MyriadWebBold.ttf) format('truetype')
 }
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ab120e;
+    border-radius: 5px;
+}

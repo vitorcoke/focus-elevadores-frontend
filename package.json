@@ -31,7 +31,8 @@
     "react-color": "^2.19.3",
     "react-dom": "18.2.0",
     "react-google-charts": "^4.0.0",
-    "react-hook-form": "^7.35.0"
+    "react-hook-form": "^7.35.0",
+    "react-number-format": "^5.0.1"
   },
   "devDependencies": {
     "@types/cookie": "^0.5.1",

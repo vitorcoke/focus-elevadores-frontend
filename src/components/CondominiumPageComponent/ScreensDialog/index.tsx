@@ -75,6 +75,7 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
     setOpenDialogCreateScreens(false);
     setCheckboxScreens([]);
     setCheckboxCondominium([]);
+    setValue("1");
   };
 
   const handleCloseAlertSucess = () => {

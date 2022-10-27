@@ -32,6 +32,7 @@ import { api } from "../../../service";
 import { Condominium } from "../../../types/condominium.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
+import { PatternFormat } from "react-number-format";
 
 type EditUserProps = {
   userSelect: User;
@@ -86,6 +87,7 @@ const EditUser: React.FC<EditUserProps> = ({
           name: editUser.name,
           username: editUser.username,
           email: editUser.email,
+          phone: editUser.phone,
           condominium_id: editUser.condominium_id,
           screen_id: editUser.screen_id,
           password: password,
@@ -102,6 +104,7 @@ const EditUser: React.FC<EditUserProps> = ({
           name: editUser.name,
           username: editUser.username,
           email: editUser.email,
+          phone: editUser.phone,
           condominium_id: editUser.condominium_id,
           screen_id: editUser.screen_id,
           permission: editUser.permission,
@@ -185,6 +188,22 @@ const EditUser: React.FC<EditUserProps> = ({
                   onChange={(e) =>
                     setEditUser({ ...editUser, email: e.target.value })
                   }
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <PatternFormat
+                  required
+                  label="Telefone"
+                  value={editUser.phone}
+                  format="(##) #####-####"
+                  fullWidth
+                  customInput={TextField}
+                  onChange={(e) => {
+                    setEditUser({
+                      ...editUser,
+                      phone: e.target.value,
+                    });
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>

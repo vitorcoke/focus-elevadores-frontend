@@ -79,6 +79,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
     try {
       await api.patch(`/condominium/${condominium._id}`, {
         name: editCondominium.name,
+        ondominium_id_imodulo: editCondominium.condominium_id_imodulo,
         cnpj: editCondominium.cnpj,
         address: editCondominium.address,
         district: editCondominium.district,
@@ -134,7 +135,27 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
 
           <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={4}>
+                <TextField
+                  required
+                  label="ID"
+                  value={editCondominium.condominium_id_imodulo}
+                  fullWidth
+                  type={"number"}
+                  sx={{
+                    "& input[type=number]::-webkit-inner-spin-button": {
+                      "-webkit-appearance": "none",
+                    },
+                  }}
+                  onChange={(e) =>
+                    seteditCondominium({
+                      ...editCondominium,
+                      condominium_id_imodulo: Number(e.target.value),
+                    })
+                  }
+                />
+              </Grid>
+              <Grid item xs={8}>
                 <TextField
                   required
                   value={editCondominium.name}

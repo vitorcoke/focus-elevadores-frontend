@@ -4,11 +4,14 @@ import {
   Box,
   Button,
   Dialog,
+  FormControl,
   Grid,
   IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   Slide,
   Snackbar,
-  Stack,
   TextField,
   Toolbar,
   Typography,
@@ -58,6 +61,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [jpg_file, setJpgFile] = useState<File>();
+  const [type, setType] = useState("");
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -105,6 +109,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           name: nameMessage,
           title,
           message,
+          type,
         });
         setCondominiumMesseger((old) => [...old, newMessege.data]);
 
@@ -113,6 +118,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
         const newMessege = await api.post("/condominium-message", {
           name: nameJpg,
           jpg_file: base64,
+          type,
         });
         setCondominiumMesseger((old) => [...old, newMessege.data]);
         setOpenAlertSucess(true);
@@ -189,6 +195,22 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     onChange={(e) => setMessage(e.target.value)}
                   />
                 </Grid>
+                <Grid item xs={12}>
+                  <FormControl fullWidth required>
+                    <InputLabel disabled={!!nameJpg}>Permissão</InputLabel>
+                    <Select
+                      required
+                      disabled={!!nameJpg}
+                      value={!!nameJpg ? "" : type}
+                      label="Responsavel"
+                      onChange={(e) => setType(e.target.value as string)}
+                    >
+                      <MenuItem value={0}>Zelador(a)</MenuItem>
+                      <MenuItem value={1}>Sindico(a)</MenuItem>
+                      <MenuItem value={2}>Administrador(a)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
             </Box>
 
@@ -210,7 +232,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                   <TextField
                     required
                     disabled={!!nameMessage}
-                    label="Titulo"
+                    label="Nome"
                     fullWidth
                     onChange={(e) => setNameJpg(e.target.value)}
                   />
@@ -232,6 +254,22 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                       onChange={handleLogotipo}
                     />
                   </Button>
+                </Grid>
+                <Grid item xs={12}>
+                  <FormControl fullWidth required>
+                    <InputLabel disabled={!!nameMessage}>Permissão</InputLabel>
+                    <Select
+                      required
+                      disabled={!!nameMessage}
+                      value={!!nameMessage ? "" : type}
+                      label="Responsavel"
+                      onChange={(e) => setType(e.target.value as string)}
+                    >
+                      <MenuItem value={0}>Zelador(a)</MenuItem>
+                      <MenuItem value={1}>Sindico(a)</MenuItem>
+                      <MenuItem value={2}>Administrador(a)</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Grid>
               </Grid>
             </Box>

@@ -49,6 +49,7 @@ const Condominium: React.FC<CondominiumProps> = ({
       id: condominium._id,
       _id: condominium._id,
       name: condominium.name,
+      condominium_id_imodulo: condominium.condominium_id_imodulo,
       cnpj: condominium.cnpj,
       cep: condominium.cep,
       address: condominium.address,
