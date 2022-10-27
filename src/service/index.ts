@@ -3,12 +3,13 @@ import createAuthRefreshInterceptor from 'axios-auth-refresh'
 import {parseCookies, setCookie} from 'nookies'
 
 
+const URL_SERVER = process.env.NEXT_PUBLIC_URL_SERVER || 'http://localhost:3333'
 
 export const getAPIClient = (ctx?: any) => {
     const {'focus-elevador-token': token, 'focus-elevador-refreshToken': refresh_token} = parseCookies(ctx)
     
     const axiosInstance = axios.create({
-        baseURL: 'http://localhost:3333'
+        baseURL: URL_SERVER
     })
 
     if(token){
