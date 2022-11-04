@@ -10,9 +10,6 @@ import {
   TextField,
   Snackbar,
   Alert,
-  InputLabel,
-  Select,
-  MenuItem,
   Autocomplete,
   Typography,
 } from "@mui/material";
@@ -26,6 +23,7 @@ import { CondominiumMessage } from "../../../../types/condominium-message.type";
 import { Condominium } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { State } from "../../../../types/state.type";
+import { VMS, VMSCameras } from "../../../../types/vms.type";
 
 type AddScreensProps = {
   condominium: Condominium;
@@ -56,6 +54,9 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [city, setCity] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
   const [cityValue, setCityValue] = useState("");
+  const [vmsCameras, setVmsCameras] = useState<VMSCameras[]>([]);
+  const [vms, setVms] = useState<string[]>([]);
+  const [vmsUrl, setVmsUrl] = useState("");
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -65,6 +66,41 @@ const AddScreens: React.FC<AddScreensProps> = ({
       .get("https://servicodados.ibge.gov.br/api/v1/localidades/estados")
       .then((response) => {
         setState(response.data);
+      });
+  }, []);
+
+  useEffect(() => {
+    api
+      .get(`/vms/condominium/${condominium._id}`)
+      .then((response) => {
+        return response.data.map((vms: VMS) => {
+          setVmsUrl(
+            `http://${vms.username}:${vms.password}@${vms.server}:${vms.port}`
+          );
+          axios
+            .get<string>(
+              `http://${vms.server}:${vms.port}/camerasnomes.cgi?receiver=${vms.receiver}&server=${vms.account}`,
+              {
+                auth: {
+                  username: vms.username,
+                  password: vms.password,
+                },
+              }
+            )
+            .then((response) => {
+              const cameras = response.data.split("&");
+              const camerasArray = cameras.map((camera) => {
+                return {
+                  name: camera.split("=")[1],
+                  code: camera.split("=")[0],
+                };
+              });
+              setVmsCameras((old) => [...old, ...camerasArray]);
+            });
+        });
+      })
+      .catch((err) => {
+        console.log(err);
       });
   }, []);
 
@@ -108,6 +144,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
         state: stateValue,
         city: cityValue,
         condominium_id_imodulo: condominium.condominium_id_imodulo,
+        vms_camera: vms,
       });
 
       setCondominium((old) => [
@@ -165,6 +202,24 @@ const AddScreens: React.FC<AddScreensProps> = ({
           }}
           renderInput={(params) => (
             <TextField {...params} label="Banner" fullWidth />
+          )}
+        />
+        <Autocomplete
+          multiple
+          options={vmsCameras}
+          getOptionLabel={(option) => option.name}
+          fullWidth
+          onChange={(event, newValue) => {
+            setVms(
+              newValue
+                ? newValue.map(
+                    (item) => `${vmsUrl}/mjpegstream.cgi?camera=${item.code}`
+                  )
+                : []
+            );
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Cameras" fullWidth />
           )}
         />
         {newCondominiumMesseger.map((item, index) => (

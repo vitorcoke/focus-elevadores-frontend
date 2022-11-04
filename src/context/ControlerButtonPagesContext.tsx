@@ -45,6 +45,12 @@ type ControlerButtonPagesContextData = {
   setOpenDialogCreateCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
   openDialogEditCondominiumMessenger: boolean;
   setOpenDialogEditCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
+  openDialogCreateVms: boolean;
+  setOpenDialogCreateVms: Dispatch<SetStateAction<boolean>>;
+  checkboxVms: GridRowId[];
+  setCheckboxVms: Dispatch<SetStateAction<GridRowId[]>>;
+  openDialogEditVms: boolean;
+  setOpenDialogEditVms: Dispatch<SetStateAction<boolean>>;
 };
 
 const ControlerButtonPagesContext = createContext(
@@ -77,6 +83,8 @@ const ControlerButtonPagesProvider: React.FC<
     openDialogEditCondominiumMessenger,
     setOpenDialogEditCondominiumMessenger,
   ] = useState(false);
+  const [openDialogCreateVms, setOpenDialogCreateVms] = useState(false);
+  const [openDialogEditVms, setOpenDialogEditVms] = useState(false);
   const [checkboxCondominium, setCheckboxCondominium] = useState<GridRowId[]>(
     []
   );
@@ -86,6 +94,7 @@ const ControlerButtonPagesProvider: React.FC<
   const [checkboxUser, setCheckboxUser] = useState<GridRowId[]>([]);
   const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] =
     useState<GridRowId[]>([]);
+  const [checkboxVms, setCheckboxVms] = useState<GridRowId[]>([]);
 
   return (
     <ControlerButtonPagesContext.Provider
@@ -124,6 +133,12 @@ const ControlerButtonPagesProvider: React.FC<
         setOpenDialogCreateCondominiumMessenger,
         openDialogEditCondominiumMessenger,
         setOpenDialogEditCondominiumMessenger,
+        openDialogCreateVms,
+        setOpenDialogCreateVms,
+        checkboxVms,
+        setCheckboxVms,
+        openDialogEditVms,
+        setOpenDialogEditVms,
       }}
     >
       {children}

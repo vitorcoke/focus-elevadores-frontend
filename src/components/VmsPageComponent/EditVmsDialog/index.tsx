@@ -1,6 +1,7 @@
 import {
   Alert,
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -14,15 +15,16 @@ import {
   useTheme,
 } from "@mui/material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CloseRounded, SendRounded, SearchRounded } from "@mui/icons-material";
-import { forwardRef, useState, Dispatch, SetStateAction } from "react";
+import { CloseRounded, SendRounded } from "@mui/icons-material";
+import { forwardRef, useState } from "react";
 import { TransitionProps } from "@mui/material/transitions";
-import { Condominium } from "../../../types/condominium.type";
 import { api } from "../../../service";
-import axios from "axios";
+import { VMS } from "../../../types/vms.type";
+import { Condominium } from "../../../types/condominium.type";
 
-type AddCondominiumProps = {
-  setCondominium: Dispatch<SetStateAction<Condominium[]>>;
+type EditVmsDialogProps = {
+  vms: VMS;
+  condominium: Condominium[];
 };
 
 const Transition = forwardRef(function Transition(
@@ -34,41 +36,20 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
+const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogCreateCondominium, setOpenDialogCreateCondominium } =
+  const { openDialogEditVms, setOpenDialogEditVms, setCheckboxVms } =
     useControlerButtonPagesContext();
 
-  const [name, setName] = useState("");
-  const [condominium_id_imodulo, setCondominiumIdImodulo] = useState<Number>();
-  const [cnpj, setCnpj] = useState("");
-  const [cep, setCep] = useState("");
-  const [address, setAddress] = useState("");
-  const [district, setDistrict] = useState("");
-  const [complement, setComplement] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-
-  const validationCep = async () => {
-    try {
-      const { data } = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-      if (data.erro) return alert("CEP não encontrado");
-      setAddress(data.logradouro);
-      setDistrict(data.bairro);
-      setComplement(data.complemento);
-      setCity(data.localidade);
-      setState(data.uf);
-    } catch (error) {
-      alert("CEP invalido");
-    }
-  };
+  const [editVms, setEditVms] = useState<VMS>(vms);
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
 
   const handleCloseDialog = () => {
-    setOpenDialogCreateCondominium(false);
+    setOpenDialogEditVms(false);
+    setCheckboxVms([]);
   };
 
   const handleCloseAlertSucess = () => {
@@ -82,18 +63,16 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     try {
-      const createCondominium = await api.post("/condominium", {
-        name,
-        condominium_id_imodulo,
-        cnpj,
-        address,
-        district,
-        cep,
-        complement,
-        city,
-        state,
+      await api.patch(`/vms/${editVms._id}`, {
+        name: editVms.name,
+        server: editVms.server,
+        port: editVms.port,
+        username: editVms.username,
+        password: editVms.password,
+        receiver: editVms.receiver,
+        account: editVms.account,
+        condominium_id: editVms.condominium_id,
       });
-      setCondominium((old) => [...old, createCondominium.data]);
       setOpenAlertSucess(true);
     } catch {
       setOpenAlertError(true);
@@ -103,7 +82,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   return (
     <Dialog
       fullScreen
-      open={openDialogCreateCondominium}
+      open={openDialogEditVms}
       onClose={handleCloseDialog}
       TransitionComponent={Transition}
     >
@@ -133,14 +112,37 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
         >
           <Toolbar />
 
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
+          <Box maxWidth={smDown ? "90%" : "30%"}>
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Nome"
+                  value={editVms.name}
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, name: e.target.value })
+                  }
+                />
+              </Grid>
+              <Grid item xs={8}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Servidor"
+                  value={editVms.server}
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, server: e.target.value })
+                  }
+                />
+              </Grid>
               <Grid item xs={4}>
                 <TextField
                   required
-                  label="ID"
                   fullWidth
+                  label="Porta"
                   type={"number"}
+                  value={editVms.port}
                   sx={{
                     "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
                       {
@@ -151,80 +153,86 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
                     },
                   }}
                   onChange={(e) =>
-                    setCondominiumIdImodulo(Number(e.target.value))
+                    setEditVms({ ...editVms, port: Number(e.target.value) })
                   }
                 />
               </Grid>
-              <Grid item xs={8}>
+              <Grid item xs={12}>
                 <TextField
                   required
-                  label="Nome"
                   fullWidth
-                  onChange={(e) => setName(e.target.value)}
+                  label="Receptor"
+                  type={"number"}
+                  value={editVms.receiver}
+                  sx={{
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        display: "none",
+                      },
+                    "& input[type=number]": {
+                      MozAppearance: "textfield",
+                    },
+                  }}
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, receiver: Number(e.target.value) })
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
-                  label="CNPJ"
                   fullWidth
-                  onChange={(e) => setCnpj(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex">
-                  <TextField
-                    required
-                    label="CEP"
-                    fullWidth
-                    onChange={(e) => setCep(e.target.value)}
-                  />
-                  <IconButton onClick={validationCep}>
-                    <SearchRounded />
-                  </IconButton>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={address}
-                  label="Endereço"
-                  fullWidth
-                  onChange={(e) => setAddress(e.target.value)}
+                  label="Conta"
+                  type={"number"}
+                  value={editVms.account}
+                  sx={{
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        display: "none",
+                      },
+                    "& input[type=number]": {
+                      MozAppearance: "textfield",
+                    },
+                  }}
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, account: Number(e.target.value) })
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
-                  value={district}
-                  label="Bairro"
                   fullWidth
-                  onChange={(e) => setDistrict(e.target.value)}
+                  label="Usuário"
+                  value={editVms.username}
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, username: e.target.value })
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Complemento"
                   fullWidth
-                  onChange={(e) => setComplement(e.target.value)}
+                  label="Senha"
+                  type="password"
+                  onChange={(e) =>
+                    setEditVms({ ...editVms, password: e.target.value })
+                  }
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  required
-                  value={city}
-                  label="Cidade"
-                  fullWidth
-                  onChange={(e) => setCity(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={state}
-                  label="Estado"
-                  fullWidth
-                  onChange={(e) => setState(e.target.value)}
+                <Autocomplete
+                  options={condominium}
+                  getOptionLabel={(option) => option.name}
+                  value={condominium.find(
+                    (condominium) => condominium._id === editVms.condominium_id
+                  )}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Condomínio" fullWidth />
+                  )}
+                  onChange={(e, value) =>
+                    setEditVms({ ...editVms, condominium_id: value?.id })
+                  }
                 />
               </Grid>
             </Grid>
@@ -251,4 +259,4 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   );
 };
 
-export default AddCondominium;
+export default EditVmsDialog;

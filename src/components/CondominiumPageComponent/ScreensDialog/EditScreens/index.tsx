@@ -71,6 +71,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
     banner: "",
     state: "",
     city: "",
+    vms_camera: [],
   });
   const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([
     {
@@ -295,7 +296,6 @@ const EditScreens: React.FC<EditScreensProps> = ({
                   <Box key={index} p={3}>
                     <Box
                       display="flex"
-                      flexDirection="column"
                       gap={3}
                       border="1px solid #ab120e"
                       borderRadius="8px"
@@ -404,7 +404,6 @@ const EditScreens: React.FC<EditScreensProps> = ({
                 <Box key={index} p={3}>
                   <Box
                     display="flex"
-                    flexDirection="column"
                     gap={3}
                     border="1px solid #ab120e"
                     borderRadius="8px"
@@ -412,7 +411,12 @@ const EditScreens: React.FC<EditScreensProps> = ({
                     key={index}
                   >
                     <Autocomplete
-                      options={condominiumMesseger}
+                      options={condominiumMesseger.filter(
+                        (item) =>
+                          screenCondominium.condominium_message?.indexOf(
+                            item._id
+                          ) === -1
+                      )}
                       getOptionLabel={(option) => option.name}
                       onChange={(event, newValue) => {
                         setNewCondominiumMesseger((prev) =>

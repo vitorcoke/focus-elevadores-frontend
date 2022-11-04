@@ -15,6 +15,7 @@ import { CondominiumMessage } from "../../types/condominium-message.type";
 import { Condominium } from "../../types/condominium.type";
 import { Rss } from "../../types/rss.type";
 import { Permission, User } from "../../types/users.type";
+import { VMS } from "../../types/vms.type";
 
 type BaseMainLayoutPageProps = {
   children: React.ReactNode;
@@ -26,7 +27,8 @@ type BaseMainLayoutPageProps = {
     | "banner"
     | "profile"
     | "dashboard"
-    | "condominium-messeger";
+    | "condominium-messeger"
+    | "vms";
   setCondominium?: React.Dispatch<React.SetStateAction<Condominium[]>>;
   setRss?: React.Dispatch<React.SetStateAction<Rss[]>>;
   setBanner?: React.Dispatch<React.SetStateAction<Banner[]>>;
@@ -34,6 +36,7 @@ type BaseMainLayoutPageProps = {
   setCondominiumMesseger?: React.Dispatch<
     React.SetStateAction<CondominiumMessage[]>
   >;
+  setVms?: React.Dispatch<React.SetStateAction<VMS[]>>;
 };
 
 const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
@@ -45,6 +48,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
   setBanner,
   setUser,
   setCondominiumMesseger,
+  setVms,
 }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
@@ -56,11 +60,13 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     checkboxBanner,
     checkboxUser,
     checkboxCondominiumMessenger,
+    checkboxVms,
     setCheckboxCondominiumMessenger,
     setCheckboxCondominium,
     setCheckboxRss,
     setCheckboxBanner,
     setCheckboxUser,
+    setCheckboxVms,
     setOpenDialogCreateCondominium,
     setOpenDialogEditCondominium,
     setOpenDialogCreateScreens,
@@ -72,6 +78,8 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     setOpenDialogEditUser,
     setOpenDialogCreateCondominiumMessenger,
     setOpenDialogEditCondominiumMessenger,
+    setOpenDialogCreateVms,
+    setOpenDialogEditVms,
   } = useControlerButtonPagesContext();
 
   const handleDeleteCondominium = () => {
@@ -152,6 +160,23 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         await api.delete(`/condominium-message/${id}`);
         setCondominiumMesseger &&
           setCondominiumMesseger((prev) =>
+            produce(prev, (draft) => {
+              let index = draft.findIndex((item) => item._id === id);
+              draft.splice(index, 1);
+            })
+          );
+      });
+    } catch {
+      console.log("error");
+    }
+  };
+
+  const handleDeleteVms = () => {
+    try {
+      checkboxVms.map(async (id) => {
+        await api.delete(`/vms/${id}`);
+        setVms &&
+          setVms((prev) =>
             produce(prev, (draft) => {
               let index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
@@ -376,6 +401,43 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                   variant="contained"
                   onClick={handleDeleteCondominiumMessenger}
                 >
+                  Excluir
+                </Button>
+              </>
+            )}
+          </Box>
+        </Box>
+      )}
+      {page === "vms" && (
+        <Box
+          component={Paper}
+          p={2}
+          display="flex"
+          justifyContent="space-between"
+          gap={2}
+        >
+          <Box display="flex" gap={2}>
+            <Button
+              variant="contained"
+              onClick={() => setOpenDialogCreateVms(true)}
+            >
+              Novo
+            </Button>
+
+            {checkboxVms.length > 0 && (
+              <>
+                <Button
+                  variant="contained"
+                  onClick={() =>
+                    checkboxCondominiumMessenger.length > 1
+                      ? (alert("Altera um condominio por vez"),
+                        setCheckboxVms([]))
+                      : setOpenDialogEditVms(true)
+                  }
+                >
+                  Alterar
+                </Button>
+                <Button variant="contained" onClick={handleDeleteVms}>
                   Excluir
                 </Button>
               </>

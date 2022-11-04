@@ -12,6 +12,7 @@ import {
   AdUnitsRounded,
   Menu,
   CommentRounded,
+  Videocam,
 } from "@mui/icons-material";
 import {
   AppBar,
@@ -173,7 +174,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                   </ListItemButton>
                 )}
               </Collapse>
-              {user?.permission !== Permission.ZELADOR && (
+              {user?.permission === Permission.ADMIN && (
                 <>
                   <ListItemButton onClick={handleOpenSettings}>
                     <ListItemIcon>
@@ -183,9 +184,15 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                     {openSettings ? <ExpandLess /> : <ExpandMore />}
                   </ListItemButton>
                   <Collapse in={openSettings}>
-                    <ListItemButton sx={{ pl: 4 }}>
-                      <ListItemIcon></ListItemIcon>
-                      <ListItemText primary="Tela inical" />
+                    <ListItemButton
+                      sx={{ pl: 4 }}
+                      selected={match === "/settings/vms"}
+                      onClick={() => router.push("/settings/vms")}
+                    >
+                      <ListItemIcon>
+                        <Videocam sx={{ color: "#111" }} />
+                      </ListItemIcon>
+                      <ListItemText primary="VMS" />
                     </ListItemButton>
                   </Collapse>
                 </>

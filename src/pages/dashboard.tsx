@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { GetServerSideProps } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardGrafic from "../components/DashbordPageComponent/DashboardGrafic";
 import { withAllPermission } from "../hocs";
 import AppBarLayoutPage from "../layout/AppBar";

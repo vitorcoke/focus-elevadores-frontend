@@ -1,6 +1,7 @@
 import {
   Alert,
   AppBar,
+  Autocomplete,
   Box,
   Button,
   Dialog,
@@ -14,15 +15,16 @@ import {
   useTheme,
 } from "@mui/material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CloseRounded, SendRounded, SearchRounded } from "@mui/icons-material";
-import { forwardRef, useState, Dispatch, SetStateAction } from "react";
+import { CloseRounded, SendRounded } from "@mui/icons-material";
+import { forwardRef, useState } from "react";
 import { TransitionProps } from "@mui/material/transitions";
-import { Condominium } from "../../../types/condominium.type";
 import { api } from "../../../service";
-import axios from "axios";
+import { VMS } from "../../../types/vms.type";
+import { Condominium } from "../../../types/condominium.type";
 
-type AddCondominiumProps = {
-  setCondominium: Dispatch<SetStateAction<Condominium[]>>;
+type AddVmsDialogProps = {
+  setVms: React.Dispatch<React.SetStateAction<VMS[]>>;
+  condominium: Condominium[];
 };
 
 const Transition = forwardRef(function Transition(
@@ -34,41 +36,26 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
+const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogCreateCondominium, setOpenDialogCreateCondominium } =
+  const { openDialogCreateVms, setOpenDialogCreateVms } =
     useControlerButtonPagesContext();
 
   const [name, setName] = useState("");
-  const [condominium_id_imodulo, setCondominiumIdImodulo] = useState<Number>();
-  const [cnpj, setCnpj] = useState("");
-  const [cep, setCep] = useState("");
-  const [address, setAddress] = useState("");
-  const [district, setDistrict] = useState("");
-  const [complement, setComplement] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-
-  const validationCep = async () => {
-    try {
-      const { data } = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-      if (data.erro) return alert("CEP não encontrado");
-      setAddress(data.logradouro);
-      setDistrict(data.bairro);
-      setComplement(data.complemento);
-      setCity(data.localidade);
-      setState(data.uf);
-    } catch (error) {
-      alert("CEP invalido");
-    }
-  };
+  const [server, setServer] = useState("");
+  const [port, setPort] = useState<number>();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [receiver, setReceiver] = useState<number>();
+  const [account, setAccount] = useState<number>();
+  const [condominium_id, setCondominium_id] = useState("");
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
 
   const handleCloseDialog = () => {
-    setOpenDialogCreateCondominium(false);
+    setOpenDialogCreateVms(false);
   };
 
   const handleCloseAlertSucess = () => {
@@ -82,18 +69,17 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     try {
-      const createCondominium = await api.post("/condominium", {
+      const newVms = await api.post("/vms", {
         name,
-        condominium_id_imodulo,
-        cnpj,
-        address,
-        district,
-        cep,
-        complement,
-        city,
-        state,
+        server,
+        port,
+        username,
+        password,
+        receiver,
+        account,
+        condominium_id: condominium_id ? condominium_id : null,
       });
-      setCondominium((old) => [...old, createCondominium.data]);
+      setVms((oldVms) => [...oldVms, newVms.data]);
       setOpenAlertSucess(true);
     } catch {
       setOpenAlertError(true);
@@ -103,7 +89,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   return (
     <Dialog
       fullScreen
-      open={openDialogCreateCondominium}
+      open={openDialogCreateVms}
       onClose={handleCloseDialog}
       TransitionComponent={Transition}
     >
@@ -133,98 +119,93 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
         >
           <Toolbar />
 
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
+          <Box maxWidth={smDown ? "90%" : "30%"}>
             <Grid container spacing={2}>
-              <Grid item xs={4}>
+              <Grid item xs={12}>
                 <TextField
                   required
-                  label="ID"
                   fullWidth
-                  type={"number"}
-                  sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
-                    "& input[type=number]": {
-                      MozAppearance: "textfield",
-                    },
-                  }}
-                  onChange={(e) =>
-                    setCondominiumIdImodulo(Number(e.target.value))
-                  }
+                  label="Nome"
+                  onChange={(e) => setName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={8}>
                 <TextField
                   required
-                  label="Nome"
                   fullWidth
-                  onChange={(e) => setName(e.target.value)}
+                  label="Servidor"
+                  onChange={(e) => setServer(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Porta"
+                  type={"number"}
+                  sx={{
+                    "& input[type=number]::-webkit-inner-spin-button": {
+                      "-webkit-appearance": "none",
+                    },
+                  }}
+                  onChange={(e) => setPort(Number(e.target.value))}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
-                  label="CNPJ"
                   fullWidth
-                  onChange={(e) => setCnpj(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex">
-                  <TextField
-                    required
-                    label="CEP"
-                    fullWidth
-                    onChange={(e) => setCep(e.target.value)}
-                  />
-                  <IconButton onClick={validationCep}>
-                    <SearchRounded />
-                  </IconButton>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={address}
-                  label="Endereço"
-                  fullWidth
-                  onChange={(e) => setAddress(e.target.value)}
+                  label="Receptor"
+                  type={"number"}
+                  sx={{
+                    "& input[type=number]::-webkit-inner-spin-button": {
+                      "-webkit-appearance": "none",
+                    },
+                  }}
+                  onChange={(e) => setReceiver(Number(e.target.value))}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
-                  value={district}
-                  label="Bairro"
                   fullWidth
-                  onChange={(e) => setDistrict(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Complemento"
-                  fullWidth
-                  onChange={(e) => setComplement(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={city}
-                  label="Cidade"
-                  fullWidth
-                  onChange={(e) => setCity(e.target.value)}
+                  label="Conta"
+                  type={"number"}
+                  sx={{
+                    "& input[type=number]::-webkit-inner-spin-button": {
+                      "-webkit-appearance": "none",
+                    },
+                  }}
+                  onChange={(e) => setAccount(Number(e.target.value))}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   required
-                  value={state}
-                  label="Estado"
                   fullWidth
-                  onChange={(e) => setState(e.target.value)}
+                  label="Usuário"
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Senha"
+                  type="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={condominium}
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Condomínio" fullWidth />
+                  )}
+                  onChange={(e, value) =>
+                    setCondominium_id(value ? value._id : "")
+                  }
                 />
               </Grid>
             </Grid>
@@ -251,4 +232,4 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   );
 };
 
-export default AddCondominium;
+export default AddVmsDialog;

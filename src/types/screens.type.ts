@@ -9,4 +9,5 @@ export type Screen = {
     condominium_id?: string,
     state: string,
     city: string,
+    vms_camera: string[],
 }
