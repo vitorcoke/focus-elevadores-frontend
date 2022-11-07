@@ -144,9 +144,11 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Porta"
                   type={"number"}
                   sx={{
-                    "& input[type=number]::-webkit-inner-spin-button": {
-                      "-webkit-appearance": "none",
-                    },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        WebkitAppearance: "none",
+                        margin: 0,
+                      },
                   }}
                   onChange={(e) => setPort(Number(e.target.value))}
                 />
@@ -158,9 +160,11 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Receptor"
                   type={"number"}
                   sx={{
-                    "& input[type=number]::-webkit-inner-spin-button": {
-                      "-webkit-appearance": "none",
-                    },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        WebkitAppearance: "none",
+                        margin: 0,
+                      },
                   }}
                   onChange={(e) => setReceiver(Number(e.target.value))}
                 />
@@ -172,9 +176,11 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Conta"
                   type={"number"}
                   sx={{
-                    "& input[type=number]::-webkit-inner-spin-button": {
-                      "-webkit-appearance": "none",
-                    },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        WebkitAppearance: "none",
+                        margin: 0,
+                      },
                   }}
                   onChange={(e) => setAccount(Number(e.target.value))}
                 />

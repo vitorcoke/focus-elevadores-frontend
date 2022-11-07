@@ -158,6 +158,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
     try {
       checkboxCondominiumMessenger.map(async (id) => {
         await api.delete(`/condominium-message/${id}`);
+        await api.delete(`/screens/message/${id}`);
         setCondominiumMesseger &&
           setCondominiumMesseger((prev) =>
             produce(prev, (draft) => {
