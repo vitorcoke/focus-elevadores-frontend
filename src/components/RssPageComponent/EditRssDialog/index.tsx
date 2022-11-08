@@ -73,10 +73,10 @@ const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          if (img.width > 100 && img.height > 100) {
+          if (img.width < 426 && img.height < 240) {
             setLogotipo(file);
           } else {
-            alert("A imagem deve ter no mínimo 100x100");
+            alert("A imagem deve ter no máximo 426x240");
           }
         };
       } else {
