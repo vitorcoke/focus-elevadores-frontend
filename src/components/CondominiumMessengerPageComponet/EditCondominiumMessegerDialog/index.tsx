@@ -229,6 +229,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                           message: e.target.value,
                         })
                       }
+                      helperText={`${editCondominiumMesseger?.message?.length}/400`}
+                      inputProps={{ maxLength: 400 }}
                     />
                   </Grid>
                 </Grid>

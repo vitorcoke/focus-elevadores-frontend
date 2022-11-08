@@ -166,7 +166,13 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
         >
           <Toolbar />
 
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
+          <Box
+            maxWidth={smDown ? "90%" : "30%"}
+            flexGrow={1}
+            sx={{
+              wordBreak: "break-word",
+            }}
+          >
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -208,6 +214,8 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
                       description: e.target.value,
                     })
                   }
+                  helperText={`${editBanner.description.length}/250`}
+                  inputProps={{ maxLength: 250 }}
                 />
               </Grid>
               <Grid item xs={12}>
