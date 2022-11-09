@@ -114,7 +114,12 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
 
           <Box width="100%">
             <TabContext value={value}>
-              <TabList onChange={handleChangeTab}>
+              <TabList
+                onChange={handleChangeTab}
+                scrollButtons="auto"
+                variant="scrollable"
+                allowScrollButtonsMobile
+              >
                 <Tab label="Lista de telas" value="1" />
                 {user?.permission === Permission.ADMIN && (
                   <Tab label="Cadastro de telas" value="2" />

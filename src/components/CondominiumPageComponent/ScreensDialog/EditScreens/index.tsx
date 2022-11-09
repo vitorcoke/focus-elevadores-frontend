@@ -56,7 +56,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
   setCondominiumMesseger,
 }) => {
   const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("md"));
+  const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
   const { user } = useAuthContext();
 
@@ -223,7 +223,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
         <Box
           component={"form"}
           p={3}
-          width={smDown ? "100%" : "45%"}
+          width={mdDown ? "100%" : "45%"}
           display="flex"
           flexDirection="column"
           gap={3}
