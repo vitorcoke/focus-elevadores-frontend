@@ -284,20 +284,20 @@ const EditScreens: React.FC<EditScreensProps> = ({
 
           <Dialog
             open={openDialog}
-            fullWidth
-            maxWidth="lg"
             onClose={handleCloseDialog}
+            fullWidth
+            maxWidth="md"
           >
-            <Box p="20px 25px 0px 25px" width="75rem">
+            <Box p="20px 25px 0px 25px" width="56rem">
               <Alert severity="success">Mensagens cadastradas</Alert>
             </Box>
             {screenCondominium.condominium_message &&
               screenCondominium.condominium_message.map((idMessage, index) => {
                 return (
-                  <Box key={index} width="75rem" p={3}>
+                  <Box key={index} width="56rem" p={3}>
                     <Box
                       display="flex"
-                      gap={3}
+                      gap={2}
                       border="1px solid #ab120e"
                       borderRadius="8px"
                       p={3}
@@ -328,7 +328,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
                       />
                       <Box
                         display="flex"
-                        gap={2}
+                        gap={1}
                         width="100%"
                         alignItems="center"
                         justifyContent="center"
@@ -397,11 +397,11 @@ const EditScreens: React.FC<EditScreensProps> = ({
                   </Box>
                 );
               })}
-            <Box px={3} width="75rem">
+            <Box px={3} width="56rem">
               <Alert severity="info">Inserir uma nova mensagem</Alert>
             </Box>
 
-            <Box p={3} width="75rem">
+            <Box p={3} width="56rem">
               <Box
                 display="flex"
                 gap={3}
@@ -428,7 +428,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
                 />
                 <Box
                   display="flex"
-                  gap={2}
+                  gap={1}
                   width="100%"
                   alignItems="center"
                   justifyContent="center"
