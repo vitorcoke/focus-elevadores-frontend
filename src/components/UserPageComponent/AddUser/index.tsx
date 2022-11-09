@@ -58,6 +58,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
+  const [messageAlertError, setMessageAlertError] = useState("");
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -93,8 +94,14 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
       });
       setUser((prev) => [...prev, user.data]);
       setOpenAlertSucess(true);
-    } catch {
-      setOpenAlertError(true);
+    } catch (err: any) {
+      if (err.response.data.message.match(/email_1 dup key/)) {
+        setMessageAlertError("Email já cadastrado");
+        setOpenAlertError(true);
+      } else {
+        setMessageAlertError("Erro ao cadastrar usuário");
+        setOpenAlertError(true);
+      }
     }
   };
 
@@ -238,7 +245,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
           onClose={handleCloseAlertError}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert severity="error">Falha ao enviar</Alert>
+          <Alert severity="error">{messageAlertError}</Alert>
         </Snackbar>
       </Box>
     </Dialog>

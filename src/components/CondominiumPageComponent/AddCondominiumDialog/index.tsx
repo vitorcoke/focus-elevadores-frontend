@@ -66,6 +66,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
+  const [messageAlertError, setMessageAlertError] = useState("");
 
   const handleCloseDialog = () => {
     setOpenDialogCreateCondominium(false);
@@ -95,8 +96,22 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
       });
       setCondominium((old) => [...old, createCondominium.data]);
       setOpenAlertSucess(true);
-    } catch {
-      setOpenAlertError(true);
+    } catch (err: any) {
+      if (
+        err.response.data.message ==
+        "cnpj must be longer than or equal to 14 characters"
+      ) {
+        setMessageAlertError("CNPJ deve ter 14 caracteres");
+        setOpenAlertError(true);
+      } else if (
+        err.response.data.message.match(/condominium_id_imodulo_1 dup key/)
+      ) {
+        setMessageAlertError("ID existente");
+        setOpenAlertError(true);
+      } else {
+        setMessageAlertError("Erro ao criar condomínio");
+        setOpenAlertError(true);
+      }
     }
   };
 
@@ -244,7 +259,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
           onClose={handleCloseAlertError}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          <Alert severity="error">Falha ao enviar</Alert>
+          <Alert severity="error">{messageAlertError}</Alert>
         </Snackbar>
       </Box>
     </Dialog>

@@ -201,7 +201,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
             setNewBanner(newValue ? newValue._id : "");
           }}
           renderInput={(params) => (
-            <TextField {...params} label="Banner" fullWidth />
+            <TextField {...params} required label="Banner" fullWidth />
           )}
         />
         <Autocomplete
@@ -327,7 +327,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
               if (newValue) handleGetCity(newValue.sigla);
             }}
             renderInput={(params) => (
-              <TextField {...params} label="Estado" fullWidth />
+              <TextField {...params} required label="Estado" fullWidth />
             )}
           />
 
@@ -353,6 +353,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
                 key={item._id}
                 control={
                   <Checkbox
+                    required
                     onChange={(e) => {
                       const index = source_rss.indexOf(e.target.name);
                       if (e.target.checked) {
