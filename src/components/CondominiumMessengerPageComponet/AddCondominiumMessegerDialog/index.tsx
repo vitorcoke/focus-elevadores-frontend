@@ -197,22 +197,6 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     inputProps={{ maxLength: 400 }}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth required>
-                    <InputLabel disabled={!!nameJpg}>Permissão</InputLabel>
-                    <Select
-                      required
-                      disabled={!!nameJpg}
-                      value={!!nameJpg ? "" : type}
-                      label="Responsavel"
-                      onChange={(e) => setType(e.target.value as string)}
-                    >
-                      <MenuItem value={0}>Zelador(a)</MenuItem>
-                      <MenuItem value={1}>Sindico(a)</MenuItem>
-                      <MenuItem value={2}>Administrador(a)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
               </Grid>
             </Box>
 
@@ -256,22 +240,6 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                       onChange={handleLogotipo}
                     />
                   </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth required>
-                    <InputLabel disabled={!!nameMessage}>Permissão</InputLabel>
-                    <Select
-                      required
-                      disabled={!!nameMessage}
-                      value={!!nameMessage ? "" : type}
-                      label="Responsavel"
-                      onChange={(e) => setType(e.target.value as string)}
-                    >
-                      <MenuItem value={0}>Zelador(a)</MenuItem>
-                      <MenuItem value={1}>Sindico(a)</MenuItem>
-                      <MenuItem value={2}>Administrador(a)</MenuItem>
-                    </Select>
-                  </FormControl>
                 </Grid>
               </Grid>
             </Box>
