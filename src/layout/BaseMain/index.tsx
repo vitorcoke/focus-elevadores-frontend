@@ -198,7 +198,6 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           component={Paper}
           p={2}
           display="flex"
-          justifyContent="space-between"
           gap={2}
           visibility={
             user?.permission !== Permission.ADMIN &&
@@ -246,6 +245,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           {checkboxCondominium.length > 0 && (
             <Button
               variant="contained"
+              color="warning"
               onClick={() =>
                 checkboxCondominium.length > 1
                   ? (alert("Altere um condominio por vez"),

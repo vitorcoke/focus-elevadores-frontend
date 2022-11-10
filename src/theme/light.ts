@@ -9,7 +9,12 @@ export const LightTheme = createTheme({
         },
         text: {
             primary: '#1d1d1b',
+        },
+        warning : {
+            main: '#D18306',
+            contrastText: '#1d1d1b',
         }
+        
     },
     typography: {
         fontFamily: 'MyriadWeb',
