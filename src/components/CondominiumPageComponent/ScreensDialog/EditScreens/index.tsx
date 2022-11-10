@@ -239,6 +239,8 @@ const EditScreens: React.FC<EditScreensProps> = ({
                 name: e.target.value,
               })
             }
+            helperText={`${screenCondominium.name.length}/30`}
+            inputProps={{ maxLength: 30 }}
           />
 
           {screenCondominium.banner && (

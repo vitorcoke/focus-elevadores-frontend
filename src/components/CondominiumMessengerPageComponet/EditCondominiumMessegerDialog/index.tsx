@@ -199,6 +199,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                           name: e.target.value,
                         })
                       }
+                      helperText={`${editCondominiumMesseger.name.length}/30`}
+                      inputProps={{ maxLength: 30 }}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -214,6 +216,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                           title: e.target.value,
                         })
                       }
+                      helperText={`${editCondominiumMesseger?.title?.length}/30`}
+                      inputProps={{ maxLength: 30 }}
                     />
                   </Grid>
                   <Grid item xs={12}>

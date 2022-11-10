@@ -153,6 +153,8 @@ const EditRss: React.FC<EditRssProps> = ({ rss, setRss }) => {
                   onChange={(e) =>
                     setEditRss({ ...editRss, name: e.target.value })
                   }
+                  helperText={`${editRss.name.length}/30`}
+                  inputProps={{ maxLength: 30 }}
                 />
               </Grid>
               <Grid item xs={12}>

@@ -175,6 +175,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     label="Nome"
                     fullWidth
                     onChange={(e) => setNameMessage(e.target.value)}
+                    helperText={`${nameMessage.length}/30`}
+                    inputProps={{ maxLength: 30 }}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -184,6 +186,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     label="Titulo"
                     fullWidth
                     onChange={(e) => setTitle(e.target.value)}
+                    helperText={`${title.length}/30`}
+                    inputProps={{ maxLength: 30 }}
                   />
                 </Grid>
                 <Grid item xs={12}>

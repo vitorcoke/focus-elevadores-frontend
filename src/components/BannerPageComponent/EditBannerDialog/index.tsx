@@ -183,6 +183,10 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
                   onChange={(e) =>
                     setEditBanner({ ...editBanner, name: e.target.value })
                   }
+                  helperText={`${editBanner.name.length}/30`}
+                  inputProps={{
+                    maxLength: 30,
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>

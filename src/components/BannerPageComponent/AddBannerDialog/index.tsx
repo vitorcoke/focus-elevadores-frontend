@@ -168,6 +168,8 @@ const AddBannerDialog: React.FC<AddCondominiumProps> = ({ setBanner }) => {
                   label="Nome"
                   fullWidth
                   onChange={(e) => setName(e.target.value)}
+                  helperText={`${name.length}/30`}
+                  inputProps={{ maxLength: 30 }}
                 />
               </Grid>
               <Grid item xs={12}>
