@@ -19,6 +19,7 @@ import { forwardRef, useState, Dispatch, SetStateAction } from "react";
 import { TransitionProps } from "@mui/material/transitions";
 import { Condominium } from "../../../types/condominium.type";
 import { api } from "../../../service";
+import { PatternFormat } from "react-number-format";
 import axios from "axios";
 
 type AddCondominiumProps = {
@@ -104,7 +105,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
         setMessageAlertError("CNPJ deve ter 14 caracteres");
         setOpenAlertError(true);
       } else if (
-        err.response.data.message.match(/condominium_id_imodulo_1 dup key/)
+        err.response.data.message.includes("condominium_id_imodulo_1 dup key")
       ) {
         setMessageAlertError("ID existente");
         setOpenAlertError(true);
@@ -179,10 +180,12 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <PatternFormat
                   required
                   label="CNPJ"
+                  customInput={TextField}
                   fullWidth
+                  format="##.###.###/####-##"
                   onChange={(e) => setCnpj(e.target.value)}
                 />
               </Grid>
@@ -219,7 +222,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Complemento"
+                  label="Numero/Complemento"
                   fullWidth
                   onChange={(e) => setComplement(e.target.value)}
                 />

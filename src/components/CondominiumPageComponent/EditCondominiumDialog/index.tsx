@@ -24,6 +24,7 @@ import { forwardRef, useState, useEffect } from "react";
 import { TransitionProps } from "@mui/material/transitions";
 import { Condominium } from "../../../types/condominium.type";
 import { api } from "../../../service";
+import { PatternFormat } from "react-number-format";
 import produce from "immer";
 
 type EditCondominiumProps = {
@@ -104,7 +105,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
         setMessageAlertError("CNPJ deve ter 14 caracteres");
         setOpenAlertError(true);
       } else if (
-        err.response.data.message.match(/condominium_id_imodulo_1 dup key/)
+        err.response.data.message.includes("condominium_id_imodulo_1 dup key")
       ) {
         setMessageAlertError("ID existente");
         setOpenAlertError(true);
@@ -114,6 +115,8 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
       }
     }
   };
+
+  console.log(editCondominium.cnpj);
 
   return (
     <Dialog
@@ -158,8 +161,12 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                   fullWidth
                   type={"number"}
                   sx={{
-                    "& input[type=number]::-webkit-inner-spin-button": {
-                      "-webkit-appearance": "none",
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                      {
+                        display: "none",
+                      },
+                    "& input[type=number]": {
+                      MozAppearance: "textfield",
                     },
                   }}
                   onChange={(e) =>
@@ -186,18 +193,22 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editCondominium.cnpj}
-                  label="CNPJ"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      cnpj: e.target.value,
-                    })
-                  }
-                />
+                <Grid item xs={12}>
+                  <PatternFormat
+                    required
+                    label="CNPJ"
+                    customInput={TextField}
+                    fullWidth
+                    value={editCondominium.cnpj}
+                    format="##.###.###/####-##"
+                    onChange={(e) =>
+                      seteditCondominium({
+                        ...editCondominium,
+                        cnpj: e.target.value,
+                      })
+                    }
+                  />
+                </Grid>
               </Grid>
               <Grid item xs={12}>
                 <Box display="flex">
@@ -245,7 +256,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
               </Grid>
               <Grid item xs={12}>
                 <TextField
-                  label="Complemento"
+                  label="Numero/Complemento"
                   value={editCondominium.complement}
                   fullWidth
                   onChange={(e) =>
