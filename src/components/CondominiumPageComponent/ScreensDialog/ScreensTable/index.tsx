@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
+import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import { useControlerButtonPagesContext } from "../../../../context/ControlerButtonPagesContext";
 import { api } from "../../../../service";
@@ -24,20 +25,25 @@ const ScreenTable: React.FC<ScreenTableProps> = ({ selectedCondominium }) => {
   }, [selectedCondominium]);
 
   const column: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "screen", headerName: "Tela", flex: 5 },
+    { field: "id", headerName: "ID", flex: 3 },
+    { field: "screen", headerName: "Tela", flex: 3 },
+    { field: "validity", headerName: "Validade", flex: 1 },
+    { field: "source_rss", headerName: "RSS ativo", flex: 1 },
   ];
 
   const rows = screenCondominium.map((screen) => {
     return {
       id: screen._id,
       screen: screen.name,
+      validity: dayjs(screen.validity).format("DD/MM/YYYY"),
+      source_rss: screen.source_rss.length,
     };
   });
   return (
     <Box height="60vh" marginTop={4}>
       <DataGridPro
         columns={column}
+        components={{ Toolbar: GridToolbar }}
         rows={rows}
         checkboxSelection
         onSelectionModelChange={(e) => setCheckboxScreens(e)}

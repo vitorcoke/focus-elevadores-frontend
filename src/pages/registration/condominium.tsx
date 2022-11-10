@@ -1,6 +1,6 @@
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
-import { GridColDef, DataGridPro } from "@mui/x-data-grid-pro";
+import { GridColDef, DataGridPro, GridToolbar } from "@mui/x-data-grid-pro";
 import { Box } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { getAPIClient } from "../../service";
@@ -40,8 +40,10 @@ const Condominium: React.FC<CondominiumProps> = ({
   const [editCondominium, setEditCondominium] = useState<Condominium>();
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
+    { field: "condominium_id_imodulo", headerName: "ID", flex: 1 },
     { field: "name", headerName: "Nome", flex: 3 },
+    { field: "district", headerName: "Bairro", flex: 3 },
+    { field: "city", headerName: "Cidade", flex: 3 },
     { field: "screenLength", headerName: "Qtds.Telas", flex: 1 },
   ];
   const rows = condominium.map((condominium) => {
@@ -73,6 +75,7 @@ const Condominium: React.FC<CondominiumProps> = ({
           <DataGridPro
             columns={columns}
             rows={rows}
+            components={{ Toolbar: GridToolbar }}
             checkboxSelection
             onSelectionModelChange={(e) => setCheckboxCondominium(e)}
             selectionModel={checkboxCondominium}
