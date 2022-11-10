@@ -65,6 +65,7 @@ const EditUser: React.FC<EditUserProps> = ({
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [messageAlertError, setMessageAlertError] = useState("");
+  const [openErrorEmail, setOpenErrorEmail] = useState(false);
 
   const [editUser, setEditUser] = useState<User>(userSelect);
   const [password, setPassword] = useState("");
@@ -78,6 +79,7 @@ const EditUser: React.FC<EditUserProps> = ({
   const handleCloseDialog = () => {
     setOpenDialogEditUser(false);
     setCheckboxUser([]);
+    setOpenErrorEmail(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -121,6 +123,7 @@ const EditUser: React.FC<EditUserProps> = ({
       if (err.response.data.message.match(/email_1 dup key/)) {
         setMessageAlertError("Email já cadastrado");
         setOpenAlertError(true);
+        setOpenErrorEmail(true);
       } else {
         setMessageAlertError("Erro ao cadastrar usuário");
         setOpenAlertError(true);
@@ -190,6 +193,8 @@ const EditUser: React.FC<EditUserProps> = ({
               <Grid item xs={12}>
                 <TextField
                   label="Email"
+                  error={openErrorEmail}
+                  helperText={openErrorEmail && "Email já cadastrado"}
                   value={editUser.email}
                   fullWidth
                   onChange={(e) =>

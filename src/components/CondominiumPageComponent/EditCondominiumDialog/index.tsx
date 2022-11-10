@@ -58,12 +58,14 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [messageAlertError, setMessageAlertError] = useState("");
+  const [openErrorIdImodulo, setOpenErrorIdImodulo] = useState(false);
+  const [openErrorCnpj, setOpenErrorCnpj] = useState(false);
 
   const handleCloseDialog = () => {
     setOpenDialogEditCondominium(false);
-    setCheckboxCondominium([]);
+    setOpenErrorCnpj(false);
+    setOpenErrorIdImodulo(false);
   };
-
   const handleCloseAlertSucess = () => {
     setOpenAlertSucess(false);
   };
@@ -98,16 +100,15 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
       );
       setOpenAlertSucess(true);
     } catch (err: any) {
-      if (
-        err.response.data.message ==
-        "cnpj must be longer than or equal to 14 characters"
-      ) {
-        setMessageAlertError("CNPJ deve ter 14 caracteres");
+      if (err.response.data.message.includes("cnpj_1 dup key")) {
+        setMessageAlertError("CNPJ já cadastrado");
+        setOpenErrorCnpj(true);
         setOpenAlertError(true);
       } else if (
         err.response.data.message.includes("condominium_id_imodulo_1 dup key")
       ) {
-        setMessageAlertError("ID existente");
+        setMessageAlertError("ID já cadastrado");
+        setOpenErrorIdImodulo(true);
         setOpenAlertError(true);
       } else {
         setMessageAlertError("Erro ao criar condomínio");
@@ -157,6 +158,8 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                 <TextField
                   required
                   label="ID"
+                  error={openErrorIdImodulo}
+                  helperText={openErrorIdImodulo && "ID já cadastrado"}
                   value={editCondominium.condominium_id_imodulo}
                   fullWidth
                   type={"number"}
@@ -196,6 +199,8 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                 <Grid item xs={12}>
                   <PatternFormat
                     required
+                    error={openErrorCnpj}
+                    helperText={openErrorCnpj && "CNPJ já cadastrado"}
                     label="CNPJ"
                     customInput={TextField}
                     fullWidth

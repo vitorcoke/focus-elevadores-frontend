@@ -31,6 +31,8 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
+  const [messageAlertError, setMessageAlertError] = useState("");
+  const [openErrorEmail, setOpenErrorEmail] = useState(false);
 
   const handleCloseAlertSucess = () => {
     setOpenAlertSucess(false);
@@ -57,8 +59,16 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
             phone: user.phone,
           });
       setOpenAlertSucess(true);
-    } catch {
-      setOpenAlertError(true);
+      setOpenErrorEmail(false);
+    } catch (err: any) {
+      if (err.response.data.message.match(/email_1 dup key/)) {
+        setMessageAlertError("Email já cadastrado");
+        setOpenErrorEmail(true);
+        setOpenAlertError(true);
+      } else {
+        setMessageAlertError("Erro ao cadastrar usuário");
+        setOpenAlertError(true);
+      }
     }
   };
 
@@ -106,6 +116,8 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
                 <TextField
                   label="Email"
                   value={user.email}
+                  error={openErrorEmail}
+                  helperText={openErrorEmail && "Email já cadastrado"}
                   onChange={(e) =>
                     setUser({
                       ...user,
@@ -164,7 +176,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
             onClose={handleCloseAlertError}
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           >
-            <Alert severity="error">Falha ao enviar</Alert>
+            <Alert severity="error">{messageAlertError}</Alert>
           </Snackbar>
         </Box>
       </BaseMainLayoutPage>

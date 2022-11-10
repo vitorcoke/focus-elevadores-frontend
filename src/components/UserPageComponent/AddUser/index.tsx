@@ -55,6 +55,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [messageAlertError, setMessageAlertError] = useState("");
+  const [openErrorEmail, setOpenErrorEmail] = useState(false);
 
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -73,6 +74,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   };
   const handleCloseDialog = () => {
     setOpenDialogCreateUser(false);
+    setOpenErrorEmail(false);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,6 +95,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
     } catch (err: any) {
       if (err.response.data.message.match(/email_1 dup key/)) {
         setMessageAlertError("Email já cadastrado");
+        setOpenErrorEmail(true);
         setOpenAlertError(true);
       } else {
         setMessageAlertError("Erro ao cadastrar usuário");
@@ -155,6 +158,8 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
               <Grid item xs={12}>
                 <TextField
                   required
+                  error={openErrorEmail}
+                  helperText={openErrorEmail && "Email já cadastrado"}
                   label="Email"
                   fullWidth
                   onChange={(e) => setEmail(e.target.value)}
