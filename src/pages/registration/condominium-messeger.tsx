@@ -47,8 +47,6 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
     };
   });
 
-  console.log(condominiumMesseger);
-
   return (
     <LayoutPage>
       <BaseMainLayoutPage

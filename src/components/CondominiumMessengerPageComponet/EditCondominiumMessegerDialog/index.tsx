@@ -200,10 +200,12 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         const newMessegeScreen = await api.get(
           `/screens/condominiumMessage/${condominiumMesseger._id}`
         );
-        setScreen(newMessegeScreen.data);
-
         const newMessage = await api.get("/screens/");
+
+        const newCondominiumMesseger = await api.get("/condominium-message");
+        setScreen(newMessegeScreen.data);
         setScreenAvailable(newMessage.data);
+        setCondominiumMesseger(newCondominiumMesseger.data);
 
         setOpenAlertSucess(true);
       }
