@@ -125,15 +125,6 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     try {
-      if (newCondominiumMesseger) {
-        newCondominiumMesseger.map(async (item) => {
-          await api.patch(`/condominium-message/${item._id}`, {
-            starttime: item.starttime,
-            endtime: item.endtime,
-          });
-        });
-      }
-
       const screenUpdate = await api.post("/screens", {
         name,
         validity,
@@ -145,6 +136,14 @@ const AddScreens: React.FC<AddScreensProps> = ({
         city: cityValue,
         condominium_id_imodulo: condominium.condominium_id_imodulo,
         vms_camera: vms,
+      });
+
+      newCondominiumMesseger.map(async (item) => {
+        await api.patch(`/condominium-message/${item._id}`, {
+          screen_id: condominiumMesseger
+            .find((message) => message._id === item._id)
+            ?.screen_id?.concat(screenUpdate.data._id),
+        });
       });
 
       setCondominium((old) => [
@@ -246,50 +245,10 @@ const AddScreens: React.FC<AddScreensProps> = ({
                 );
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Mensagem" fullWidth />
+                <TextField {...params} required label="Mensagem" fullWidth />
               )}
             />
-            <Box
-              display="flex"
-              gap={2}
-              width="100%"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <TextField
-                required={!!newCondominiumMesseger}
-                label="Data Inicial"
-                type="datetime-local"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e) => {
-                  setNewCondominiumMesseger((prev) =>
-                    produce(prev, (draft) => {
-                      draft[index].starttime = new Date(e.target.value);
-                    })
-                  );
-                }}
-                fullWidth
-              />
-              <Typography>ATÉ</Typography>
-              <TextField
-                required={!!newCondominiumMesseger}
-                label="Data Final"
-                type="datetime-local"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                onChange={(e) => {
-                  setNewCondominiumMesseger((prev) =>
-                    produce(prev, (draft) => {
-                      draft[index].endtime = new Date(e.target.value);
-                    })
-                  );
-                }}
-                fullWidth
-              />
-            </Box>
+
             <Box display="flex" gap={2} justifyContent="end">
               <Button
                 variant="contained"

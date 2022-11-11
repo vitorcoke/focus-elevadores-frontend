@@ -159,6 +159,9 @@ const EditScreens: React.FC<EditScreensProps> = ({
           await api.patch(`/condominium-message/${messege._id}`, {
             starttime: messege.starttime,
             endtime: messege.endtime,
+            screen_id: condominiumMesseger
+              .find((item) => item._id === messege._id)
+              ?.screen_id?.concat(screenCondominium._id),
           });
         }
       });
@@ -175,6 +178,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
       await api.delete(
         `/condominium/${condominium._id}/screen/${screenCondominium._id}`
       );
+      await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       setCondominium((old) => [
         ...old.map((item) =>
           item._id === condominium._id

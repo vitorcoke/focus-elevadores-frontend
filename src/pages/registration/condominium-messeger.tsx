@@ -1,14 +1,14 @@
 import { Box } from "@mui/material";
 import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { CondominiumMessage } from "../../types/condominium-message.type";
 
 type CondominiumMessegerProps = {
@@ -29,6 +29,7 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nome", flex: 2 },
+    { field: "screens", headerName: "Qtds.Telas", flex: 2 },
   ];
 
   const rows = condominiumMesseger.map((message) => {
@@ -37,11 +38,16 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
       _id: message._id,
       name: message.name,
       title: message.title,
+      starttime: message.starttime,
       endtime: message.endtime,
       message: message.message,
       jpg_file: message.jpg_file,
+      screens: message.screen_id?.length,
+      screen_id: message.screen_id,
     };
   });
+
+  console.log(condominiumMesseger);
 
   return (
     <LayoutPage>

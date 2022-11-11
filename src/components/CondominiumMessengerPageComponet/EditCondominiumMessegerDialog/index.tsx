@@ -10,6 +10,9 @@ import {
   Snackbar,
   TextField,
   Toolbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { TransitionProps } from "@mui/material/transitions";
 import {
@@ -28,6 +31,9 @@ import {
 import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
+import { Screen } from "../../../types/screens.type";
+import dayjs from "dayjs";
+import { DataGridPro, GridColDef, GridRowId } from "@mui/x-data-grid-pro";
 
 type EditCondominiumMessegerProps = {
   condominiumMesseger: CondominiumMessage;
@@ -47,6 +53,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
   condominiumMesseger,
   setCondominiumMesseger,
 }) => {
+  const theme = useTheme();
+  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const {
     openDialogEditCondominiumMessenger,
     setOpenDialogEditCondominiumMessenger,
@@ -57,6 +65,14 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
     useState(condominiumMesseger);
 
   const [jpg_file, setJpgFile] = useState<File>();
+  const [screen, setScreen] = useState<Screen[]>([]);
+  const [screenAvailable, setScreenAvailable] = useState<Screen[]>([]);
+  const [checkboxScreenRegistered, setCheckboxScreenRegistered] = useState<
+    GridRowId[] | string[]
+  >([]);
+  const [checkboxScreenAvailable, setCheckboxScreenAvailable] = useState<
+    GridRowId[] | string[]
+  >([]);
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -106,8 +122,21 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
             name: editCondominiumMesseger.name,
             title: editCondominiumMesseger.title,
             message: editCondominiumMesseger.message,
+            starttime: editCondominiumMesseger.starttime,
+            endtime: editCondominiumMesseger.endtime,
+            screen_id: editCondominiumMesseger.screen_id?.concat(
+              checkboxScreenAvailable as string[]
+            ),
           }
         );
+
+        if (checkboxScreenAvailable.length > 0) {
+          checkboxScreenAvailable.forEach(async (screen) => {
+            await api.patch(`/screens/message/${screen}`, {
+              condominium_message: newMessege.data._id,
+            });
+          });
+        }
 
         setCondominiumMesseger((old) => {
           let index = old.findIndex(
@@ -117,6 +146,14 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           return [...old];
         });
 
+        const newMessegeScreen = await api.get(
+          `/screens/condominiumMessage/${condominiumMesseger._id}`
+        );
+        setScreen(newMessegeScreen.data);
+
+        const newMessage = await api.get("/screens/");
+        setScreenAvailable(newMessage.data);
+
         setOpenAlertSucess(true);
       } else {
         const newMessege = await api.patch(
@@ -124,8 +161,20 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           {
             name: editCondominiumMesseger.name,
             jpg_file: base64 ? base64 : undefined,
+            starttime: editCondominiumMesseger.starttime,
+            endtime: editCondominiumMesseger.endtime,
+            screen_id: editCondominiumMesseger.screen_id?.concat(
+              checkboxScreenAvailable as string[]
+            ),
           }
         );
+        if (checkboxScreenAvailable.length > 0) {
+          checkboxScreenAvailable.forEach(async (screen) => {
+            await api.patch(`/screens/message/${screen}`, {
+              condominium_message: newMessege.data._id,
+            });
+          });
+        }
         setCondominiumMesseger((old) => {
           let index = old.findIndex(
             (item) => item._id === editCondominiumMesseger._id
@@ -141,9 +190,70 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
     }
   };
 
+  const handleDeleteScreen = async () => {
+    try {
+      if (checkboxScreenRegistered.length > 0) {
+        checkboxScreenRegistered.map(async (item) => {
+          await api.delete(`/condominium-message/screen/${item}`);
+        });
+        await api.delete(`/screens/message/${editCondominiumMesseger._id}`);
+        const newMessegeScreen = await api.get(
+          `/screens/condominiumMessage/${condominiumMesseger._id}`
+        );
+        setScreen(newMessegeScreen.data);
+
+        const newMessage = await api.get("/screens/");
+        setScreenAvailable(newMessage.data);
+
+        setOpenAlertSucess(true);
+      }
+    } catch {
+      setOpenAlertError(true);
+    }
+  };
+
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Nome", flex: 1 },
+  ];
+
+  const rows = screen?.map((item) => {
+    return {
+      id: item._id,
+      name: item.name,
+    };
+  });
+
+  const columnsAvailable: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Nome", flex: 1 },
+  ];
+
+  const filterScreem = screenAvailable.filter((item) => {
+    return !item.condominium_message?.includes(editCondominiumMesseger._id);
+  });
+
+  const rowsAvailable = filterScreem?.map((item) => {
+    return {
+      id: item._id,
+      name: item.name,
+    };
+  });
+
   useEffect(() => {
     setEditCondominiumMesseger(condominiumMesseger);
   }, [condominiumMesseger]);
+
+  useEffect(() => {
+    api
+      .get(`/screens/condominiumMessage/${condominiumMesseger._id}`)
+      .then((res) => {
+        setScreen(res.data);
+      });
+    api.get("/screens/").then((res) => {
+      setScreenAvailable(res.data);
+    });
+  }, [openDialogEditCondominiumMessenger]);
 
   return (
     <Dialog
@@ -169,7 +279,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         </AppBar>
         <Box
           width="100%"
-          height="100vh"
+          height="100%"
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -178,8 +288,17 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         >
           <Toolbar />
 
-          <Box maxWidth="100%">
-            <Box>
+          <Box
+            maxWidth="100%"
+            display="flex"
+            flexDirection={smDown ? "column" : "row"}
+            justifyContent="space-evenly"
+            gap={2}
+          >
+            <Box
+              width={smDown ? "100%" : "40%"}
+              alignItems={smDown ? "flex-start" : "center"}
+            >
               {!editCondominiumMesseger.jpg_file ? (
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -280,6 +399,100 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                 </Grid>
               )}
             </Box>
+            <Box
+              width={smDown ? "100%" : "40%"}
+              display="flex"
+              textAlign="center"
+              alignItems={smDown ? "flex-start" : "center"}
+              mt={smDown ? 10 : 0}
+            >
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Typography>Validade : </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    value={dayjs(editCondominiumMesseger.starttime).format(
+                      "YYYY-MM-DDTHH:mm"
+                    )}
+                    type="datetime-local"
+                    label="Data inicial"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(e) =>
+                      setEditCondominiumMesseger({
+                        ...editCondominiumMesseger,
+                        starttime: new Date(e.target.value),
+                      })
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography>ATÉ</Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    value={dayjs(editCondominiumMesseger.endtime).format(
+                      "YYYY-MM-DDTHH:mm"
+                    )}
+                    type="datetime-local"
+                    label="Data final"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    onChange={(e) =>
+                      setEditCondominiumMesseger({
+                        ...editCondominiumMesseger,
+                        endtime: new Date(e.target.value),
+                      })
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </Box>
+          <Box
+            width={smDown ? "100%" : "70%"}
+            height="30rem"
+            mt={10}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+          >
+            <Typography variant="h5">Telas já cadastradas :</Typography>
+            <DataGridPro
+              rows={rows}
+              columns={columns}
+              checkboxSelection
+              onSelectionModelChange={(e) => setCheckboxScreenRegistered(e)}
+            />
+            {checkboxScreenRegistered.length > 0 && (
+              <Button variant="contained" onClick={() => handleDeleteScreen()}>
+                Excluir
+              </Button>
+            )}
+          </Box>
+
+          <Box
+            width={smDown ? "100%" : "70%"}
+            height="30rem"
+            mt={10}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+          >
+            <Typography variant="h5">Telas disponiveis :</Typography>
+            <DataGridPro
+              rows={rowsAvailable}
+              columns={columnsAvailable}
+              checkboxSelection
+              onSelectionModelChange={(e) => setCheckboxScreenAvailable(e)}
+            />
           </Box>
         </Box>
         <Snackbar

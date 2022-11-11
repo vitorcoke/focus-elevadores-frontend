@@ -156,7 +156,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
 
   const handleDeleteCondominiumMessenger = () => {
     try {
-      checkboxCondominiumMessenger.map(async (id) => {
+      checkboxCondominiumMessenger.forEach(async (id) => {
         await api.delete(`/condominium-message/${id}`);
         await api.delete(`/screens/message/${id}`);
         setCondominiumMesseger &&

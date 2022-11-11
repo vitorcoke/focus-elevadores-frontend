@@ -117,8 +117,6 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
     }
   };
 
-  console.log(editCondominium.cnpj);
-
   return (
     <Dialog
       fullScreen
