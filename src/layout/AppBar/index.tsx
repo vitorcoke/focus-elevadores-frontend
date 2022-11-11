@@ -126,26 +126,31 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                   </ListItemIcon>
                   <ListItemText primary="Condominio" />
                 </ListItemButton>
-                <ListItemButton
-                  sx={{ pl: 4 }}
-                  selected={match === "/registration/rss"}
-                  onClick={() => router.push("/registration/rss")}
-                >
-                  <ListItemIcon>
-                    <Code fontSize="small" sx={{ color: "#111" }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Fonte RSS" />
-                </ListItemButton>
-                <ListItemButton
-                  sx={{ pl: 4 }}
-                  selected={match === "/registration/banner"}
-                  onClick={() => router.push("/registration/banner")}
-                >
-                  <ListItemIcon>
-                    <AdUnitsRounded fontSize="small" sx={{ color: "#111" }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Banner" />
-                </ListItemButton>
+                {user?.permission === Permission.ADMIN && (
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    selected={match === "/registration/rss"}
+                    onClick={() => router.push("/registration/rss")}
+                  >
+                    <ListItemIcon>
+                      <Code fontSize="small" sx={{ color: "#111" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Fonte RSS" />
+                  </ListItemButton>
+                )}
+                {user?.permission === Permission.ADMIN && (
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    selected={match === "/registration/banner"}
+                    onClick={() => router.push("/registration/banner")}
+                  >
+                    <ListItemIcon>
+                      <AdUnitsRounded fontSize="small" sx={{ color: "#111" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Banner" />
+                  </ListItemButton>
+                )}
+
                 <ListItemButton
                   sx={{ pl: 4 }}
                   selected={match === "/registration/condominium-messeger"}

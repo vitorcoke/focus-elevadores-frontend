@@ -247,7 +247,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
             inputProps={{ maxLength: 30 }}
           />
 
-          {screenCondominium.banner && (
+          {user?.permission === Permission.ADMIN && screenCondominium.banner && (
             <Autocomplete
               options={banner}
               getOptionLabel={(option) => option.name}
@@ -267,7 +267,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
             />
           )}
 
-          {!screenCondominium.banner && (
+          {user?.permission === Permission.ADMIN && !screenCondominium.banner && (
             <Autocomplete
               options={banner}
               getOptionLabel={(option) => option.name}

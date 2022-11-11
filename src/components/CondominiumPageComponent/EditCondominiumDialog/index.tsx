@@ -14,12 +14,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import {
-  CloseRounded,
-  EventBusy,
-  SendRounded,
-  SearchRounded,
-} from "@mui/icons-material";
+import { CloseRounded, SendRounded } from "@mui/icons-material";
 import { forwardRef, useState, useEffect } from "react";
 import { TransitionProps } from "@mui/material/transitions";
 import { Condominium } from "../../../types/condominium.type";
@@ -47,11 +42,8 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
 }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const {
-    openDialogEditCondominium,
-    setOpenDialogEditCondominium,
-    setCheckboxCondominium,
-  } = useControlerButtonPagesContext();
+  const { openDialogEditCondominium, setOpenDialogEditCondominium } =
+    useControlerButtonPagesContext();
 
   const [editCondominium, seteditCondominium] = useState(condominium);
 
