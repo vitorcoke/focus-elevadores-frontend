@@ -129,6 +129,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
         state: stateValue ? stateValue : screenCondominium.state,
         city: cityValue ? cityValue : screenCondominium.city,
       });
+      await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       condominiumMesseger.map(async (messege) => {
         if (screenCondominium.condominium_message?.includes(messege._id)) {
           await api.patch(`/condominium-message/${messege._id}`, {
