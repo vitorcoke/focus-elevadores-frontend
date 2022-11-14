@@ -13,7 +13,6 @@ import {
   Select,
   Slide,
   Snackbar,
-  Stack,
   TextField,
   Toolbar,
   useMediaQuery,
@@ -207,7 +206,9 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
                     onChange={(e) => setPermission(e.target.value as string)}
                   >
                     <MenuItem value={0}>Zelador(a)</MenuItem>
-                    <MenuItem value={1}>Sindico(a)</MenuItem>
+                    {user?.permission !== Permission.SINDICO && (
+                      <MenuItem value={1}>Sindico(a)</MenuItem>
+                    )}
                     {user?.permission !== Permission.SINDICO && (
                       <MenuItem value={2}>Administrador(a)</MenuItem>
                     )}
