@@ -1,5 +1,4 @@
 import { Box } from "@mui/material";
-import { type } from "os";
 import { Chart } from "react-google-charts";
 import { Condominium } from "../../../types/condominium.type";
 

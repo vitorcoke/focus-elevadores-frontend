@@ -1,5 +1,3 @@
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
 import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
 import { Avatar, Box } from "@mui/material";
 import { GetServerSideProps } from "next";
@@ -7,9 +5,11 @@ import { getAPIClient } from "../../service";
 import { Banner } from "../../types/banner.type";
 import { useState } from "react";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import { withAllPermission } from "../../hocs";
 import AddBannerDialog from "../../components/BannerPageComponent/AddBannerDialog";
 import EditBannerDialog from "../../components/BannerPageComponent/EditBannerDialog";
-import { withAllPermission } from "../../hocs";
+import LayoutPage from "../../layout/AppBar";
+import BaseMainLayoutPage from "../../layout/BaseMain";
 
 type BannerProps = {
   initialBanner: Banner[];

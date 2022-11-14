@@ -1,19 +1,19 @@
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
 import { GridColDef, DataGridPro, GridToolbar } from "@mui/x-data-grid-pro";
 import { Box } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { getAPIClient } from "../../service";
 import { useState } from "react";
 import { Condominium } from "../../types/condominium.type";
-import AddCondominium from "../../components/CondominiumPageComponent/AddCondominiumDialog";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import EditCondominium from "../../components/CondominiumPageComponent/EditCondominiumDialog";
-import ScreensDialog from "../../components/CondominiumPageComponent/ScreensDialog/index";
 import { Rss } from "../../types/rss.type";
 import { Banner } from "../../types/banner.type";
 import { withAllPermission } from "../../hocs";
 import { CondominiumMessage } from "../../types/condominium-message.type";
+import AddCondominium from "../../components/CondominiumPageComponent/AddCondominiumDialog";
+import EditCondominium from "../../components/CondominiumPageComponent/EditCondominiumDialog";
+import ScreensDialog from "../../components/CondominiumPageComponent/ScreensDialog/index";
+import LayoutPage from "../../layout/AppBar";
+import BaseMainLayoutPage from "../../layout/BaseMain";
 
 type CondominiumProps = {
   initialCondominium: Condominium[];

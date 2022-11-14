@@ -8,7 +8,6 @@ import {
   IconButton,
   Slide,
   Snackbar,
-  Stack,
   TextField,
   Toolbar,
   useMediaQuery,

@@ -1,12 +1,12 @@
 import { Box } from "@mui/material";
 import { GetServerSideProps } from "next";
-import { useEffect, useState } from "react";
-import DashboardGrafic from "../components/DashbordPageComponent/DashboardGrafic";
+import { useState } from "react";
 import { withAllPermission } from "../hocs";
-import AppBarLayoutPage from "../layout/AppBar";
-import BaseMainLayoutPage from "../layout/BaseMain";
 import { getAPIClient } from "../service";
 import { Condominium } from "../types/condominium.type";
+import DashboardGrafic from "../components/DashbordPageComponent/DashboardGrafic";
+import AppBarLayoutPage from "../layout/AppBar";
+import BaseMainLayoutPage from "../layout/BaseMain";
 
 type DashboardProps = {
   initialCondominium: Condominium[];

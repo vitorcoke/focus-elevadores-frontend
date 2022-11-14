@@ -2,14 +2,14 @@ import { Box } from "@mui/material";
 import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
-import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
-import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
-import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import { withAllPermission } from "../../hocs";
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
 import { getAPIClient } from "../../service";
 import { CondominiumMessage } from "../../types/condominium-message.type";
+import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import { withAllPermission } from "../../hocs";
+import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
+import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
+import LayoutPage from "../../layout/AppBar";
+import BaseMainLayoutPage from "../../layout/BaseMain";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessage[];

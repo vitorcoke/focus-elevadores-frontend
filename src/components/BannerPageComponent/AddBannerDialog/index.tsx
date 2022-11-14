@@ -1,7 +1,6 @@
 import {
   CloseRounded,
   FileUploadRounded,
-  SearchRounded,
   SendRounded,
 } from "@mui/icons-material";
 import {
@@ -24,7 +23,7 @@ import { TransitionProps } from "@mui/material/transitions";
 import { Dispatch, forwardRef, SetStateAction, useState } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { Banner } from "../../../types/banner.type";
-import { BlockPicker, AlphaPicker } from "react-color";
+import { BlockPicker } from "react-color";
 import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 

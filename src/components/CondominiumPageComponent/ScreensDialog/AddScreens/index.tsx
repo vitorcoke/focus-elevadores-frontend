@@ -11,10 +11,7 @@ import {
   Snackbar,
   Alert,
   Autocomplete,
-  Typography,
 } from "@mui/material";
-import axios from "axios";
-import produce from "immer";
 import { useEffect, useState } from "react";
 import { api } from "../../../../service";
 import { Banner } from "../../../../types/banner.type";
@@ -24,6 +21,8 @@ import { Condominium } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { State } from "../../../../types/state.type";
 import { VMS, VMSCameras } from "../../../../types/vms.type";
+import axios from "axios";
+import produce from "immer";
 
 type AddScreensProps = {
   condominium: Condominium;

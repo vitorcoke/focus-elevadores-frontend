@@ -19,11 +19,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import {
-  CloseRounded,
-  SendRounded,
-  FileUploadRounded,
-} from "@mui/icons-material";
+import { CloseRounded, SendRounded } from "@mui/icons-material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState, useEffect } from "react";

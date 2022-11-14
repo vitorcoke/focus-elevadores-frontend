@@ -3,7 +3,6 @@ import {
   Alert,
   AppBar,
   Box,
-  Button,
   Dialog,
   IconButton,
   Slide,
@@ -16,14 +15,14 @@ import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { Condominium } from "../../../types/condominium.type";
-import ScreenTable from "./ScreensTable";
-import AddScreens from "./AddScreens";
-import EditScreens from "./EditScreens";
 import { Rss } from "../../../types/rss.type";
 import { Banner } from "../../../types/banner.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Permission } from "../../../types/users.type";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
+import ScreenTable from "./ScreensTable";
+import AddScreens from "./AddScreens";
+import EditScreens from "./EditScreens";
 
 type ScreenDialogProp = {
   condominium: Condominium;

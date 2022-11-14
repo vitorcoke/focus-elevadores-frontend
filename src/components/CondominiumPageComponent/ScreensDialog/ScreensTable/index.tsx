@@ -1,11 +1,11 @@
 import { Box } from "@mui/material";
 import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import { useControlerButtonPagesContext } from "../../../../context/ControlerButtonPagesContext";
 import { api } from "../../../../service";
 import { Condominium } from "../../../../types/condominium.type";
 import { Screen } from "../../../../types/screens.type";
+import dayjs from "dayjs";
 
 type ScreenTableProps = {
   selectedCondominium: Condominium;

@@ -32,8 +32,8 @@ import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import dayjs from "dayjs";
 import { DataGridPro, GridColDef, GridRowId } from "@mui/x-data-grid-pro";
+import dayjs from "dayjs";
 
 type EditCondominiumMessegerProps = {
   condominiumMesseger: CondominiumMessage;

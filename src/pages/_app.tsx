@@ -1,11 +1,11 @@
+import { Router } from "next/router";
 import { CssBaseline } from "@mui/material";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "../context/AuthContext";
-import AppThemeProvider from "../context/ThemeContext";
 import { LicenseInfo } from "@mui/x-license-pro";
+import AppThemeProvider from "../context/ThemeContext";
 import ControlerButtonPagesProvider from "../context/ControlerButtonPagesContext";
 import Nprogress from "nprogress";
-import { Router } from "next/router";
 
 import "../styles/nprogress.css";
 import "../styles/global.css";

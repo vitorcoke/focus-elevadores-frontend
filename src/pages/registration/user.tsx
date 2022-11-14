@@ -5,13 +5,13 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { User } from "../../types/users.type";
 import { getAPIClient } from "../../service";
 import { GetServerSideProps } from "next";
+import { Condominium } from "../../types/condominium.type";
+import { withAdminAndSindicoPermission } from "../../hocs";
+import { Screen } from "../../types/screens.type";
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
 import AddUser from "../../components/UserPageComponent/AddUser";
 import EditUser from "../../components/UserPageComponent/EditUser";
-import { Condominium } from "../../types/condominium.type";
-import { withAdminAndSindicoPermission } from "../../hocs";
-import { Screen } from "../../types/screens.type";
 
 type UserProps = {
   initialUser: User[];

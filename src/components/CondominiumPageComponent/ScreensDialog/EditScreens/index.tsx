@@ -7,14 +7,10 @@ import {
   FormControl,
   FormControlLabel,
   FormGroup,
-  InputLabel,
-  MenuItem,
-  Select,
   Snackbar,
   TextField,
   useMediaQuery,
   useTheme,
-  Stack,
   Autocomplete,
   Typography,
   Dialog,
@@ -23,18 +19,17 @@ import { useEffect, useState } from "react";
 import { useControlerButtonPagesContext } from "../../../../context/ControlerButtonPagesContext";
 import { api } from "../../../../service";
 import { Screen } from "../../../../types/screens.type";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Condominium } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
-import axios from "axios";
 import { City } from "../../../../types/city.type";
 import { State } from "../../../../types/state.type";
 import { Banner } from "../../../../types/banner.type";
 import { CondominiumMessage } from "../../../../types/condominium-message.type";
 import { useAuthContext } from "../../../../context/AuthContext";
 import { Permission } from "../../../../types/users.type";
-import produce from "immer";
+import axios from "axios";
 
 type EditScreensProps = {
   condominium: Condominium;
