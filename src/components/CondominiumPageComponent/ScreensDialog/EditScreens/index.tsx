@@ -298,111 +298,117 @@ const EditScreens: React.FC<EditScreensProps> = ({
               <Alert severity="success">Mensagens cadastradas</Alert>
             </Box>
             {screenCondominium.condominium_message &&
-              screenCondominium.condominium_message.map((idMessage, index) => {
-                return (
-                  <Box key={index} width="56rem" p={3}>
-                    <Box
-                      display="flex"
-                      gap={2}
-                      border="1px solid #ab120e"
-                      borderRadius="8px"
-                      p={3}
-                    >
-                      <Autocomplete
-                        options={condominiumMesseger}
-                        getOptionLabel={(option) => option.name}
-                        value={condominiumMesseger.find(
-                          (item) => item._id === idMessage
-                        )}
-                        onChange={(event, newValue) => {
-                          setScreenCondominium((old) => ({
-                            ...old,
-                            condominium_message: old.condominium_message?.map(
-                              (item) =>
-                                item === idMessage
-                                  ? newValue
-                                    ? newValue._id
-                                    : ""
-                                  : item
-                            ),
-                          }));
-                        }}
-                        fullWidth
-                        renderInput={(params) => (
-                          <TextField {...params} label="Mensagem" fullWidth />
-                        )}
-                      />
+              screenCondominium.condominium_message
+                .filter((id) => {
+                  if (condominiumMesseger.find((item) => item._id === id)) {
+                    return true;
+                  }
+                })
+                .map((idMessage, index) => {
+                  return (
+                    <Box key={index} width="56rem" p={3}>
                       <Box
                         display="flex"
-                        gap={1}
-                        width="100%"
-                        alignItems="center"
-                        justifyContent="center"
+                        gap={2}
+                        border="1px solid #ab120e"
+                        borderRadius="8px"
+                        p={3}
                       >
-                        <TextField
-                          label="Data Inicial"
-                          type="datetime-local"
-                          value={dayjs(
-                            condominiumMesseger.find(
-                              (item) => item._id === idMessage
-                            )?.starttime
-                          ).format("YYYY-MM-DDTHH:mm")}
-                          onChange={(e) => {
-                            setCondominiumMesseger((old) => [
-                              ...old.map((item) =>
-                                item._id === idMessage
-                                  ? {
-                                      ...item,
-                                      starttime: new Date(e.target.value),
-                                    }
-                                  : item
+                        <Autocomplete
+                          options={condominiumMesseger}
+                          getOptionLabel={(option) => option.name}
+                          value={condominiumMesseger.find(
+                            (item) => item._id === idMessage
+                          )}
+                          onChange={(event, newValue) => {
+                            setScreenCondominium((old) => ({
+                              ...old,
+                              condominium_message: old.condominium_message?.map(
+                                (item) =>
+                                  item === idMessage
+                                    ? newValue
+                                      ? newValue._id
+                                      : ""
+                                    : item
                               ),
-                            ]);
-                          }}
-                          InputLabelProps={{
-                            shrink: true,
+                            }));
                           }}
                           fullWidth
+                          renderInput={(params) => (
+                            <TextField {...params} label="Mensagem" fullWidth />
+                          )}
                         />
-                        <Typography>ATÉ</Typography>
-                        <TextField
-                          label="Data Final"
-                          type="datetime-local"
-                          value={dayjs(
-                            condominiumMesseger.find(
-                              (item) => item._id === idMessage
-                            )?.endtime
-                          ).format("YYYY-MM-DDTHH:mm")}
-                          onChange={(e) => {
-                            setCondominiumMesseger((old) => [
-                              ...old.map((item) =>
-                                item._id === idMessage
-                                  ? {
-                                      ...item,
-                                      endtime: new Date(e.target.value),
-                                    }
-                                  : item
-                              ),
-                            ]);
-                          }}
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                          fullWidth
-                        />
-                      </Box>
-                      <Box display="flex" justifyContent="end" gap={2}>
-                        <Button
-                          variant="contained"
-                          onClick={() => handleDeleteMesseger(idMessage)}
+                        <Box
+                          display="flex"
+                          gap={1}
+                          width="100%"
+                          alignItems="center"
+                          justifyContent="center"
                         >
-                          Excluir
-                        </Button>
+                          <TextField
+                            label="Data Inicial"
+                            type="datetime-local"
+                            value={dayjs(
+                              condominiumMesseger.find(
+                                (item) => item._id === idMessage
+                              )?.starttime
+                            ).format("YYYY-MM-DDTHH:mm")}
+                            onChange={(e) => {
+                              setCondominiumMesseger((old) => [
+                                ...old.map((item) =>
+                                  item._id === idMessage
+                                    ? {
+                                        ...item,
+                                        starttime: new Date(e.target.value),
+                                      }
+                                    : item
+                                ),
+                              ]);
+                            }}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                            fullWidth
+                          />
+                          <Typography>ATÉ</Typography>
+                          <TextField
+                            label="Data Final"
+                            type="datetime-local"
+                            value={dayjs(
+                              condominiumMesseger.find(
+                                (item) => item._id === idMessage
+                              )?.endtime
+                            ).format("YYYY-MM-DDTHH:mm")}
+                            onChange={(e) => {
+                              setCondominiumMesseger((old) => [
+                                ...old.map((item) =>
+                                  item._id === idMessage
+                                    ? {
+                                        ...item,
+                                        endtime: new Date(e.target.value),
+                                      }
+                                    : item
+                                ),
+                              ]);
+                            }}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                            fullWidth
+                          />
+                        </Box>
+                        <Box display="flex" justifyContent="end" gap={2}>
+                          <Button
+                            variant="contained"
+                            onClick={() => handleDeleteMesseger(idMessage)}
+                          >
+                            Excluir
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
-                );
-              })}
+                  );
+                })}
             <Box px={3} width="56rem">
               <Alert severity="info">Inserir uma nova mensagem</Alert>
             </Box>
