@@ -71,7 +71,7 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          if (img.width < 426 && img.height < 240) {
+          if (img.width <= 426 && img.height <= 240) {
             setLogotipo(file);
           } else {
             alert("A imagem deve ter no máximo 426x240");

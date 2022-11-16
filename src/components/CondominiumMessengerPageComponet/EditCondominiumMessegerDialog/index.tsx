@@ -99,7 +99,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          if (img.width < 720 && img.height < 480) {
+          if (img.width <= 720 && img.height <= 480) {
             setJpgFile(file);
           } else {
             alert("A imagem deve ter no máximo 720x480");
