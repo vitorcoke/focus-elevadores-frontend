@@ -1,5 +1,5 @@
 import { Avatar, Box } from "@mui/material";
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
@@ -50,6 +50,9 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
             checkboxSelection
             selectionModel={checkboxRss}
             onSelectionModelChange={(e) => setCheckboxRss(e)}
+            components={{
+              Toolbar: GridToolbar,
+            }}
             rows={rows}
             columns={columns}
             onCellClick={(params) =>

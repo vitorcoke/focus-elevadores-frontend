@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { useState } from "react";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { User } from "../../types/users.type";
@@ -59,6 +59,9 @@ const User: React.FC<UserProps> = ({
             checkboxSelection
             selectionModel={checkboxUser}
             onSelectionModelChange={(e) => setCheckboxUser(e)}
+            components={{
+              Toolbar: GridToolbar,
+            }}
             rows={rows}
             columns={columns}
             onCellClick={(params) =>

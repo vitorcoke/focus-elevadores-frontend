@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { getAPIClient } from "../../service";
@@ -60,6 +60,9 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
             columns={columns}
             checkboxSelection
             selectionModel={checkboxCondominiumMessenger}
+            components={{
+              Toolbar: GridToolbar,
+            }}
             onSelectionModelChange={(e) => {
               setCheckboxCondominiumMessenger(e);
             }}

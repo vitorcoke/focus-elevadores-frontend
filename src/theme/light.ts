@@ -1,4 +1,5 @@
 import { createTheme } from "@mui/material";
+import { ptBR } from "@mui/x-data-grid-pro";
 
 export const LightTheme = createTheme({
     palette: {
@@ -23,4 +24,4 @@ export const LightTheme = createTheme({
         }
     },
     
-})
+}, ptBR);

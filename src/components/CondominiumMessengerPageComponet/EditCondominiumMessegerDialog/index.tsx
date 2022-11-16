@@ -32,7 +32,12 @@ import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import { DataGridPro, GridColDef, GridRowId } from "@mui/x-data-grid-pro";
+import {
+  DataGridPro,
+  GridColDef,
+  GridRowId,
+  GridToolbar,
+} from "@mui/x-data-grid-pro";
 import dayjs from "dayjs";
 
 type EditCondominiumMessegerProps = {
@@ -185,7 +190,6 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         setOpenAlertSucess(true);
       }
     } catch (err) {
-      console.log(err);
       setOpenAlertError(true);
     }
   };
@@ -472,6 +476,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
               columns={columns}
               checkboxSelection
               onSelectionModelChange={(e) => setCheckboxScreenRegistered(e)}
+              components={{
+                Toolbar: GridToolbar,
+              }}
             />
             {checkboxScreenRegistered.length > 0 && (
               <Button variant="contained" onClick={() => handleDeleteScreen()}>
@@ -494,6 +501,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
               columns={columnsAvailable}
               checkboxSelection
               onSelectionModelChange={(e) => setCheckboxScreenAvailable(e)}
+              components={{
+                Toolbar: GridToolbar,
+              }}
             />
           </Box>
         </Box>

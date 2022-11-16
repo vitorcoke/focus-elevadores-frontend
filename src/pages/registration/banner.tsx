@@ -1,4 +1,4 @@
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { Avatar, Box } from "@mui/material";
 import { GetServerSideProps } from "next";
 import { getAPIClient } from "../../service";
@@ -56,6 +56,9 @@ const Banner: React.FC<BannerProps> = ({ initialBanner }) => {
             columns={column}
             checkboxSelection
             onSelectionModelChange={(e) => setCheckboxBanner(e)}
+            components={{
+              Toolbar: GridToolbar,
+            }}
             selectionModel={checkboxBanner}
             onCellClick={(params) =>
               checkboxBanner.length === 0

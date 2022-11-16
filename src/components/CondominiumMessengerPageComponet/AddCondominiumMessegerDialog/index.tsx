@@ -31,7 +31,12 @@ import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import { DataGridPro, GridColDef, GridRowId } from "@mui/x-data-grid-pro";
+import {
+  DataGridPro,
+  GridColDef,
+  GridRowId,
+  GridToolbar,
+} from "@mui/x-data-grid-pro";
 
 type AddCondominiumMessegerProps = {
   setCondominiumMesseger: React.Dispatch<
@@ -102,7 +107,6 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          console.log(img.width, img.height);
           if (img.width <= 720 && img.height <= 480) {
             setJpgFile(file);
           } else {
@@ -352,6 +356,9 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
               columns={columns}
               checkboxSelection
               onSelectionModelChange={(e) => setCheckboxScreens(e)}
+              components={{
+                Toolbar: GridToolbar,
+              }}
             />
           </Box>
         </Box>
