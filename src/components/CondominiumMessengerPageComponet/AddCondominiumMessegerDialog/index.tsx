@@ -84,6 +84,12 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
   const handleCloseDialog = () => {
     setOpenDialogCreateCondominiumMessenger(false);
     setCheckboxCondominiumMessenger([]);
+    setNameMessage("");
+    setNameJpg("");
+    setTitle("");
+    setMessage("");
+    setJpgFile(undefined);
+    setScreen([]);
   };
 
   const handleLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {

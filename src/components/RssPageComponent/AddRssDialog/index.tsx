@@ -58,6 +58,7 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
   };
   const handleCloseDialog = () => {
     setOpenDialogCreateRss(false);
+    setName("");
   };
 
   const handleLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -84,6 +84,9 @@ const AddBannerDialog: React.FC<AddCondominiumProps> = ({ setBanner }) => {
 
   const handleCloseDialog = () => {
     setOpenDialogCreateBanner(false);
+    setName("");
+    setImage(undefined);
+    setDescription("");
   };
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
