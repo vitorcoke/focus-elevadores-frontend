@@ -202,6 +202,16 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
                     required
                     label="CEP"
                     fullWidth
+                    type={"number"}
+                    sx={{
+                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                        {
+                          display: "none",
+                        },
+                      "& input[type=number]": {
+                        MozAppearance: "textfield",
+                      },
+                    }}
                     onChange={(e) => setCep(e.target.value)}
                   />
                   <IconButton onClick={validationCep}>
