@@ -19,11 +19,18 @@ import {
   FileUploadRounded,
 } from "@mui/icons-material";
 import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { Rss } from "../../../types/rss.type";
+import {
+  DataGridPro,
+  GridColDef,
+  GridRowId,
+  GridToolbar,
+} from "@mui/x-data-grid-pro";
+import { Screen } from "../../../types/screens.type";
 
 type AddRssProps = {
   setRss: React.Dispatch<React.SetStateAction<Rss[]>>;
@@ -47,6 +54,10 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [logotipo, setLogotipo] = useState<File>();
+
+  const [screen, setScreen] = useState<Screen[]>([]);
+  const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
+
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
 
@@ -90,13 +101,41 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
         name,
         url,
         logotipo: base64,
+        screen_id: checkboxScreens,
       });
+
+      if (checkboxScreens.length > 0) {
+        checkboxScreens.map(async (screen) => {
+          await api.patch(`/screens/rss/${screen}`, {
+            source_rss: rss.data._id,
+          });
+        });
+      }
+
       setRss((prev) => [...prev, rss.data]);
       setOpenAlertSucess(true);
     } catch {
       setOpenAlertError(true);
     }
   };
+
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", flex: 1 },
+    { field: "name", headerName: "Nome", flex: 1 },
+  ];
+
+  const rows = screen?.map((item) => {
+    return {
+      id: item._id,
+      name: item.name,
+    };
+  });
+
+  useEffect(() => {
+    api.get(`/screens`).then((response) => {
+      setScreen(response.data);
+    });
+  }, []);
 
   return (
     <Dialog
@@ -169,6 +208,17 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
                 </Button>
               </Grid>
             </Grid>
+          </Box>
+          <Box width={smDown ? "100%" : "70%"} height="25rem" mt="3.5rem">
+            <DataGridPro
+              rows={rows}
+              columns={columns}
+              checkboxSelection
+              onSelectionModelChange={(e) => setCheckboxScreens(e)}
+              components={{
+                Toolbar: GridToolbar,
+              }}
+            />
           </Box>
         </Box>
         <Snackbar

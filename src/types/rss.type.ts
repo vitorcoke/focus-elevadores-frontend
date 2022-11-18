@@ -3,4 +3,5 @@ export type Rss ={
     name: string,
     url: string,
     logotipo: string,
+    screen_id: string[],
 }

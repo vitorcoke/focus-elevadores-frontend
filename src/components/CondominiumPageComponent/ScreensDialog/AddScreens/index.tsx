@@ -47,7 +47,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [source_rss, setSource_rss] = useState<string[]>([]);
   const [newBanner, setNewBanner] = useState("");
   const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([
-    { _id: "", starttime: new Date(), endtime: new Date() },
+    { _id: "" },
   ]);
   const [state, setState] = useState<State[]>([]);
   const [city, setCity] = useState<City[]>([]);
@@ -137,11 +137,15 @@ const AddScreens: React.FC<AddScreensProps> = ({
         vms_camera: vms,
       });
 
-      newCondominiumMesseger.map(async (item) => {
-        await api.patch(`/condominium-message/${item._id}`, {
-          screen_id: condominiumMesseger
-            .find((message) => message._id === item._id)
-            ?.screen_id?.concat(screenUpdate.data._id),
+      newCondominiumMesseger.forEach(async (item) => {
+        await api.patch(`/condominium-message/${item._id}/screen`, {
+          screen_id: screenUpdate.data._id,
+        });
+      });
+
+      source_rss.forEach(async (item) => {
+        await api.patch(`/source-rss/${item}/screen`, {
+          screen_id: screenUpdate.data._id,
         });
       });
 

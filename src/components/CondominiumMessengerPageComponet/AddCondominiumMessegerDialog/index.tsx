@@ -150,6 +150,14 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
         });
+
+        if (checkboxScreens.length > 0) {
+          checkboxScreens.map(async (screen) => {
+            await api.patch(`/screens/message/${screen}`, {
+              condominium_message: newMessege.data._id,
+            });
+          });
+        }
         setCondominiumMesseger((old) => [...old, newMessege.data]);
         setOpenAlertSucess(true);
       }

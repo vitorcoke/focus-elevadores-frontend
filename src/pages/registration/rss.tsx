@@ -30,6 +30,7 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
     },
     { field: "name", headerName: "Nome", flex: 2 },
     { field: "url", headerName: "URL", flex: 3 },
+    { field: "screens", headerName: "Qtds. Telas", flex: 1 },
   ];
 
   const rows = rss.map((rss) => {
@@ -39,6 +40,8 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
       name: rss.name,
       url: rss.url,
       logotipo: rss.logotipo,
+      screen_id: rss.screen_id,
+      screens: rss.screen_id?.length,
     };
   });
 

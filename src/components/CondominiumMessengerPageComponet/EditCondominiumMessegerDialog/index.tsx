@@ -187,6 +187,14 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           old[index] = newMessege.data;
           return [...old];
         });
+
+        const newMessegeScreen = await api.get(
+          `/screens/condominiumMessage/${condominiumMesseger._id}`
+        );
+        setScreen(newMessegeScreen.data);
+
+        const newMessage = await api.get("/screens/");
+        setScreenAvailable(newMessage.data);
         setOpenAlertSucess(true);
       }
     } catch (err) {
@@ -197,19 +205,30 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
   const handleDeleteScreen = async () => {
     try {
       if (checkboxScreenRegistered.length > 0) {
-        checkboxScreenRegistered.map(async (item) => {
+        checkboxScreenRegistered.forEach(async (item) => {
           await api.delete(`/condominium-message/screen/${item}`);
-        });
-        await api.delete(`/screens/message/${editCondominiumMesseger._id}`);
-        const newMessegeScreen = await api.get(
-          `/screens/condominiumMessage/${condominiumMesseger._id}`
-        );
-        const newMessage = await api.get("/screens/");
+          await api.delete(
+            `/screens/message/${editCondominiumMesseger._id}/screen/${item}`
+          );
 
-        const newCondominiumMesseger = await api.get("/condominium-message");
-        setScreen(newMessegeScreen.data);
-        setScreenAvailable(newMessage.data);
-        setCondominiumMesseger(newCondominiumMesseger.data);
+          const newMessegeScreen = await api.get(
+            `/screens/condominiumMessage/${condominiumMesseger._id}`
+          );
+          const newMessage = await api.get("/screens/");
+          const newCondominiumMesseger = await api.get(
+            `/condominium-message/${editCondominiumMesseger._id}`
+          );
+          setScreen(newMessegeScreen.data);
+          setScreenAvailable(newMessage.data);
+          setEditCondominiumMesseger(newCondominiumMesseger.data);
+          setCondominiumMesseger((old) => {
+            let index = old.findIndex(
+              (item) => item._id === editCondominiumMesseger._id
+            );
+            old[index] = newCondominiumMesseger.data;
+            return [...old];
+          });
+        });
 
         setOpenAlertSucess(true);
       }
@@ -324,7 +343,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                           name: e.target.value,
                         })
                       }
-                      helperText={`${editCondominiumMesseger.name.length}/30`}
+                      helperText={`${editCondominiumMesseger?.name?.length}/30`}
                       inputProps={{ maxLength: 30 }}
                     />
                   </Grid>

@@ -10,13 +10,16 @@ import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerP
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
+import { User } from "../../types/users.type";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessage[];
+  initialUsers: User[];
 };
 
 const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
   initialCondominiumMessege,
+  initialUsers,
 }) => {
   const { checkboxCondominiumMessenger, setCheckboxCondominiumMessenger } =
     useControlerButtonPagesContext();
@@ -24,12 +27,16 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
   const [condominiumMesseger, setCondominiumMesseger] = useState(
     initialCondominiumMessege
   );
+
+  const [users, setUsers] = useState(initialUsers);
+
   const [editCondominiumMesseger, setEditCondominiumMesseger] =
     useState<CondominiumMessage>();
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nome", flex: 2 },
     { field: "screens", headerName: "Qtds.Telas", flex: 2 },
+    { field: "user_id", headerName: "Criado por", flex: 2 },
   ];
 
   const rows = condominiumMesseger.map((message) => {
@@ -44,6 +51,7 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
       jpg_file: message.jpg_file,
       screens: message.screen_id?.length,
       screen_id: message.screen_id,
+      user_id: users.find((user) => user._id === message.user_id)?.name,
     };
   });
 
@@ -98,18 +106,22 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
 
   try {
-    const { data } = await api.get<CondominiumMessage[]>(
+    const condominiumMessages = await api.get<CondominiumMessage[]>(
       "/condominium-message"
     );
+    const users = await api.get<User[]>("/users/all");
+
     return {
       props: {
-        initialCondominiumMessege: data,
+        initialCondominiumMessege: condominiumMessages.data,
+        initialUsers: users.data,
       },
     };
   } catch {
     return {
       props: {
         initialCondominiumMessege: [],
+        initialUsers: [],
       },
     };
   }

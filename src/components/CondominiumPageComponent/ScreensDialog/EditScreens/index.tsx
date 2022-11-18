@@ -175,6 +175,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
         `/condominium/${condominium._id}/screen/${screenCondominium._id}`
       );
       await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
+      await api.delete(`/source-rss/screen/${screenCondominium._id}`);
       setCondominium((old) => [
         ...old.map((item) =>
           item._id === condominium._id
