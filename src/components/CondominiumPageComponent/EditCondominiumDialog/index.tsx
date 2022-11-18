@@ -75,7 +75,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
     try {
       await api.patch(`/condominium/${condominium._id}`, {
         name: editCondominium.name,
-        ondominium_id_imodulo: editCondominium.condominium_id_imodulo,
+        condominium_id_imodulo: editCondominium.condominium_id_imodulo,
         cnpj: editCondominium.cnpj,
         address: editCondominium.address,
         district: editCondominium.district,
