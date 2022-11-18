@@ -52,6 +52,7 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
       screens: message.screen_id?.length,
       screen_id: message.screen_id,
       user_id: users.find((user) => user._id === message.user_id)?.name,
+      time_exibition: message.time_exibition && message.time_exibition / 1000,
     };
   });
 

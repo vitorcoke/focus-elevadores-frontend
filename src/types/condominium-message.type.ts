@@ -9,4 +9,5 @@ export type CondominiumMessage = {
     endtime?: Date;
     jpg_file?: string;
     screen_id?: string[];
+    time_exibition?: number;
 }

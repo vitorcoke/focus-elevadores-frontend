@@ -37,6 +37,8 @@ import {
   GridRowId,
   GridToolbar,
 } from "@mui/x-data-grid-pro";
+import { useAuthContext } from "../../../context/AuthContext";
+import { Permission } from "../../../types/users.type";
 
 type AddCondominiumMessegerProps = {
   setCondominiumMesseger: React.Dispatch<
@@ -63,6 +65,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
     setOpenDialogCreateCondominiumMessenger,
     setCheckboxCondominiumMessenger,
   } = useControlerButtonPagesContext();
+  const { user } = useAuthContext();
 
   const [nameMessage, setNameMessage] = useState("");
   const [nameJpg, setNameJpg] = useState("");
@@ -72,6 +75,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
   const [screen, setScreen] = useState<Screen[]>([]);
   const [starttime, setStarttime] = useState<Date>();
   const [endtime, setEndtime] = useState<Date>();
+  const [time_exibition, setTimeExibition] = useState("");
 
   const [select, setSelect] = useState(0);
   const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
@@ -131,6 +135,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           starttime,
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
+          time_exibition:
+            time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
         });
         if (checkboxScreens.length > 0) {
           checkboxScreens.map(async (screen) => {
@@ -140,6 +146,11 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           });
         }
         setCondominiumMesseger((old) => [...old, newMessege.data]);
+        setMessage("");
+        setTitle("");
+        setNameMessage("");
+        setJpgFile(undefined);
+        setTimeExibition("");
 
         setOpenAlertSucess(true);
       } else {
@@ -149,6 +160,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           starttime,
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
+          time_exibition:
+            time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
         });
 
         if (checkboxScreens.length > 0) {
@@ -159,6 +172,11 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           });
         }
         setCondominiumMesseger((old) => [...old, newMessege.data]);
+        setMessage("");
+        setTitle("");
+        setNameMessage("");
+        setJpgFile(undefined);
+        setTimeExibition("");
         setOpenAlertSucess(true);
       }
     } catch {
@@ -253,6 +271,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                       <TextField
                         required
                         disabled={!!nameJpg}
+                        value={nameMessage}
                         label="Nome"
                         fullWidth
                         onChange={(e) => setNameMessage(e.target.value)}
@@ -263,6 +282,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     <Grid item xs={12}>
                       <TextField
                         required
+                        value={title}
                         disabled={!!nameJpg}
                         label="Titulo"
                         fullWidth
@@ -274,6 +294,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     <Grid item xs={12}>
                       <TextField
                         required
+                        value={message}
                         disabled={!!nameJpg}
                         label="Mensagem"
                         fullWidth
@@ -282,18 +303,62 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                         inputProps={{ maxLength: 400 }}
                       />
                     </Grid>
+                    {user?.permission === Permission.ADMIN && (
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Exibição em segundos"
+                          value={time_exibition}
+                          type={"number"}
+                          sx={{
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                              {
+                                display: "none",
+                              },
+                            "& input[type=number]": {
+                              MozAppearance: "textfield",
+                            },
+                          }}
+                          onChange={(e) => setTimeExibition(e.target.value)}
+                          helperText={`${time_exibition?.toString().length}/3`}
+                          inputProps={{ maxLength: 3 }}
+                        />
+                      </Grid>
+                    )}
                   </>
                 ) : (
                   <>
                     <Grid item xs={12}>
                       <TextField
                         required
+                        value={nameJpg}
                         disabled={!!nameMessage}
                         label="Nome"
                         fullWidth
                         onChange={(e) => setNameJpg(e.target.value)}
                       />
                     </Grid>
+                    {user?.permission === Permission.ADMIN && (
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Exibição em segundos"
+                          value={time_exibition}
+                          type={"number"}
+                          sx={{
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                              {
+                                display: "none",
+                              },
+                            "& input[type=number]": {
+                              MozAppearance: "textfield",
+                            },
+                          }}
+                          onChange={(e) => setTimeExibition(e.target.value)}
+                          helperText={`${time_exibition?.toString().length}/3`}
+                          inputProps={{ maxLength: 3 }}
+                        />
+                      </Grid>
+                    )}
+
                     <Grid item xs={12}>
                       <Button
                         variant="contained"
@@ -302,7 +367,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                         fullWidth
                         startIcon={<FileUploadRounded />}
                       >
-                        JPG mensagem
+                        JPG mensagem 720x480
                         <input
                           hidden
                           accept="image/jpeg"

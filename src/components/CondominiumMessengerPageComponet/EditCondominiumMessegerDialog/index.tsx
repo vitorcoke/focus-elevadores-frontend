@@ -39,6 +39,8 @@ import {
   GridToolbar,
 } from "@mui/x-data-grid-pro";
 import dayjs from "dayjs";
+import { Permission } from "../../../types/users.type";
+import { useAuthContext } from "../../../context/AuthContext";
 
 type EditCondominiumMessegerProps = {
   condominiumMesseger: CondominiumMessage;
@@ -65,6 +67,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
     setOpenDialogEditCondominiumMessenger,
     setCheckboxCondominiumMessenger,
   } = useControlerButtonPagesContext();
+  const { user } = useAuthContext();
 
   const [editCondominiumMesseger, setEditCondominiumMesseger] =
     useState(condominiumMesseger);
@@ -132,6 +135,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
             screen_id: editCondominiumMesseger.screen_id?.concat(
               checkboxScreenAvailable as string[]
             ),
+            time_exibition:
+              editCondominiumMesseger.time_exibition &&
+              editCondominiumMesseger.time_exibition * 1000,
           }
         );
 
@@ -171,6 +177,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
             screen_id: editCondominiumMesseger.screen_id?.concat(
               checkboxScreenAvailable as string[]
             ),
+            time_exibition:
+              editCondominiumMesseger.time_exibition &&
+              editCondominiumMesseger.time_exibition * 1000,
           }
         );
         if (checkboxScreenAvailable.length > 0) {
@@ -381,6 +390,34 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                       inputProps={{ maxLength: 400 }}
                     />
                   </Grid>
+                  {user?.permission === Permission.ADMIN && (
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Exibição em segundos"
+                        value={editCondominiumMesseger.time_exibition}
+                        type={"number"}
+                        sx={{
+                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                            {
+                              display: "none",
+                            },
+                          "& input[type=number]": {
+                            MozAppearance: "textfield",
+                          },
+                        }}
+                        onChange={(e) =>
+                          setEditCondominiumMesseger({
+                            ...editCondominiumMesseger,
+                            time_exibition: Number(e.target.value),
+                          })
+                        }
+                        helperText={`${
+                          String(editCondominiumMesseger.time_exibition).length
+                        }/3`}
+                        inputProps={{ maxLength: 3 }}
+                      />
+                    </Grid>
+                  )}
                 </Grid>
               ) : (
                 <Grid container spacing={2}>
@@ -403,6 +440,34 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                       }
                     />
                   </Grid>
+                  {user?.permission === Permission.ADMIN && (
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Exibição em segundos"
+                        value={editCondominiumMesseger.time_exibition}
+                        type={"number"}
+                        sx={{
+                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                            {
+                              display: "none",
+                            },
+                          "& input[type=number]": {
+                            MozAppearance: "textfield",
+                          },
+                        }}
+                        onChange={(e) =>
+                          setEditCondominiumMesseger({
+                            ...editCondominiumMesseger,
+                            time_exibition: Number(e.target.value),
+                          })
+                        }
+                        helperText={`${
+                          String(editCondominiumMesseger.time_exibition).length
+                        }/3`}
+                        inputProps={{ maxLength: 3 }}
+                      />
+                    </Grid>
+                  )}
                   <Grid item xs={12}>
                     <Button
                       variant="contained"
@@ -411,7 +476,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                       fullWidth
                       startIcon={<FileUploadRounded />}
                     >
-                      JPG mensagem
+                      JPG mensagem 720x480
                       <input
                         hidden
                         accept="image/jpeg"
