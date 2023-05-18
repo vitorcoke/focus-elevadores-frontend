@@ -74,6 +74,8 @@ const EditScreens: React.FC<EditScreensProps> = ({
   const [stateValue, setStateValue] = useState("");
   const [cityValue, setCityValue] = useState("");
   const [messege_id, setMessegeId] = useState("");
+  const [rssId, setRssId] = useState("");
+  const [rssScreensId, setRssScreensId] = useState<string[]>([]);
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -128,6 +130,9 @@ const EditScreens: React.FC<EditScreensProps> = ({
         condominium_message: screenCondominium.condominium_message,
         state: stateValue ? stateValue : screenCondominium.state,
         city: cityValue ? cityValue : screenCondominium.city,
+      });
+      await api.patch(`/source-rss/${rssId}`, {
+        screen_id: rssScreensId.concat(screenCondominium._id),
       });
       await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       condominiumMesseger.map(async (messege) => {
@@ -244,42 +249,44 @@ const EditScreens: React.FC<EditScreensProps> = ({
             inputProps={{ maxLength: 30 }}
           />
 
-          {user?.permission === Permission.ADMIN && screenCondominium.banner && (
-            <Autocomplete
-              options={banner}
-              getOptionLabel={(option) => option.name}
-              value={banner.find(
-                (item) => item._id === screenCondominium.banner
-              )}
-              fullWidth
-              onChange={(event, newValue) => {
-                setScreenCondominium({
-                  ...screenCondominium,
-                  banner: newValue ? newValue._id : "",
-                });
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Banner" fullWidth />
-              )}
-            />
-          )}
+          {user?.permission === Permission.ADMIN &&
+            screenCondominium.banner && (
+              <Autocomplete
+                options={banner}
+                getOptionLabel={(option) => option.name}
+                value={banner.find(
+                  (item) => item._id === screenCondominium.banner
+                )}
+                fullWidth
+                onChange={(event, newValue) => {
+                  setScreenCondominium({
+                    ...screenCondominium,
+                    banner: newValue ? newValue._id : "",
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="Banner" fullWidth />
+                )}
+              />
+            )}
 
-          {user?.permission === Permission.ADMIN && !screenCondominium.banner && (
-            <Autocomplete
-              options={banner}
-              getOptionLabel={(option) => option.name}
-              fullWidth
-              onChange={(event, newValue) => {
-                setScreenCondominium({
-                  ...screenCondominium,
-                  banner: newValue ? newValue._id : "",
-                });
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Banner" fullWidth />
-              )}
-            />
-          )}
+          {user?.permission === Permission.ADMIN &&
+            !screenCondominium.banner && (
+              <Autocomplete
+                options={banner}
+                getOptionLabel={(option) => option.name}
+                fullWidth
+                onChange={(event, newValue) => {
+                  setScreenCondominium({
+                    ...screenCondominium,
+                    banner: newValue ? newValue._id : "",
+                  });
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} label="Banner" fullWidth />
+                )}
+              />
+            )}
 
           <Button variant="contained" onClick={() => setOpenDialog(true)}>
             Ver mensagens
@@ -562,6 +569,8 @@ const EditScreens: React.FC<EditScreensProps> = ({
                                 item._id,
                               ],
                             });
+                            setRssId(item._id);
+                            setRssScreensId(item.screen_id);
                           } else {
                             setScreenCondominium({
                               ...screenCondominium,
