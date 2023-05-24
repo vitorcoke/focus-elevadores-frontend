@@ -50,8 +50,8 @@ const AddBannerDialog: React.FC<AddCondominiumProps> = ({ setBanner }) => {
   const [name, setName] = useState("");
   const [image, setImage] = useState<File>();
   const [description, setDescription] = useState("");
-  const [background_color, setBackgroundColor] = useState("");
-  const [font_color, setFontColor] = useState("");
+  const [background_color, setBackgroundColor] = useState("#000000");
+  const [font_color, setFontColor] = useState("#000000");
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
   const [openPickerColorBackground, setOpenPickerColorBackground] =
