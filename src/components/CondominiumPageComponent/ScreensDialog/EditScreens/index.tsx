@@ -74,8 +74,9 @@ const EditScreens: React.FC<EditScreensProps> = ({
   const [stateValue, setStateValue] = useState("");
   const [cityValue, setCityValue] = useState("");
   const [messege_id, setMessegeId] = useState("");
-  const [rssId, setRssId] = useState("");
+  const [rssIdAdd, setRssIdAdd] = useState<string[]>([]);
   const [rssScreensId, setRssScreensId] = useState<string[]>([]);
+  const [rssIdRemove, setRssIdRemove] = useState<string[]>([]);
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -131,9 +132,28 @@ const EditScreens: React.FC<EditScreensProps> = ({
         state: stateValue ? stateValue : screenCondominium.state,
         city: cityValue ? cityValue : screenCondominium.city,
       });
-      await api.patch(`/source-rss/${rssId}`, {
-        screen_id: rssScreensId.concat(screenCondominium._id),
-      });
+
+      if (rssIdRemove.length > 0) {
+        rssIdRemove.map(async (id) => {
+          await api.patch(`/source-rss/${id}`, {
+            screen_id: rssScreensId.filter((screen) => screen !== id),
+          });
+        });
+      }
+
+      if (rssIdAdd.length > 0) {
+        rssIdAdd.map(async (id) => {
+          const rss = await api.get(`/source-rss/${id}`);
+          if (rss.data.screen_id.includes(screenCondominium._id)) {
+            return;
+          } else {
+            await api.patch(`/source-rss/${id}`, {
+              screen_id: rssScreensId.concat(id),
+            });
+          }
+        });
+      }
+
       await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       condominiumMesseger.map(async (messege) => {
         if (screenCondominium.condominium_message?.includes(messege._id)) {
@@ -569,9 +589,16 @@ const EditScreens: React.FC<EditScreensProps> = ({
                                 item._id,
                               ],
                             });
-                            setRssId(item._id);
+                            setRssIdAdd((old) => [...old, item._id]);
+                            setRssIdRemove((old) =>
+                              old.filter((id) => id !== item._id)
+                            );
                             setRssScreensId(item.screen_id);
                           } else {
+                            setRssIdRemove((old) => [...old, item._id]);
+                            setRssIdAdd((old) =>
+                              old.filter((id) => id !== item._id)
+                            );
                             setScreenCondominium({
                               ...screenCondominium,
                               source_rss: screenCondominium.source_rss.filter(
