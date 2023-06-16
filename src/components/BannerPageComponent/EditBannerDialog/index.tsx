@@ -1,8 +1,4 @@
-import {
-  CloseRounded,
-  FileUploadRounded,
-  SendRounded,
-} from "@mui/icons-material";
+import { CloseRounded, FileUploadRounded, SendRounded } from "@mui/icons-material";
 import {
   Alert,
   AppBar,
@@ -41,12 +37,8 @@ type EditBannerDialogProps = {
   setBanner: Dispatch<SetStateAction<Banner[]>>;
 };
 
-const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
-  banner,
-  setBanner,
-}) => {
-  const { openDialogEditBanner, setOpenDialogEditBanner, setCheckboxBanner } =
-    useControlerButtonPagesContext();
+const EditBannerDialog: React.FC<EditBannerDialogProps> = ({ banner, setBanner }) => {
+  const { openDialogEditBanner, setOpenDialogEditBanner, setCheckboxBanner } = useControlerButtonPagesContext();
 
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
@@ -55,8 +47,7 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
   const [image, setImage] = useState<File>();
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
-  const [openPickerColorBackground, setOpenPickerColorBackground] =
-    useState(false);
+  const [openPickerColorBackground, setOpenPickerColorBackground] = useState(false);
   const [openPickerColorFont, setOpenPickerColorFont] = useState(false);
 
   const handleOpenPickerColorBackground = () => {
@@ -98,11 +89,7 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          if (img.width <= 426 && img.height <= 240) {
-            setImage(file);
-          } else {
-            alert("A imagem deve ter no máximo 426x240");
-          }
+          setImage(file);
         };
       } else {
         alert("O arquivo deve ser uma imagem");
@@ -133,36 +120,19 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
   };
 
   return (
-    <Dialog
-      open={openDialogEditBanner}
-      onClose={handleCloseDialog}
-      fullScreen
-      TransitionComponent={Transition}
-    >
+    <Dialog open={openDialogEditBanner} onClose={handleCloseDialog} fullScreen TransitionComponent={Transition}>
       <Box component={"form"} onSubmit={handleSubmit}>
         <AppBar>
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
         </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
+        <Box width="100%" height="100vh" display="flex" flexDirection="column" alignItems="center" gap={2} p={3}>
           <Toolbar />
 
           <Box
@@ -179,9 +149,7 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
                   value={editBanner.name}
                   label="Nome"
                   fullWidth
-                  onChange={(e) =>
-                    setEditBanner({ ...editBanner, name: e.target.value })
-                  }
+                  onChange={(e) => setEditBanner({ ...editBanner, name: e.target.value })}
                   helperText={`${editBanner.name.length}/30`}
                   inputProps={{
                     maxLength: 30,
@@ -189,20 +157,9 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  component="label"
-                  fullWidth
-                  startIcon={<FileUploadRounded />}
-                >
+                <Button variant="contained" component="label" fullWidth startIcon={<FileUploadRounded />}>
                   Imagem do Banner
-                  <input
-                    hidden
-                    accept="image/*"
-                    multiple
-                    type="file"
-                    onChange={handleImage}
-                  />
+                  <input hidden accept="image/*" multiple type="file" onChange={handleImage} />
                 </Button>
               </Grid>
               <Grid item xs={12}>
@@ -224,20 +181,11 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
               <Grid item xs={12}>
                 <ClickAwayListener onClickAway={handleClickedAwayBackground}>
                   <Box>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleOpenPickerColorBackground}
-                    >
+                    <Button variant="contained" fullWidth onClick={handleOpenPickerColorBackground}>
                       Selecione uma cor
                     </Button>
                     {openPickerColorBackground && (
-                      <Box
-                        marginTop="1rem"
-                        width="100%"
-                        display="flex"
-                        justifyContent="center"
-                      >
+                      <Box marginTop="1rem" width="100%" display="flex" justifyContent="center">
                         <BlockPicker
                           color={editBanner.background_color}
                           onChange={(e) =>
@@ -255,20 +203,11 @@ const EditBannerDialog: React.FC<EditBannerDialogProps> = ({
               <Grid item xs={12}>
                 <ClickAwayListener onClickAway={handleClickedAwayFont}>
                   <Box>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleOpenPickerColorFont}
-                    >
+                    <Button variant="contained" fullWidth onClick={handleOpenPickerColorFont}>
                       Selecione uma cor
                     </Button>
                     {openPickerColorFont && (
-                      <Box
-                        marginTop="1rem"
-                        width="100%"
-                        display="flex"
-                        justifyContent="center"
-                      >
+                      <Box marginTop="1rem" width="100%" display="flex" justifyContent="center">
                         <BlockPicker
                           color={editBanner.font_color}
                           onChange={(e) =>

@@ -32,13 +32,7 @@ type AddScreensProps = {
   condominiumMesseger: CondominiumMessage[];
 };
 
-const AddScreens: React.FC<AddScreensProps> = ({
-  condominium,
-  setCondominium,
-  rss,
-  banner,
-  condominiumMesseger,
-}) => {
+const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rss, banner, condominiumMesseger }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -46,9 +40,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [validity, setValidity] = useState("");
   const [source_rss, setSource_rss] = useState<string[]>([]);
   const [newBanner, setNewBanner] = useState("");
-  const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([
-    { _id: "" },
-  ]);
+  const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([{ _id: "" }]);
   const [state, setState] = useState<State[]>([]);
   const [city, setCity] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
@@ -61,11 +53,9 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [openAlertError, setOpenAlertError] = useState(false);
 
   useEffect(() => {
-    axios
-      .get("https://servicodados.ibge.gov.br/api/v1/localidades/estados")
-      .then((response) => {
-        setState(response.data);
-      });
+    axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados").then((response) => {
+      setState(response.data);
+    });
   }, []);
 
   useEffect(() => {
@@ -73,19 +63,14 @@ const AddScreens: React.FC<AddScreensProps> = ({
       .get(`/vms/condominium/${condominium._id}`)
       .then((response) => {
         return response.data.map((vms: VMS) => {
-          setVmsUrl(
-            `http://${vms.username}:${vms.password}@${vms.server}:${vms.port}`
-          );
+          setVmsUrl(`http://${vms.username}:${vms.password}@${vms.server}:${vms.port}`);
           axios
-            .get<string>(
-              `http://${vms.server}:${vms.port}/camerasnomes.cgi?receiver=${vms.receiver}&server=${vms.account}`,
-              {
-                auth: {
-                  username: vms.username,
-                  password: vms.password,
-                },
-              }
-            )
+            .get<string>(`http://${vms.server}:${vms.port}/camerasnomes.cgi?receiver=${vms.receiver}&server=${vms.account}`, {
+              auth: {
+                username: vms.username,
+                password: vms.password,
+              },
+            })
             .then((response) => {
               const cameras = response.data.split("&");
               const camerasArray = cameras.map((camera) => {
@@ -104,13 +89,9 @@ const AddScreens: React.FC<AddScreensProps> = ({
   }, []);
 
   const handleGetCity = (state: string) => {
-    axios
-      .get(
-        `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`
-      )
-      .then((response) => {
-        setCity(response.data);
-      });
+    axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`).then((response) => {
+      setCity(response.data);
+    });
   };
 
   const handleCloseAlertSucess = () => {
@@ -151,9 +132,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
 
       setCondominium((old) => [
         ...old.map((item) =>
-          item._id === screenUpdate.data.condominium_id
-            ? { ...item, screens: item.screens?.concat(screenUpdate.data._id) }
-            : item
+          item._id === screenUpdate.data.condominium_id ? { ...item, screens: item.screens?.concat(screenUpdate.data._id) } : item
         ),
       ]);
 
@@ -164,21 +143,8 @@ const AddScreens: React.FC<AddScreensProps> = ({
   };
 
   return (
-    <Box
-      width="100%"
-      display="flex"
-      alignContent="center"
-      justifyContent="center"
-    >
-      <Box
-        component={"form"}
-        p={3}
-        width={smDown ? "100%" : "45%"}
-        display="flex"
-        flexDirection="column"
-        gap={3}
-        onSubmit={handleSubmit}
-      >
+    <Box width="100%" display="flex" alignContent="center" justifyContent="center">
+      <Box component={"form"} p={3} width={smDown ? "100%" : "45%"} display="flex" flexDirection="column" gap={3} onSubmit={handleSubmit}>
         <TextField
           required
           label="Nome"
@@ -204,9 +170,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
           onChange={(event, newValue) => {
             setNewBanner(newValue ? newValue._id : "");
           }}
-          renderInput={(params) => (
-            <TextField {...params} required label="Banner" fullWidth />
-          )}
+          renderInput={(params) => <TextField {...params} required label="Banner" fullWidth />}
         />
         <Autocomplete
           multiple
@@ -214,28 +178,12 @@ const AddScreens: React.FC<AddScreensProps> = ({
           getOptionLabel={(option) => option.name}
           fullWidth
           onChange={(event, newValue) => {
-            setVms(
-              newValue
-                ? newValue.map(
-                    (item) => `${vmsUrl}/mjpegstream.cgi?camera=${item.code}`
-                  )
-                : []
-            );
+            setVms(newValue ? newValue.map((item) => `${vmsUrl}/mjpegstream.cgi?camera=${item.code}`) : []);
           }}
-          renderInput={(params) => (
-            <TextField {...params} label="Cameras" fullWidth />
-          )}
+          renderInput={(params) => <TextField {...params} label="Cameras" fullWidth />}
         />
         {newCondominiumMesseger.map((item, index) => (
-          <Box
-            display="flex"
-            flexDirection="column"
-            gap={3}
-            border="1px solid #ab120e"
-            borderRadius="8px"
-            p={3}
-            key={index}
-          >
+          <Box display="flex" flexDirection="column" gap={3} border="1px solid #ab120e" borderRadius="8px" p={3} key={index}>
             <Autocomplete
               options={condominiumMesseger}
               getOptionLabel={(option) => option.name}
@@ -247,33 +195,21 @@ const AddScreens: React.FC<AddScreensProps> = ({
                   })
                 );
               }}
-              renderInput={(params) => (
-                <TextField {...params} required label="Mensagem" fullWidth />
-              )}
+              renderInput={(params) => <TextField {...params} required label="Mensagem" fullWidth />}
             />
 
             <Box display="flex" gap={2} justifyContent="end">
               <Button
                 variant="contained"
                 size="small"
-                onClick={() =>
-                  newCondominiumMesseger.length > 1 &&
-                  setNewCondominiumMesseger(
-                    newCondominiumMesseger.filter((_, i) => i !== index)
-                  )
-                }
+                onClick={() => newCondominiumMesseger.length > 1 && setNewCondominiumMesseger(newCondominiumMesseger.filter((_, i) => i !== index))}
               >
                 Excluir
               </Button>
               <Button
                 variant="contained"
                 size="small"
-                onClick={() =>
-                  setNewCondominiumMesseger((prev) => [
-                    ...prev,
-                    { _id: "", starttime: new Date(), endtime: new Date() },
-                  ])
-                }
+                onClick={() => setNewCondominiumMesseger((prev) => [...prev, { _id: "", starttime: new Date(), endtime: new Date() }])}
               >
                 Adicionar mais uma
               </Button>
@@ -290,9 +226,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
               setStateValue(newValue ? newValue.nome : "");
               if (newValue) handleGetCity(newValue.sigla);
             }}
-            renderInput={(params) => (
-              <TextField {...params} required label="Estado" fullWidth />
-            )}
+            renderInput={(params) => <TextField {...params} required label="Estado" fullWidth />}
           />
 
           <Autocomplete
@@ -303,9 +237,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
             onChange={(event, newValue) => {
               setCityValue(newValue ? newValue.nome : "");
             }}
-            renderInput={(params) => (
-              <TextField {...params} label="Cidade" fullWidth />
-            )}
+            renderInput={(params) => <TextField {...params} label="Cidade" fullWidth />}
             autoComplete
           />
         </Box>
@@ -317,7 +249,7 @@ const AddScreens: React.FC<AddScreensProps> = ({
                 key={item._id}
                 control={
                   <Checkbox
-                    required
+                    required={source_rss.length === 0}
                     onChange={(e) => {
                       const index = source_rss.indexOf(e.target.name);
                       if (e.target.checked) {

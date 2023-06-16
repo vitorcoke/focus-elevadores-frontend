@@ -22,28 +22,17 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState, useEffect } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import {
-  CloseRounded,
-  SendRounded,
-  FileUploadRounded,
-} from "@mui/icons-material";
+import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
 import { api } from "../../../service";
 import { base64toFile } from "../../../utils/fileBase64";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import {
-  DataGridPro,
-  GridColDef,
-  GridRowId,
-  GridToolbar,
-} from "@mui/x-data-grid-pro";
+import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Permission } from "../../../types/users.type";
 
 type AddCondominiumMessegerProps = {
-  setCondominiumMesseger: React.Dispatch<
-    React.SetStateAction<CondominiumMessage[]>
-  >;
+  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessage[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -55,16 +44,11 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
-  setCondominiumMesseger,
-}) => {
+const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ setCondominiumMesseger }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const {
-    openDialogCreateCondominiumMessenger,
-    setOpenDialogCreateCondominiumMessenger,
-    setCheckboxCondominiumMessenger,
-  } = useControlerButtonPagesContext();
+  const { openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger, setCheckboxCondominiumMessenger } =
+    useControlerButtonPagesContext();
   const { user } = useAuthContext();
 
   const [nameMessage, setNameMessage] = useState("");
@@ -111,11 +95,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
         let img = new Image();
         img.src = objectUrl;
         img.onload = () => {
-          if (img.width <= 720 && img.height <= 480) {
-            setJpgFile(file);
-          } else {
-            alert("A imagem deve ter no máximo 720x480");
-          }
+          setJpgFile(file);
         };
       } else {
         alert("O arquivo deve ser uma imagem");
@@ -135,8 +115,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           starttime,
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
-          time_exibition:
-            time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
+          time_exibition: time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
         });
         if (checkboxScreens.length > 0) {
           checkboxScreens.map(async (screen) => {
@@ -160,8 +139,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
           starttime,
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
-          time_exibition:
-            time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
+          time_exibition: time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
         });
 
         if (checkboxScreens.length > 0) {
@@ -208,58 +186,28 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
   }, [select]);
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogCreateCondominiumMessenger}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
+    <Dialog fullScreen open={openDialogCreateCondominiumMessenger} onClose={handleCloseDialog} TransitionComponent={Transition}>
       <Box component={"form"} onSubmit={handleSubmit}>
         <AppBar>
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
         </AppBar>
-        <Box
-          width="100%"
-          height="100%"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
+        <Box width="100%" height="100%" display="flex" flexDirection="column" alignItems="center" gap={2} p={3}>
           <Toolbar />
 
-          <Box
-            maxWidth="100%"
-            display="flex"
-            flexDirection={smDown ? "column" : "row"}
-            justifyContent="space-evenly"
-            gap={2}
-          >
-            <Box
-              width={smDown ? "100%" : "40%"}
-              alignItems={smDown ? "flex-start" : "center"}
-            >
+          <Box maxWidth="100%" display="flex" flexDirection={smDown ? "column" : "row"} justifyContent="space-evenly" gap={2}>
+            <Box width={smDown ? "100%" : "40%"} alignItems={smDown ? "flex-start" : "center"}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <FormControl fullWidth focused>
                     <InputLabel>Selecione o tipo da mensagem</InputLabel>
-                    <Select
-                      label="Selecione o tipo da mensagem"
-                      value={select}
-                      onChange={(e) => setSelect(e.target.value as number)}
-                    >
+                    <Select label="Selecione o tipo da mensagem" value={select} onChange={(e) => setSelect(e.target.value as number)}>
                       <MenuItem value={0}>Mensagem texto</MenuItem>
                       <MenuItem value={1}>Mensagem JPG</MenuItem>
                     </Select>
@@ -310,10 +258,9 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                           value={time_exibition}
                           type={"number"}
                           sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                              {
-                                display: "none",
-                              },
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                              display: "none",
+                            },
                             "& input[type=number]": {
                               MozAppearance: "textfield",
                             },
@@ -344,10 +291,9 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                           value={time_exibition}
                           type={"number"}
                           sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                              {
-                                display: "none",
-                              },
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                              display: "none",
+                            },
                             "& input[type=number]": {
                               MozAppearance: "textfield",
                             },
@@ -360,21 +306,9 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
                     )}
 
                     <Grid item xs={12}>
-                      <Button
-                        variant="contained"
-                        component="label"
-                        disabled={!!nameMessage}
-                        fullWidth
-                        startIcon={<FileUploadRounded />}
-                      >
+                      <Button variant="contained" component="label" disabled={!!nameMessage} fullWidth startIcon={<FileUploadRounded />}>
                         JPG mensagem 720x480
-                        <input
-                          hidden
-                          accept="image/jpeg"
-                          multiple
-                          type="file"
-                          onChange={handleLogotipo}
-                        />
+                        <input hidden accept="image/jpeg" multiple type="file" onChange={handleLogotipo} />
                       </Button>
                     </Grid>
                   </>
@@ -382,13 +316,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
               </Grid>
             </Box>
             {!smDown && <Divider orientation="vertical" />}
-            <Box
-              width={smDown ? "100%" : "40%"}
-              display="flex"
-              textAlign="center"
-              alignItems={smDown ? "flex-start" : "center"}
-              mt={smDown ? 10 : 0}
-            >
+            <Box width={smDown ? "100%" : "40%"} display="flex" textAlign="center" alignItems={smDown ? "flex-start" : "center"} mt={smDown ? 10 : 0}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Typography>Validade : </Typography>
