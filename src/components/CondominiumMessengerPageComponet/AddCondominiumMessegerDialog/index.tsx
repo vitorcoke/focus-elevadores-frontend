@@ -90,13 +90,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
     if (files) {
       let file = files[0];
       if (file && file.type.includes("image")) {
-        let url = window.URL || window.webkitURL;
-        let objectUrl = url.createObjectURL(file);
-        let img = new Image();
-        img.src = objectUrl;
-        img.onload = () => {
-          setJpgFile(file);
-        };
+        setJpgFile(file);
       } else {
         alert("O arquivo deve ser uma imagem");
       }
@@ -105,9 +99,23 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let base64 = jpg_file !== undefined && (await base64toFile(jpg_file));
+
+    let nameFile = "";
+
+    const formData = new FormData();
+    if (jpg_file) {
+      formData.append("file", jpg_file);
+
+      const nameFileResponse = await api.post("/condominium-message/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      nameFile = nameFileResponse.data;
+    }
+
     try {
-      if (nameMessage) {
+      if (select === 0) {
         const newMessege = await api.post("/condominium-message", {
           name: nameMessage,
           title,
@@ -132,10 +140,10 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         setTimeExibition("");
 
         setOpenAlertSucess(true);
-      } else {
+      } else if (select === 1 && jpg_file) {
         const newMessege = await api.post("/condominium-message", {
           name: nameJpg,
-          jpg_file: base64,
+          jpg_file: nameFile,
           starttime,
           endtime,
           screen_id: checkboxScreens ? checkboxScreens : [],
@@ -156,6 +164,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         setJpgFile(undefined);
         setTimeExibition("");
         setOpenAlertSucess(true);
+      } else {
+        alert("Selecione uma imagem");
       }
     } catch {
       setOpenAlertError(true);
