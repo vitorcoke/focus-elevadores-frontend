@@ -3,6 +3,9 @@ import {
   AppBar,
   Box,
   Button,
+  Card,
+  CardContent,
+  CardMedia,
   Dialog,
   Divider,
   FormControl,
@@ -24,7 +27,7 @@ import { forwardRef, useState, useEffect } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
 import { api } from "../../../service";
-import { base64toFile } from "../../../utils/fileBase64";
+import Rezide from "react-image-file-resizer";
 import { CondominiumMessage } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
@@ -66,6 +69,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
+  const [infosImage, setInfosImage] = useState({ url: "", name: "" });
 
   const handleCloseAlertSucess = () => {
     setOpenAlertSucess(false);
@@ -79,22 +83,46 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
     setCheckboxCondominiumMessenger([]);
     setNameMessage("");
     setNameJpg("");
+    setInfosImage({ url: "", name: "" });
     setTitle("");
     setMessage("");
     setJpgFile(undefined);
     setScreen([]);
   };
 
-  const handleLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogotipo = async (e: React.ChangeEvent<HTMLInputElement>) => {
     let files = e.target.files;
-    if (files) {
+    if (files && files.length > 0) {
       let file = files[0];
       if (file && file.type.includes("image")) {
-        setJpgFile(file);
+        resizeFile(file);
       } else {
+        setInfosImage({ url: "", name: "" });
+        setJpgFile(undefined);
         alert("O arquivo deve ser uma imagem");
       }
+    } else {
+      setInfosImage({ url: "", name: "" });
+      setJpgFile(undefined);
     }
+  };
+
+  const resizeFile = (file: File) => {
+    Rezide.imageFileResizer(
+      file,
+      960, // largura desejada
+      750, // altura desejada
+      "JPEG", // formato
+      200, // qualidade
+      0, // rotação
+      (url: string | File | Blob | ProgressEvent<FileReader>) => {
+        if (url instanceof File) {
+          setInfosImage({ url: URL.createObjectURL(url), name: file.name });
+          setJpgFile(url);
+        }
+      },
+      "file" // formato de saída
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -137,6 +165,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         setTitle("");
         setNameMessage("");
         setJpgFile(undefined);
+        setInfosImage({ url: "", name: "" });
         setTimeExibition("");
 
         setOpenAlertSucess(true);
@@ -161,6 +190,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         setMessage("");
         setTitle("");
         setNameMessage("");
+        setInfosImage({ url: "", name: "" });
         setJpgFile(undefined);
         setTimeExibition("");
         setOpenAlertSucess(true);
@@ -193,6 +223,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   useEffect(() => {
     setNameJpg("");
     setNameMessage("");
+    setInfosImage({ url: "", name: "" });
   }, [select]);
 
   return (
@@ -275,9 +306,8 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                               MozAppearance: "textfield",
                             },
                           }}
-                          onChange={(e) => setTimeExibition(e.target.value)}
+                          onChange={(e) => setTimeExibition(e.target.value.slice(0, 3))}
                           helperText={`${time_exibition?.toString().length}/3`}
-                          inputProps={{ maxLength: 3 }}
                         />
                       </Grid>
                     )}
@@ -308,17 +338,30 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                               MozAppearance: "textfield",
                             },
                           }}
-                          onChange={(e) => setTimeExibition(e.target.value)}
+                          onChange={(e) => setTimeExibition(e.target.value.slice(0, 3))}
                           helperText={`${time_exibition?.toString().length}/3`}
-                          inputProps={{ maxLength: 3 }}
                         />
                       </Grid>
                     )}
 
                     <Grid item xs={12}>
+                      <Box width="100%" display="flex" justifyContent="center" alignItems="center">
+                        {!infosImage.url ? (
+                          <Typography>Selecione uma imagem</Typography>
+                        ) : (
+                          <Card>
+                            <CardMedia component="img" image={infosImage.url} width={200} height={200} />
+                            <CardContent>
+                              <Typography>{infosImage.name} </Typography>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12}>
                       <Button variant="contained" component="label" disabled={!!nameMessage} fullWidth startIcon={<FileUploadRounded />}>
-                        JPG mensagem 720x480
-                        <input hidden accept="image/jpeg" multiple type="file" onChange={handleLogotipo} />
+                        Upload imagem
+                        <input hidden accept="image/jpeg" type="file" onChange={handleLogotipo} />
                       </Button>
                     </Grid>
                   </>
