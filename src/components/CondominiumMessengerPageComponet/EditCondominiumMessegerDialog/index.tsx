@@ -412,7 +412,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                             height={200}
                           />
                           <CardContent>
-                            <Typography>{!infosImage.name ? editCondominiumMesseger.jpg_file.split("/")[4] : infosImage.name} </Typography>
+                            <Typography>{!infosImage.name ? editCondominiumMesseger.jpg_file.split("/")[5] : infosImage.name} </Typography>
                           </CardContent>
                         </Card>
                       )}
