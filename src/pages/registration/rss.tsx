@@ -15,7 +15,7 @@ type RssProps = {
   initialRss: Rss[];
 };
 
-const Rss: React.FC<RssProps> = ({ initialRss }) => {
+const RssPage: React.FC<RssProps> = ({ initialRss }) => {
   const { checkboxRss, setCheckboxRss } = useControlerButtonPagesContext();
 
   const [rss, setRss] = useState(initialRss);
@@ -58,11 +58,7 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
             }}
             rows={rows}
             columns={columns}
-            onCellClick={(params) =>
-              checkboxRss.length === 0
-                ? setEditRss(params.row as Rss)
-                : setEditRss(undefined)
-            }
+            onCellClick={(params) => (checkboxRss.length === 0 ? setEditRss(params.row as Rss) : setEditRss(undefined))}
           />
           <AddRss setRss={setRss} />
           {editRss && <EditRss rss={editRss} setRss={setRss} />}
@@ -72,7 +68,7 @@ const Rss: React.FC<RssProps> = ({ initialRss }) => {
   );
 };
 
-export default withAllPermission(Rss);
+export default withAllPermission(RssPage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
