@@ -1,8 +1,8 @@
 # Etapa 1: Usar uma imagem oficial do Node.js
-FROM node:18.12-alpine AS build
+FROM node:18-bullseye AS build
 
 # Definir o diretório de trabalho dentro do container
-WORKDIR /app/focus-elevador-screen-frontend
+WORKDIR /app/focus-elevadores-frontend
 
 # Copiar os arquivos package.json e package-lock.json para instalar as dependências
 COPY package*.json ./
@@ -19,4 +19,4 @@ RUN npm run build
 RUN npm install -g pm2
 
 # Comando para iniciar a aplicação com PM2
-CMD ["pm2-runtime", "start", "npm", "--name", "focus-elevador-screen-frontend", "--", "start"]
+CMD ["pm2-runtime", "start", "npm", "--name", "focus-elevadores-frontend", "--", "start"]
