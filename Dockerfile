@@ -13,6 +13,9 @@ RUN npm install --force
 # Copiar o código da aplicação NestJS para dentro do container
 COPY . .
 
+ARG NEXT_PUBLIC_URL_SERVER
+ENV NEXT_PUBLIC_URL_SERVER=$NEXT_PUBLIC_URL_SERVER
+
 RUN npm run build
 
 # Instala o PM2 globalmente
