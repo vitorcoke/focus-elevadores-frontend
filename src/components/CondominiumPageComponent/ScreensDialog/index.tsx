@@ -14,25 +14,25 @@ import { TabContext, TabList, TabPanel } from "@mui/lab";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState } from "react";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 import { Rss } from "../../../types/rss.type";
 import { Banner } from "../../../types/banner.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Permission } from "../../../types/users.type";
-import { CondominiumMessage } from "../../../types/condominium-message.type";
+import { CondominiumMessageType } from "../../../types/condominium-message.type";
 import ScreenTable from "./ScreensTable";
 import AddScreens from "./AddScreens";
 import EditScreens from "./EditScreens";
+import { Noticies } from "../../../types/noticies.type";
 
 type ScreenDialogProp = {
-  condominium: Condominium;
-  setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
+  condominium: CondominiumType;
+  setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
   rss: Rss[];
   banner: Banner[];
-  condominiumMesseger: CondominiumMessage[];
-  setCondominiumMesseger: React.Dispatch<
-    React.SetStateAction<CondominiumMessage[]>
-  >;
+  noticies: Noticies[];
+  condominiumMesseger: CondominiumMessageType[];
+  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -48,6 +48,7 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
   condominium,
   setCondominium,
   rss,
+  noticies,
   banner,
   condominiumMesseger,
   setCondominiumMesseger,
@@ -123,18 +124,15 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
                 {user?.permission === Permission.ADMIN && (
                   <Tab label="Cadastro de telas" value="2" />
                 )}
-                {checkboxScreens.length === 1 && (
-                  <Tab label="Editar de telas" value="3" />
-                )}
+                {checkboxScreens.length === 1 && <Tab label="Editar de telas" value="3" />}
               </TabList>
-              <TabPanel value="1">
-                {<ScreenTable selectedCondominium={condominium} />}
-              </TabPanel>
+              <TabPanel value="1">{<ScreenTable selectedCondominium={condominium} />}</TabPanel>
               <TabPanel value="2">
                 {
                   <AddScreens
                     condominium={condominium}
                     setCondominium={setCondominium}
+                    noticies={noticies}
                     rss={rss}
                     banner={banner}
                     condominiumMesseger={condominiumMesseger}
@@ -147,6 +145,7 @@ const ScreensDialog: React.FC<ScreenDialogProp> = ({
                     setCondominium={setCondominium}
                     condominium={condominium}
                     rss={rss}
+                    noticies={noticies}
                     banner={banner}
                     condominiumMesseger={condominiumMesseger}
                     setCondominiumMesseger={setCondominiumMesseger}

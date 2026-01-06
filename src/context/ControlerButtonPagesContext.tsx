@@ -1,11 +1,5 @@
 import { GridRowId } from "@mui/x-data-grid-pro";
-import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useState,
-} from "react";
+import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
 
 type ControlerButtonPagesContextProps = {
   children: React.ReactNode;
@@ -51,23 +45,23 @@ type ControlerButtonPagesContextData = {
   setCheckboxVms: Dispatch<SetStateAction<GridRowId[]>>;
   openDialogEditVms: boolean;
   setOpenDialogEditVms: Dispatch<SetStateAction<boolean>>;
+  openDialogCreateNoticies: boolean;
+  setOpenDialogCreateNoticies: Dispatch<SetStateAction<boolean>>;
+  checkboxNoticies: GridRowId[];
+  setCheckboxNoticies: Dispatch<SetStateAction<GridRowId[]>>;
+  openDialogEditNoticies: boolean;
+  setOpenDialogEditNoticies: Dispatch<SetStateAction<boolean>>;
 };
 
-const ControlerButtonPagesContext = createContext(
-  {} as ControlerButtonPagesContextData
-);
+const ControlerButtonPagesContext = createContext({} as ControlerButtonPagesContextData);
 
 export const useControlerButtonPagesContext = () => {
   return useContext(ControlerButtonPagesContext);
 };
 
-const ControlerButtonPagesProvider: React.FC<
-  ControlerButtonPagesContextProps
-> = ({ children }) => {
-  const [openDialogCreateCondominium, setOpenDialogCreateCondominium] =
-    useState(false);
-  const [openDialogEditCondominium, setOpenDialogEditCondominium] =
-    useState(false);
+const ControlerButtonPagesProvider: React.FC<ControlerButtonPagesContextProps> = ({ children }) => {
+  const [openDialogCreateCondominium, setOpenDialogCreateCondominium] = useState(false);
+  const [openDialogEditCondominium, setOpenDialogEditCondominium] = useState(false);
   const [openDialogEditRss, setOpenDialogEditRss] = useState(false);
   const [openDialogCreateRss, setOpenDialogCreateRss] = useState(false);
   const [openDialogCreateScreens, setOpenDialogCreateScreens] = useState(false);
@@ -75,26 +69,22 @@ const ControlerButtonPagesProvider: React.FC<
   const [openDialogEditBanner, setOpenDialogEditBanner] = useState(false);
   const [openDialogCreateUser, setOpenDialogCreateUser] = useState(false);
   const [openDialogEditUser, setOpenDialogEditUser] = useState(false);
-  const [
-    openDialogCreateCondominiumMessenger,
-    setOpenDialogCreateCondominiumMessenger,
-  ] = useState(false);
-  const [
-    openDialogEditCondominiumMessenger,
-    setOpenDialogEditCondominiumMessenger,
-  ] = useState(false);
+  const [openDialogCreateNoticies, setOpenDialogCreateNoticies] = useState(false);
+  const [openDialogEditNoticies, setOpenDialogEditNoticies] = useState(false);
+  const [openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger] =
+    useState(false);
+  const [openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger] =
+    useState(false);
   const [openDialogCreateVms, setOpenDialogCreateVms] = useState(false);
   const [openDialogEditVms, setOpenDialogEditVms] = useState(false);
-  const [checkboxCondominium, setCheckboxCondominium] = useState<GridRowId[]>(
-    []
-  );
+  const [checkboxCondominium, setCheckboxCondominium] = useState<GridRowId[]>([]);
   const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
   const [checkboxRss, setCheckboxRss] = useState<GridRowId[]>([]);
   const [checkboxBanner, setCheckboxBanner] = useState<GridRowId[]>([]);
   const [checkboxUser, setCheckboxUser] = useState<GridRowId[]>([]);
-  const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] =
-    useState<GridRowId[]>([]);
+  const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] = useState<GridRowId[]>([]);
   const [checkboxVms, setCheckboxVms] = useState<GridRowId[]>([]);
+  const [checkboxNoticies, setCheckboxNoticies] = useState<GridRowId[]>([]);
 
   return (
     <ControlerButtonPagesContext.Provider
@@ -139,6 +129,12 @@ const ControlerButtonPagesProvider: React.FC<
         setCheckboxVms,
         openDialogEditVms,
         setOpenDialogEditVms,
+        openDialogCreateNoticies,
+        setOpenDialogCreateNoticies,
+        checkboxNoticies,
+        setCheckboxNoticies,
+        openDialogEditNoticies,
+        setOpenDialogEditNoticies,
       }}
     >
       {children}

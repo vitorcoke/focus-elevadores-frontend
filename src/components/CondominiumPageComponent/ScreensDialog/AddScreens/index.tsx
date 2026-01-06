@@ -16,29 +16,39 @@ import { useEffect, useState } from "react";
 import { api } from "../../../../service";
 import { Banner } from "../../../../types/banner.type";
 import { City } from "../../../../types/city.type";
-import { CondominiumMessage } from "../../../../types/condominium-message.type";
-import { Condominium } from "../../../../types/condominium.type";
+import { CondominiumMessageType } from "../../../../types/condominium-message.type";
+import { CondominiumType } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { State } from "../../../../types/state.type";
 import { VMS, VMSCameras } from "../../../../types/vms.type";
 import axios from "axios";
 import produce from "immer";
+import { Noticies } from "../../../../types/noticies.type";
 
 type AddScreensProps = {
-  condominium: Condominium;
-  setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
+  condominium: CondominiumType;
+  setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
   rss: Rss[];
+  noticies: Noticies[];
   banner: Banner[];
-  condominiumMesseger: CondominiumMessage[];
+  condominiumMesseger: CondominiumMessageType[];
 };
 
-const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rss, banner, condominiumMesseger }) => {
+const AddScreens: React.FC<AddScreensProps> = ({
+  condominium,
+  setCondominium,
+  rss,
+  noticies,
+  banner,
+  condominiumMesseger,
+}) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("md"));
 
   const [name, setName] = useState("");
   const [validity, setValidity] = useState("");
   const [source_rss, setSource_rss] = useState<string[]>([]);
+  const [noticiesSelect, setNoticiesSelect] = useState<string[]>([]);
   const [newBanner, setNewBanner] = useState("");
   const [newCondominiumMesseger, setNewCondominiumMesseger] = useState([{ _id: "" }]);
   const [state, setState] = useState<State[]>([]);
@@ -65,12 +75,15 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
         return response.data.map((vms: VMS) => {
           setVmsUrl(`http://${vms.username}:${vms.password}@${vms.server}:${vms.port}`);
           axios
-            .get<string>(`http://${vms.server}:${vms.port}/camerasnomes.cgi?receiver=${vms.receiver}&server=${vms.account}`, {
-              auth: {
-                username: vms.username,
-                password: vms.password,
-              },
-            })
+            .get<string>(
+              `http://${vms.server}:${vms.port}/camerasnomes.cgi?receiver=${vms.receiver}&server=${vms.account}`,
+              {
+                auth: {
+                  username: vms.username,
+                  password: vms.password,
+                },
+              }
+            )
             .then((response) => {
               const cameras = response.data.split("&");
               const camerasArray = cameras.map((camera) => {
@@ -89,9 +102,11 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
   }, []);
 
   const handleGetCity = (state: string) => {
-    axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`).then((response) => {
-      setCity(response.data);
-    });
+    axios
+      .get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`)
+      .then((response) => {
+        setCity(response.data);
+      });
   };
 
   const handleCloseAlertSucess = () => {
@@ -109,6 +124,7 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
         name,
         validity,
         source_rss,
+        noticies: noticiesSelect,
         banner: newBanner,
         condominium_id: condominium._id,
         condominium_message: newCondominiumMesseger.map((item) => item._id),
@@ -124,15 +140,17 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
         });
       });
 
-      source_rss.forEach(async (item) => {
-        await api.patch(`/source-rss/${item}/screen`, {
+      noticiesSelect.forEach(async (item) => {
+        await api.patch(`/noticies/${item}/screen`, {
           screen_id: screenUpdate.data._id,
         });
       });
 
       setCondominium((old) => [
         ...old.map((item) =>
-          item._id === screenUpdate.data.condominium_id ? { ...item, screens: item.screens?.concat(screenUpdate.data._id) } : item
+          item._id === screenUpdate.data.condominium_id
+            ? { ...item, screens: item.screens?.concat(screenUpdate.data._id) }
+            : item
         ),
       ]);
 
@@ -144,7 +162,15 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
 
   return (
     <Box width="100%" display="flex" alignContent="center" justifyContent="center">
-      <Box component={"form"} p={3} width={smDown ? "100%" : "45%"} display="flex" flexDirection="column" gap={3} onSubmit={handleSubmit}>
+      <Box
+        component={"form"}
+        p={3}
+        width={smDown ? "100%" : "45%"}
+        display="flex"
+        flexDirection="column"
+        gap={3}
+        onSubmit={handleSubmit}
+      >
         <TextField
           required
           label="Nome"
@@ -178,12 +204,24 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
           getOptionLabel={(option) => option.name}
           fullWidth
           onChange={(event, newValue) => {
-            setVms(newValue ? newValue.map((item) => `${vmsUrl}/mjpegstream.cgi?camera=${item.code}`) : []);
+            setVms(
+              newValue
+                ? newValue.map((item) => `${vmsUrl}/mjpegstream.cgi?camera=${item.code}`)
+                : []
+            );
           }}
           renderInput={(params) => <TextField {...params} label="Cameras" fullWidth />}
         />
         {newCondominiumMesseger.map((item, index) => (
-          <Box display="flex" flexDirection="column" gap={3} border="1px solid #ab120e" borderRadius="8px" p={3} key={index}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            gap={3}
+            border="1px solid #ab120e"
+            borderRadius="8px"
+            p={3}
+            key={index}
+          >
             <Autocomplete
               options={condominiumMesseger}
               getOptionLabel={(option) => option.name}
@@ -195,21 +233,31 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
                   })
                 );
               }}
-              renderInput={(params) => <TextField {...params} required label="Mensagem" fullWidth />}
+              renderInput={(params) => (
+                <TextField {...params} required label="Mensagem" fullWidth />
+              )}
             />
 
             <Box display="flex" gap={2} justifyContent="end">
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => newCondominiumMesseger.length > 1 && setNewCondominiumMesseger(newCondominiumMesseger.filter((_, i) => i !== index))}
+                onClick={() =>
+                  newCondominiumMesseger.length > 1 &&
+                  setNewCondominiumMesseger(newCondominiumMesseger.filter((_, i) => i !== index))
+                }
               >
                 Excluir
               </Button>
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => setNewCondominiumMesseger((prev) => [...prev, { _id: "", starttime: new Date(), endtime: new Date() }])}
+                onClick={() =>
+                  setNewCondominiumMesseger((prev) => [
+                    ...prev,
+                    { _id: "", starttime: new Date(), endtime: new Date() },
+                  ])
+                }
               >
                 Adicionar mais uma
               </Button>
@@ -243,7 +291,7 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
         </Box>
 
         <FormControl>
-          <FormGroup row>
+          {/* <FormGroup row>
             {rss.map((item) => (
               <FormControlLabel
                 key={item._id}
@@ -256,6 +304,32 @@ const AddScreens: React.FC<AddScreensProps> = ({ condominium, setCondominium, rs
                         setSource_rss((prev) => [...prev, e.target.name]);
                       } else {
                         setSource_rss((prev) => {
+                          prev.splice(index, 1);
+                          return prev;
+                        });
+                      }
+                    }}
+                    name={item._id}
+                  />
+                }
+                label={item.name}
+              />
+            ))}
+          </FormGroup> */}
+
+          <FormGroup row>
+            {noticies.map((item) => (
+              <FormControlLabel
+                key={item._id}
+                control={
+                  <Checkbox
+                    required={noticiesSelect.length === 0}
+                    onChange={(e) => {
+                      const index = noticiesSelect.indexOf(e.target.name);
+                      if (e.target.checked) {
+                        setNoticiesSelect((prev) => [...prev, e.target.name]);
+                      } else {
+                        setNoticiesSelect((prev) => {
                           prev.splice(index, 1);
                           return prev;
                         });

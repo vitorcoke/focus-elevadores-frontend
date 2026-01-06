@@ -3,7 +3,7 @@ import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { getAPIClient } from "../../service";
-import { CondominiumMessage } from "../../types/condominium-message.type";
+import { CondominiumMessageType } from "../../types/condominium-message.type";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { withAllPermission } from "../../hocs";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
@@ -13,7 +13,7 @@ import BaseMainLayoutPage from "../../layout/BaseMain";
 import { User } from "../../types/users.type";
 
 type CondominiumMessegerProps = {
-  initialCondominiumMessege: CondominiumMessage[];
+  initialCondominiumMessege: CondominiumMessageType[];
   initialUsers: User[];
 };
 
@@ -24,14 +24,11 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
   const { checkboxCondominiumMessenger, setCheckboxCondominiumMessenger } =
     useControlerButtonPagesContext();
 
-  const [condominiumMesseger, setCondominiumMesseger] = useState(
-    initialCondominiumMessege
-  );
+  const [condominiumMesseger, setCondominiumMesseger] = useState(initialCondominiumMessege);
 
   const [users, setUsers] = useState(initialUsers);
 
-  const [editCondominiumMesseger, setEditCondominiumMesseger] =
-    useState<CondominiumMessage>();
+  const [editCondominiumMesseger, setEditCondominiumMesseger] = useState<CondominiumMessageType>();
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nome", flex: 2 },
@@ -77,18 +74,16 @@ const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
             }}
             onCellClick={(params) => {
               checkboxCondominiumMessenger.length === 0
-                ? setEditCondominiumMesseger(params.row as CondominiumMessage)
+                ? setEditCondominiumMesseger(params.row as CondominiumMessageType)
                 : setEditCondominiumMesseger(undefined);
             }}
             onRowClick={(params) => {
               checkboxCondominiumMessenger.length === 0
-                ? setEditCondominiumMesseger(params.row as CondominiumMessage)
+                ? setEditCondominiumMesseger(params.row as CondominiumMessageType)
                 : setEditCondominiumMesseger(undefined);
             }}
           />
-          <AddCondominiumMessegerDialog
-            setCondominiumMesseger={setCondominiumMesseger}
-          />
+          <AddCondominiumMessegerDialog setCondominiumMesseger={setCondominiumMesseger} />
           {editCondominiumMesseger && (
             <EditCondominiumMessegerDialog
               condominiumMesseger={editCondominiumMesseger}
@@ -107,9 +102,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
 
   try {
-    const condominiumMessages = await api.get<CondominiumMessage[]>(
-      "/condominium-message"
-    );
+    const condominiumMessages = await api.get<CondominiumMessageType[]>("/condominium-message");
     const users = await api.get<User[]>("/users/all");
 
     return {

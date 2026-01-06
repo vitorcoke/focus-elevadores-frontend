@@ -45,9 +45,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
   const match = router.pathname;
   const { singOut, user } = useAuthContext();
   const [openSettings, setOpenSettings] = useState(false);
-  const [openRegistration, setOpenRegistration] = useState(
-    match > "/registration" ? true : false
-  );
+  const [openRegistration, setOpenRegistration] = useState(match > "/registration" ? true : false);
 
   const [openDrawer, setOpenDrawer] = useState(false);
 
@@ -126,7 +124,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                   </ListItemIcon>
                   <ListItemText primary="Condominio" />
                 </ListItemButton>
-                {user?.permission === Permission.ADMIN && (
+                {/* {user?.permission === Permission.ADMIN && (
                   <ListItemButton
                     sx={{ pl: 4 }}
                     selected={match === "/registration/rss"}
@@ -136,6 +134,18 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                       <Code fontSize="small" sx={{ color: "#111" }} />
                     </ListItemIcon>
                     <ListItemText primary="Fonte RSS" />
+                  </ListItemButton>
+                )} */}
+                {user?.permission === Permission.ADMIN && (
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    selected={match === "/registration/noticies"}
+                    onClick={() => router.push("/registration/noticies")}
+                  >
+                    <ListItemIcon>
+                      <Code fontSize="small" sx={{ color: "#111" }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Noticias" />
                   </ListItemButton>
                 )}
                 {user?.permission === Permission.ADMIN && (
@@ -154,9 +164,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                 <ListItemButton
                   sx={{ pl: 4 }}
                   selected={match === "/registration/condominium-messeger"}
-                  onClick={() =>
-                    router.push("/registration/condominium-messeger")
-                  }
+                  onClick={() => router.push("/registration/condominium-messeger")}
                 >
                   <ListItemIcon>
                     <CommentRounded fontSize="small" sx={{ color: "#111" }} />
@@ -170,10 +178,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                     onClick={() => router.push("/registration/user")}
                   >
                     <ListItemIcon>
-                      <PersonAddAlt1Rounded
-                        fontSize="small"
-                        sx={{ color: "#111" }}
-                      />
+                      <PersonAddAlt1Rounded fontSize="small" sx={{ color: "#111" }} />
                     </ListItemIcon>
                     <ListItemText primary="Usuário" />
                   </ListItemButton>

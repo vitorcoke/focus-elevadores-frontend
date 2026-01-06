@@ -21,26 +21,36 @@ import { api } from "../../../../service";
 import { Screen } from "../../../../types/screens.type";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Condominium } from "../../../../types/condominium.type";
+import { CondominiumType } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { City } from "../../../../types/city.type";
 import { State } from "../../../../types/state.type";
 import { Banner } from "../../../../types/banner.type";
-import { CondominiumMessage } from "../../../../types/condominium-message.type";
+import { CondominiumMessageType } from "../../../../types/condominium-message.type";
 import { useAuthContext } from "../../../../context/AuthContext";
 import { Permission } from "../../../../types/users.type";
 import axios from "axios";
+import { Noticies } from "../../../../types/noticies.type";
 
 type EditScreensProps = {
-  condominium: Condominium;
-  setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
+  condominium: CondominiumType;
+  setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
   rss: Rss[];
   banner: Banner[];
-  condominiumMesseger: CondominiumMessage[];
-  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessage[]>>;
+  noticies: Noticies[];
+  condominiumMesseger: CondominiumMessageType[];
+  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
-const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, rss, banner, condominiumMesseger, setCondominiumMesseger }) => {
+const EditScreens: React.FC<EditScreensProps> = ({
+  condominium,
+  setCondominium,
+  rss,
+  noticies,
+  banner,
+  condominiumMesseger,
+  setCondominiumMesseger,
+}) => {
   const theme = useTheme();
   const mdDown = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -53,6 +63,7 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
     name: "",
     validity: "",
     source_rss: [],
+    noticies: [],
     condominium_message: [],
     banner: "",
     state: "",
@@ -68,6 +79,9 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
   const [rssIdAdd, setRssIdAdd] = useState<string[]>([]);
   const [rssScreensId, setRssScreensId] = useState<string[]>([]);
   const [rssIdRemove, setRssIdRemove] = useState<string[]>([]);
+  const [noticiesIdAdd, setNoticiesIdAdd] = useState<string[]>([]);
+  const [noticiesScreensId, setNoticiesScreensId] = useState<string[]>([]);
+  const [noticiesIdRemove, setNoticiesIdRemove] = useState<string[]>([]);
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -99,9 +113,11 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
   }, []);
 
   const handleGetCity = (state: string) => {
-    axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`).then((response) => {
-      setCity(response.data);
-    });
+    axios
+      .get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`)
+      .then((response) => {
+        setCity(response.data);
+      });
   };
 
   const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +127,7 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
         name: screenCondominium.name,
         banner: screenCondominium.banner,
         source_rss: screenCondominium.source_rss,
+        noticies: screenCondominium.noticies,
         condominium_message: screenCondominium.condominium_message,
         state: stateValue ? stateValue : screenCondominium.state,
         city: cityValue ? cityValue : screenCondominium.city,
@@ -136,6 +153,28 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
           }
         });
       }
+
+      if (noticiesIdRemove.length > 0) {
+        noticiesIdRemove.map(async (id) => {
+          await api.patch(`/noticies/${id}`, {
+            screen_id: noticiesScreensId.filter((screen) => screen !== id),
+          });
+        });
+      }
+
+      if (noticiesIdAdd.length > 0) {
+        noticiesIdAdd.map(async (id) => {
+          const noticie = await api.get(`/noticies/${id}`);
+          if (noticie.data.screen_id.includes(screenCondominium._id)) {
+            return;
+          } else {
+            await api.patch(`/noticies/${id}`, {
+              screen_id: noticiesScreensId.concat(id),
+            });
+          }
+        });
+      }
+
       condominiumMesseger.map(async (messege) => {
         if (screenCondominium.condominium_message?.includes(messege._id)) {
           await api.patch(`/condominium-message/${messege._id}`, {
@@ -160,7 +199,9 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
           await api.patch(`/condominium-message/${messege._id}`, {
             starttime: messege.starttime,
             endtime: messege.endtime,
-            screen_id: condominiumMesseger.find((item) => item._id === messege._id)?.screen_id?.concat(screenCondominium._id),
+            screen_id: condominiumMesseger
+              .find((item) => item._id === messege._id)
+              ?.screen_id?.concat(screenCondominium._id),
           });
         }
       });
@@ -177,6 +218,7 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
       await api.delete(`/condominium/${condominium._id}/screen/${screenCondominium._id}`);
       await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       await api.delete(`/source-rss/screen/${screenCondominium._id}`);
+      await api.delete(`/noticies/screen/${screenCondominium._id}`);
       setCondominium((old) => [
         ...old.map((item) =>
           item._id === condominium._id
@@ -211,7 +253,15 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box width="100%" display="flex" alignContent="center" justifyContent="center">
-        <Box component={"form"} p={3} width={mdDown ? "100%" : "45%"} display="flex" flexDirection="column" gap={3} onSubmit={handleSubmit}>
+        <Box
+          component={"form"}
+          p={3}
+          width={mdDown ? "100%" : "45%"}
+          display="flex"
+          flexDirection="column"
+          gap={3}
+          onSubmit={handleSubmit}
+        >
           <TextField
             label="Nome"
             fullWidth
@@ -275,7 +325,13 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                 .map((idMessage, index) => {
                   return (
                     <Box key={index} width="56rem" p={3}>
-                      <Box display="flex" gap={2} border="1px solid #ab120e" borderRadius="8px" p={3}>
+                      <Box
+                        display="flex"
+                        gap={2}
+                        border="1px solid #ab120e"
+                        borderRadius="8px"
+                        p={3}
+                      >
                         <Autocomplete
                           options={condominiumMesseger}
                           getOptionLabel={(option) => option.name}
@@ -289,13 +345,23 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                             }));
                           }}
                           fullWidth
-                          renderInput={(params) => <TextField {...params} label="Mensagem" fullWidth />}
+                          renderInput={(params) => (
+                            <TextField {...params} label="Mensagem" fullWidth />
+                          )}
                         />
-                        <Box display="flex" gap={1} width="100%" alignItems="center" justifyContent="center">
+                        <Box
+                          display="flex"
+                          gap={1}
+                          width="100%"
+                          alignItems="center"
+                          justifyContent="center"
+                        >
                           <TextField
                             label="Data Inicial"
                             type="datetime-local"
-                            value={dayjs(condominiumMesseger.find((item) => item._id === idMessage)?.starttime).format("YYYY-MM-DDTHH:mm")}
+                            value={dayjs(
+                              condominiumMesseger.find((item) => item._id === idMessage)?.starttime
+                            ).format("YYYY-MM-DDTHH:mm")}
                             onChange={(e) => {
                               setCondominiumMesseger((old) => [
                                 ...old.map((item) =>
@@ -317,7 +383,9 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                           <TextField
                             label="Data Final"
                             type="datetime-local"
-                            value={dayjs(condominiumMesseger.find((item) => item._id === idMessage)?.endtime).format("YYYY-MM-DDTHH:mm")}
+                            value={dayjs(
+                              condominiumMesseger.find((item) => item._id === idMessage)?.endtime
+                            ).format("YYYY-MM-DDTHH:mm")}
                             onChange={(e) => {
                               setCondominiumMesseger((old) => [
                                 ...old.map((item) =>
@@ -337,7 +405,10 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                           />
                         </Box>
                         <Box display="flex" justifyContent="end" gap={2}>
-                          <Button variant="contained" onClick={() => handleDeleteMesseger(idMessage)}>
+                          <Button
+                            variant="contained"
+                            onClick={() => handleDeleteMesseger(idMessage)}
+                          >
                             Excluir
                           </Button>
                         </Box>
@@ -352,7 +423,9 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
             <Box p={3} width="56rem">
               <Box display="flex" gap={3} border="1px solid #ab120e" borderRadius="8px" p={3}>
                 <Autocomplete
-                  options={condominiumMesseger.filter((item) => !screenCondominium.condominium_message?.includes(item._id))}
+                  options={condominiumMesseger.filter(
+                    (item) => !screenCondominium.condominium_message?.includes(item._id)
+                  )}
                   isOptionEqualToValue={(option, value) => option._id === value._id}
                   getOptionLabel={(option) => option.name}
                   onChange={(event, newValue) => {
@@ -361,7 +434,13 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                   fullWidth
                   renderInput={(params) => <TextField {...params} label="Mensagem" fullWidth />}
                 />
-                <Box display="flex" gap={1} width="100%" alignItems="center" justifyContent="center">
+                <Box
+                  display="flex"
+                  gap={1}
+                  width="100%"
+                  alignItems="center"
+                  justifyContent="center"
+                >
                   <TextField
                     label="Data Inicial"
                     type="datetime-local"
@@ -405,7 +484,11 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                   />
                 </Box>
                 <Box display="flex" justifyContent="end" gap={2}>
-                  <Button variant="contained" onClick={() => handleSubmitNewMessage()} disabled={!messege_id}>
+                  <Button
+                    variant="contained"
+                    onClick={() => handleSubmitNewMessage()}
+                    disabled={!messege_id}
+                  >
                     Adicionar
                   </Button>
                 </Box>
@@ -438,13 +521,15 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
               onChange={(event, newValue) => {
                 setCityValue(newValue ? newValue.nome : "");
               }}
-              renderInput={(params) => <TextField {...params} label="Cidade" value={screenCondominium.city} fullWidth />}
+              renderInput={(params) => (
+                <TextField {...params} label="Cidade" value={screenCondominium.city} fullWidth />
+              )}
               autoComplete
             />
           </Box>
           {rss.length > 0 && screenCondominium && (
             <FormControl>
-              <FormGroup row>
+              {/* <FormGroup row>
                 {rss.map((item) => (
                   <FormControlLabel
                     key={item._id}
@@ -465,11 +550,46 @@ const EditScreens: React.FC<EditScreensProps> = ({ condominium, setCondominium, 
                             setRssIdAdd((old) => old.filter((id) => id !== item._id));
                             setScreenCondominium({
                               ...screenCondominium,
-                              source_rss: screenCondominium.source_rss.filter((id) => id !== item._id),
+                              source_rss: screenCondominium.source_rss.filter(
+                                (id) => id !== item._id
+                              ),
                             });
                           }
                         }}
                         checked={screenCondominium.source_rss.includes(item._id)}
+                        name={item._id}
+                      />
+                    }
+                    label={item.name}
+                  />
+                ))}
+              </FormGroup> */}
+              <FormGroup row>
+                {noticies.map((item) => (
+                  <FormControlLabel
+                    key={item._id}
+                    control={
+                      <Checkbox
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setScreenCondominium({
+                              ...screenCondominium,
+
+                              noticies: [...screenCondominium.noticies, item._id],
+                            });
+                            setNoticiesIdAdd((old) => [...old, item._id]);
+                            setNoticiesIdRemove((old) => old.filter((id) => id !== item._id));
+                            setNoticiesScreensId(item.screen_id);
+                          } else {
+                            setNoticiesIdRemove((old) => [...old, item._id]);
+                            setNoticiesIdAdd((old) => old.filter((id) => id !== item._id));
+                            setScreenCondominium({
+                              ...screenCondominium,
+                              noticies: screenCondominium.noticies.filter((id) => id !== item._id),
+                            });
+                          }
+                        }}
+                        checked={screenCondominium.noticies.includes(item._id)}
                         name={item._id}
                       />
                     }
