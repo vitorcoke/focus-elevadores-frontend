@@ -20,11 +20,11 @@ import { forwardRef, useState } from "react";
 import { TransitionProps } from "@mui/material/transitions";
 import { api } from "../../../service";
 import { VMS } from "../../../types/vms.type";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 
 type AddVmsDialogProps = {
   setVms: React.Dispatch<React.SetStateAction<VMS[]>>;
-  condominium: Condominium[];
+  condominium: CondominiumType[];
 };
 
 const Transition = forwardRef(function Transition(
@@ -39,8 +39,7 @@ const Transition = forwardRef(function Transition(
 const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogCreateVms, setOpenDialogCreateVms } =
-    useControlerButtonPagesContext();
+  const { openDialogCreateVms, setOpenDialogCreateVms } = useControlerButtonPagesContext();
 
   const [name, setName] = useState("");
   const [server, setServer] = useState("");
@@ -99,11 +98,7 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -144,11 +139,10 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Porta"
                   type={"number"}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        WebkitAppearance: "none",
-                        margin: 0,
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      WebkitAppearance: "none",
+                      margin: 0,
+                    },
                   }}
                   onChange={(e) => setPort(Number(e.target.value))}
                 />
@@ -160,11 +154,10 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Receptor"
                   type={"number"}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        WebkitAppearance: "none",
-                        margin: 0,
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      WebkitAppearance: "none",
+                      margin: 0,
+                    },
                   }}
                   onChange={(e) => setReceiver(Number(e.target.value))}
                 />
@@ -176,11 +169,10 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                   label="Conta"
                   type={"number"}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        WebkitAppearance: "none",
-                        margin: 0,
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      WebkitAppearance: "none",
+                      margin: 0,
+                    },
                   }}
                   onChange={(e) => setAccount(Number(e.target.value))}
                 />
@@ -206,12 +198,8 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
                 <Autocomplete
                   options={condominium}
                   getOptionLabel={(option) => option.name}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Condomínio" fullWidth />
-                  )}
-                  onChange={(e, value) =>
-                    setCondominium_id(value ? value._id : "")
-                  }
+                  renderInput={(params) => <TextField {...params} label="Condomínio" fullWidth />}
+                  onChange={(e, value) => setCondominium_id(value ? value._id : "")}
                 />
               </Grid>
             </Grid>

@@ -10,11 +10,11 @@ import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerP
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
 import LayoutPage from "../../layout/AppBar";
 import BaseMainLayoutPage from "../../layout/BaseMain";
-import { User } from "../../types/users.type";
+import { UserType } from "../../types/users.type";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessageType[];
-  initialUsers: User[];
+  initialUsers: UserType[];
 };
 
 const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
@@ -103,7 +103,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
   try {
     const condominiumMessages = await api.get<CondominiumMessageType[]>("/condominium-message");
-    const users = await api.get<User[]>("/users/all");
+    const users = await api.get<UserType[]>("/users/all");
 
     return {
       props: {

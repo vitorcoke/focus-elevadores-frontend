@@ -17,13 +17,13 @@ import { useControlerButtonPagesContext } from "../../../context/ControlerButton
 import { CloseRounded, SendRounded, SearchRounded } from "@mui/icons-material";
 import { forwardRef, useState, Dispatch, SetStateAction } from "react";
 import { TransitionProps } from "@mui/material/transitions";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 import { api } from "../../../service";
 import { PatternFormat } from "react-number-format";
 import axios from "axios";
 
 type AddCondominiumProps = {
-  setCondominium: Dispatch<SetStateAction<Condominium[]>>;
+  setCondominium: Dispatch<SetStateAction<CondominiumType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -106,9 +106,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
         setMessageAlertError("CNPJ já cadastrado");
         setOpenErrorCnpj(true);
         setOpenAlertError(true);
-      } else if (
-        err.response.data.message.includes("condominium_id_imodulo_1 dup key")
-      ) {
+      } else if (err.response.data.message.includes("condominium_id_imodulo_1 dup key")) {
         setMessageAlertError("ID já cadastrado");
         setOpenErrorIdImodulo(true);
         setOpenAlertError(true);
@@ -132,11 +130,7 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -163,17 +157,14 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
                   fullWidth
                   type={"number"}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      display: "none",
+                    },
                     "& input[type=number]": {
                       MozAppearance: "textfield",
                     },
                   }}
-                  onChange={(e) =>
-                    setCondominiumIdImodulo(Number(e.target.value))
-                  }
+                  onChange={(e) => setCondominiumIdImodulo(Number(e.target.value))}
                 />
               </Grid>
               <Grid item xs={8}>
@@ -204,10 +195,9 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
                     fullWidth
                     type={"number"}
                     sx={{
-                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                        {
-                          display: "none",
-                        },
+                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                        display: "none",
+                      },
                       "& input[type=number]": {
                         MozAppearance: "textfield",
                       },

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../service";
 import { setCookie, parseCookies, destroyCookie } from "nookies";
-import { User } from "../types/users.type";
+import { UserType } from "../types/users.type";
 import Router from "next/router";
 
 type AuthProviderProps = {
@@ -12,7 +12,7 @@ type AuthContextData = {
   isAuthenticated: boolean;
   singIn: ({ username, password }: SingInData) => Promise<void>;
   singOut: () => void;
-  user: User | null;
+  user: UserType | null;
 };
 
 type SingInData = {
@@ -27,7 +27,7 @@ export const useAuthContext = () => {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const isAuthenticated = !!user;
 
   useEffect(() => {
@@ -56,14 +56,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       maxAge: 60 * 60 * 1, // 1 hour
     });
 
-    setCookie(
-      undefined,
-      "focus-elevador-refreshToken",
-      data.refresh_token._id,
-      {
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      }
-    );
+    setCookie(undefined, "focus-elevador-refreshToken", data.refresh_token._id, {
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
 
     setUser(data.user);
 

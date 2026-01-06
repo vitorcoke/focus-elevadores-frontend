@@ -17,14 +17,14 @@ import { useControlerButtonPagesContext } from "../../../context/ControlerButton
 import { CloseRounded, SendRounded } from "@mui/icons-material";
 import { forwardRef, useState, useEffect } from "react";
 import { TransitionProps } from "@mui/material/transitions";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 import { api } from "../../../service";
 import { PatternFormat } from "react-number-format";
 import produce from "immer";
 
 type EditCondominiumProps = {
-  condominium: Condominium;
-  setCondominium: React.Dispatch<React.SetStateAction<Condominium[]>>;
+  condominium: CondominiumType;
+  setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -36,10 +36,7 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditCondominium: React.FC<EditCondominiumProps> = ({
-  condominium,
-  setCondominium,
-}) => {
+const EditCondominium: React.FC<EditCondominiumProps> = ({ condominium, setCondominium }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const { openDialogEditCondominium, setOpenDialogEditCondominium } =
@@ -96,9 +93,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
         setMessageAlertError("CNPJ já cadastrado");
         setOpenErrorCnpj(true);
         setOpenAlertError(true);
-      } else if (
-        err.response.data.message.includes("condominium_id_imodulo_1 dup key")
-      ) {
+      } else if (err.response.data.message.includes("condominium_id_imodulo_1 dup key")) {
         setMessageAlertError("ID já cadastrado");
         setOpenErrorIdImodulo(true);
         setOpenAlertError(true);
@@ -122,11 +117,7 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -154,10 +145,9 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                   fullWidth
                   type={"number"}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      display: "none",
+                    },
                     "& input[type=number]": {
                       MozAppearance: "textfield",
                     },
@@ -214,10 +204,9 @@ const EditCondominium: React.FC<EditCondominiumProps> = ({
                     fullWidth
                     type={"number"}
                     sx={{
-                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                        {
-                          display: "none",
-                        },
+                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                        display: "none",
+                      },
                       "& input[type=number]": {
                         MozAppearance: "textfield",
                       },

@@ -22,16 +22,16 @@ import { CloseRounded, SendRounded } from "@mui/icons-material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState } from "react";
-import { Permission, User } from "../../../types/users.type";
+import { Permission, UserType } from "../../../types/users.type";
 import { api } from "../../../service";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
 import { PatternFormat } from "react-number-format";
 
 type AddUserProps = {
-  setUser: React.Dispatch<React.SetStateAction<User[]>>;
-  condominium: Condominium[];
+  setUser: React.Dispatch<React.SetStateAction<UserType[]>>;
+  condominium: CondominiumType[];
   screens: Screen[];
 };
 
@@ -48,8 +48,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useAuthContext();
-  const { openDialogCreateUser, setOpenDialogCreateUser } =
-    useControlerButtonPagesContext();
+  const { openDialogCreateUser, setOpenDialogCreateUser } = useControlerButtonPagesContext();
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
   const [openAlertError, setOpenAlertError] = useState(false);
@@ -79,7 +78,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const user = await api.post<User>("/users", {
+      const user = await api.post<UserType>("/users", {
         name,
         username,
         email,
@@ -116,11 +115,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -188,12 +183,8 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
                   multiple
                   options={condominium}
                   getOptionLabel={(option) => option.name}
-                  onChange={(e, value) =>
-                    setCondominium_id(value.map((item) => item._id))
-                  }
-                  renderInput={(params) => (
-                    <TextField {...params} label="Condomínio" />
-                  )}
+                  onChange={(e, value) => setCondominium_id(value.map((item) => item._id))}
+                  renderInput={(params) => <TextField {...params} label="Condomínio" />}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -221,12 +212,8 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
                     multiple
                     options={screens}
                     getOptionLabel={(option) => option.name}
-                    onChange={(e, value) =>
-                      setScreen_id(value.map((item) => item._id))
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Telas" />
-                    )}
+                    onChange={(e, value) => setScreen_id(value.map((item) => item._id))}
+                    renderInput={(params) => <TextField {...params} label="Telas" />}
                   />
                 </Grid>
               )}

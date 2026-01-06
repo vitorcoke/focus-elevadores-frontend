@@ -1,9 +1,9 @@
 import { Box } from "@mui/material";
 import { Chart } from "react-google-charts";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 
 type DashboardGraficProps = {
-  condominium: Condominium[];
+  condominium: CondominiumType[];
 };
 
 const DashboardGrafic: React.FC<DashboardGraficProps> = ({ condominium }) => {

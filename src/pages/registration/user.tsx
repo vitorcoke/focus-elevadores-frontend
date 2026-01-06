@@ -2,10 +2,10 @@ import { Box } from "@mui/material";
 import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
 import { useState } from "react";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import { User } from "../../types/users.type";
+import { UserType } from "../../types/users.type";
 import { getAPIClient } from "../../service";
 import { GetServerSideProps } from "next";
-import { Condominium } from "../../types/condominium.type";
+import { CondominiumType } from "../../types/condominium.type";
 import { withAdminAndSindicoPermission } from "../../hocs";
 import { Screen } from "../../types/screens.type";
 import LayoutPage from "../../layout/AppBar";
@@ -14,22 +14,18 @@ import AddUser from "../../components/UserPageComponent/AddUser";
 import EditUser from "../../components/UserPageComponent/EditUser";
 
 type UserProps = {
-  initialUser: User[];
-  initialCondominium: Condominium[];
+  initialUser: UserType[];
+  initialCondominium: CondominiumType[];
   initialScreens: Screen[];
 };
 
-const User: React.FC<UserProps> = ({
-  initialUser,
-  initialCondominium,
-  initialScreens,
-}) => {
+const User: React.FC<UserProps> = ({ initialUser, initialCondominium, initialScreens }) => {
   const { checkboxUser, setCheckboxUser } = useControlerButtonPagesContext();
 
   const [condominium] = useState(initialCondominium);
   const [user, setUser] = useState(initialUser);
   const [screens] = useState(initialScreens);
-  const [editUser, setEditUser] = useState<User>();
+  const [editUser, setEditUser] = useState<UserType>();
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nome", flex: 2 },
@@ -66,15 +62,11 @@ const User: React.FC<UserProps> = ({
             columns={columns}
             onCellClick={(params) =>
               checkboxUser.length === 0
-                ? setEditUser(params.row as User)
+                ? setEditUser(params.row as UserType)
                 : setEditUser(undefined)
             }
           />
-          <AddUser
-            setUser={setUser}
-            condominium={condominium}
-            screens={screens}
-          />
+          <AddUser setUser={setUser} condominium={condominium} screens={screens} />
           {editUser && condominium && (
             <EditUser
               userSelect={editUser}
@@ -94,10 +86,8 @@ export default withAdminAndSindicoPermission(User);
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const apiClient = getAPIClient(ctx);
   try {
-    const users = await apiClient.get<User[]>("/users");
-    const condominium = await apiClient.get<Condominium[]>(
-      "/condominium?query=all"
-    );
+    const users = await apiClient.get<UserType[]>("/users");
+    const condominium = await apiClient.get<CondominiumType[]>("/condominium?query=all");
     const screens = await apiClient.get<Screen[]>("/screens");
     return {
       props: {

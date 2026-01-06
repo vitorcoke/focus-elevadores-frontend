@@ -3,7 +3,7 @@ import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { getAPIClient } from "../../service";
-import { Condominium } from "../../types/condominium.type";
+import { CondominiumType } from "../../types/condominium.type";
 import { VMS } from "../../types/vms.type";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import AddVmsDialog from "../../components/VmsPageComponent/AddVmsDialog";
@@ -13,7 +13,7 @@ import BaseMainLayoutPage from "../../layout/BaseMain";
 
 type VmsProps = {
   initialVms: VMS[];
-  initialCondominium: Condominium[];
+  initialCondominium: CondominiumType[];
 };
 
 const Vms: React.FC<VmsProps> = ({ initialVms, initialCondominium }) => {
@@ -52,15 +52,11 @@ const Vms: React.FC<VmsProps> = ({ initialVms, initialCondominium }) => {
             selectionModel={checkboxVms}
             onSelectionModelChange={(e) => setCheckboxVms(e)}
             onCellClick={(params) =>
-              checkboxVms.length === 0
-                ? setEditVms(params.row as VMS)
-                : setEditVms(undefined)
+              checkboxVms.length === 0 ? setEditVms(params.row as VMS) : setEditVms(undefined)
             }
           />
           <AddVmsDialog setVms={setVms} condominium={initialCondominium} />
-          {editVms && (
-            <EditVmsDialog condominium={initialCondominium} vms={editVms} />
-          )}
+          {editVms && <EditVmsDialog condominium={initialCondominium} vms={editVms} />}
         </Box>
       </BaseMainLayoutPage>
     </LayoutPage>
@@ -73,7 +69,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
   try {
     const vms = await api.get<VMS[]>("/vms");
-    const condominium = await api.get<Condominium[]>("/condominium?query=all");
+    const condominium = await api.get<CondominiumType[]>("/condominium?query=all");
     return {
       props: {
         initialVms: vms.data,

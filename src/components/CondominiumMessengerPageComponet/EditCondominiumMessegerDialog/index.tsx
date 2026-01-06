@@ -23,7 +23,7 @@ import { useControlerButtonPagesContext } from "../../../context/ControlerButton
 import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
 import { api } from "../../../service";
 import Rezide from "react-image-file-resizer";
-import { CondominiumMessage } from "../../../types/condominium-message.type";
+import { CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
 import dayjs from "dayjs";
@@ -31,8 +31,8 @@ import { Permission } from "../../../types/users.type";
 import { useAuthContext } from "../../../context/AuthContext";
 
 type EditCondominiumMessegerProps = {
-  condominiumMesseger: CondominiumMessage;
-  setCondominiumMesseger: Dispatch<SetStateAction<CondominiumMessage[]>>;
+  condominiumMesseger: CondominiumMessageType;
+  setCondominiumMesseger: Dispatch<SetStateAction<CondominiumMessageType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -44,11 +44,17 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({ condominiumMesseger, setCondominiumMesseger }) => {
+const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
+  condominiumMesseger,
+  setCondominiumMesseger,
+}) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger, setCheckboxCondominiumMessenger } =
-    useControlerButtonPagesContext();
+  const {
+    openDialogEditCondominiumMessenger,
+    setOpenDialogEditCondominiumMessenger,
+    setCheckboxCondominiumMessenger,
+  } = useControlerButtonPagesContext();
   const { user } = useAuthContext();
 
   const [editCondominiumMesseger, setEditCondominiumMesseger] = useState(condominiumMesseger);
@@ -56,8 +62,12 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
   const [jpg_file, setJpgFile] = useState<File>();
   const [screen, setScreen] = useState<Screen[]>([]);
   const [screenAvailable, setScreenAvailable] = useState<Screen[]>([]);
-  const [checkboxScreenRegistered, setCheckboxScreenRegistered] = useState<GridRowId[] | string[]>([]);
-  const [checkboxScreenAvailable, setCheckboxScreenAvailable] = useState<GridRowId[] | string[]>([]);
+  const [checkboxScreenRegistered, setCheckboxScreenRegistered] = useState<GridRowId[] | string[]>(
+    []
+  );
+  const [checkboxScreenAvailable, setCheckboxScreenAvailable] = useState<GridRowId[] | string[]>(
+    []
+  );
   const [infosImage, setInfosImage] = useState({ url: "", name: "" });
 
   const [openAlertSucess, setOpenAlertSucess] = useState(false);
@@ -134,7 +144,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           starttime: editCondominiumMesseger.starttime,
           endtime: editCondominiumMesseger.endtime,
           screen_id: editCondominiumMesseger.screen_id?.concat(checkboxScreenAvailable as string[]),
-          time_exibition: editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
+          time_exibition:
+            editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
         });
 
         if (checkboxScreenAvailable.length > 0) {
@@ -151,7 +162,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           return [...old];
         });
 
-        const newMessegeScreen = await api.get(`/screens/condominiumMessage/${condominiumMesseger._id}`);
+        const newMessegeScreen = await api.get(
+          `/screens/condominiumMessage/${condominiumMesseger._id}`
+        );
         setScreen(newMessegeScreen.data);
 
         const newMessage = await api.get("/screens/");
@@ -165,7 +178,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           starttime: editCondominiumMesseger.starttime,
           endtime: editCondominiumMesseger.endtime,
           screen_id: editCondominiumMesseger.screen_id?.concat(checkboxScreenAvailable as string[]),
-          time_exibition: editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
+          time_exibition:
+            editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
         });
         if (checkboxScreenAvailable.length > 0) {
           checkboxScreenAvailable.forEach(async (screen) => {
@@ -180,7 +194,9 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           return [...old];
         });
 
-        const newMessegeScreen = await api.get(`/screens/condominiumMessage/${condominiumMesseger._id}`);
+        const newMessegeScreen = await api.get(
+          `/screens/condominiumMessage/${condominiumMesseger._id}`
+        );
         setScreen(newMessegeScreen.data);
 
         const newMessage = await api.get("/screens/");
@@ -199,9 +215,13 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           await api.delete(`/condominium-message/screen/${item}`);
           await api.delete(`/screens/message/${editCondominiumMesseger._id}/screen/${item}`);
 
-          const newMessegeScreen = await api.get(`/screens/condominiumMessage/${condominiumMesseger._id}`);
+          const newMessegeScreen = await api.get(
+            `/screens/condominiumMessage/${condominiumMesseger._id}`
+          );
           const newMessage = await api.get("/screens/");
-          const newCondominiumMesseger = await api.get(`/condominium-message/${editCondominiumMesseger._id}`);
+          const newCondominiumMesseger = await api.get(
+            `/condominium-message/${editCondominiumMesseger._id}`
+          );
           setScreen(newMessegeScreen.data);
           setScreenAvailable(newMessage.data);
           setEditCondominiumMesseger(newCondominiumMesseger.data);
@@ -261,7 +281,12 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
   }, [openDialogEditCondominiumMessenger]);
 
   return (
-    <Dialog fullScreen open={openDialogEditCondominiumMessenger} onClose={handleCloseDialog} TransitionComponent={Transition}>
+    <Dialog
+      fullScreen
+      open={openDialogEditCondominiumMessenger}
+      onClose={handleCloseDialog}
+      TransitionComponent={Transition}
+    >
       <Box component={"form"} onSubmit={handleSubmit}>
         <AppBar>
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -273,10 +298,24 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
             </Button>
           </Toolbar>
         </AppBar>
-        <Box width="100%" height="100%" display="flex" flexDirection="column" alignItems="center" gap={2} p={3}>
+        <Box
+          width="100%"
+          height="100%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          gap={2}
+          p={3}
+        >
           <Toolbar />
 
-          <Box maxWidth="100%" display="flex" flexDirection={smDown ? "column" : "row"} justifyContent="space-evenly" gap={2}>
+          <Box
+            maxWidth="100%"
+            display="flex"
+            flexDirection={smDown ? "column" : "row"}
+            justifyContent="space-evenly"
+            gap={2}
+          >
             <Box width={smDown ? "100%" : "40%"} alignItems={smDown ? "flex-start" : "center"}>
               {!editCondominiumMesseger.jpg_file ? (
                 <Grid container spacing={2}>
@@ -338,9 +377,10 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                         value={editCondominiumMesseger.time_exibition}
                         type={"number"}
                         sx={{
-                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                            display: "none",
-                          },
+                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                            {
+                              display: "none",
+                            },
                           "& input[type=number]": {
                             MozAppearance: "textfield",
                           },
@@ -381,9 +421,10 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                         value={editCondominiumMesseger.time_exibition}
                         type={"number"}
                         sx={{
-                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                            display: "none",
-                          },
+                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                            {
+                              display: "none",
+                            },
                           "& input[type=number]": {
                             MozAppearance: "textfield",
                           },
@@ -407,12 +448,18 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                         <Card>
                           <CardMedia
                             component="img"
-                            image={!infosImage.url ? editCondominiumMesseger.jpg_file : infosImage.url}
+                            image={
+                              !infosImage.url ? editCondominiumMesseger.jpg_file : infosImage.url
+                            }
                             width={200}
                             height={200}
                           />
                           <CardContent>
-                            <Typography>{!infosImage.name ? editCondominiumMesseger.jpg_file.split("/")[5] : infosImage.name} </Typography>
+                            <Typography>
+                              {!infosImage.name
+                                ? editCondominiumMesseger.jpg_file.split("/")[5]
+                                : infosImage.name}{" "}
+                            </Typography>
                           </CardContent>
                         </Card>
                       )}
@@ -433,7 +480,13 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
                 </Grid>
               )}
             </Box>
-            <Box width={smDown ? "100%" : "40%"} display="flex" textAlign="center" alignItems={smDown ? "flex-start" : "center"} mt={smDown ? 10 : 0}>
+            <Box
+              width={smDown ? "100%" : "40%"}
+              display="flex"
+              textAlign="center"
+              alignItems={smDown ? "flex-start" : "center"}
+              mt={smDown ? 10 : 0}
+            >
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Typography>Validade : </Typography>
@@ -480,7 +533,14 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
               </Grid>
             </Box>
           </Box>
-          <Box width={smDown ? "100%" : "70%"} height="30rem" mt={10} display="flex" flexDirection="column" gap={2}>
+          <Box
+            width={smDown ? "100%" : "70%"}
+            height="30rem"
+            mt={10}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+          >
             <Typography variant="h5">Telas já cadastradas :</Typography>
             <DataGridPro
               rows={rows}
@@ -498,7 +558,14 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
             )}
           </Box>
 
-          <Box width={smDown ? "100%" : "70%"} height="30rem" mt={10} display="flex" flexDirection="column" gap={2}>
+          <Box
+            width={smDown ? "100%" : "70%"}
+            height="30rem"
+            mt={10}
+            display="flex"
+            flexDirection="column"
+            gap={2}
+          >
             <Typography variant="h5">Telas disponiveis :</Typography>
             <DataGridPro
               rows={rowsAvailable}

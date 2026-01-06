@@ -20,11 +20,11 @@ import { forwardRef, useState } from "react";
 import { TransitionProps } from "@mui/material/transitions";
 import { api } from "../../../service";
 import { VMS } from "../../../types/vms.type";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 
 type EditVmsDialogProps = {
   vms: VMS;
-  condominium: Condominium[];
+  condominium: CondominiumType[];
 };
 
 const Transition = forwardRef(function Transition(
@@ -92,11 +92,7 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -120,9 +116,7 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   fullWidth
                   label="Nome"
                   value={editVms.name}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, name: e.target.value })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, name: e.target.value })}
                 />
               </Grid>
               <Grid item xs={8}>
@@ -131,9 +125,7 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   fullWidth
                   label="Servidor"
                   value={editVms.server}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, server: e.target.value })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, server: e.target.value })}
                 />
               </Grid>
               <Grid item xs={4}>
@@ -144,17 +136,14 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   type={"number"}
                   value={editVms.port}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      display: "none",
+                    },
                     "& input[type=number]": {
                       MozAppearance: "textfield",
                     },
                   }}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, port: Number(e.target.value) })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, port: Number(e.target.value) })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -165,17 +154,14 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   type={"number"}
                   value={editVms.receiver}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      display: "none",
+                    },
                     "& input[type=number]": {
                       MozAppearance: "textfield",
                     },
                   }}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, receiver: Number(e.target.value) })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, receiver: Number(e.target.value) })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -186,17 +172,14 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   type={"number"}
                   value={editVms.account}
                   sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                      {
-                        display: "none",
-                      },
+                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                      display: "none",
+                    },
                     "& input[type=number]": {
                       MozAppearance: "textfield",
                     },
                   }}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, account: Number(e.target.value) })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, account: Number(e.target.value) })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -205,9 +188,7 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   fullWidth
                   label="Usuário"
                   value={editVms.username}
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, username: e.target.value })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, username: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -215,9 +196,7 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   fullWidth
                   label="Senha"
                   type="password"
-                  onChange={(e) =>
-                    setEditVms({ ...editVms, password: e.target.value })
-                  }
+                  onChange={(e) => setEditVms({ ...editVms, password: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -227,12 +206,8 @@ const EditVmsDialog: React.FC<EditVmsDialogProps> = ({ vms, condominium }) => {
                   value={condominium.find(
                     (condominium) => condominium._id === editVms.condominium_id
                   )}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Condomínio" fullWidth />
-                  )}
-                  onChange={(e, value) =>
-                    setEditVms({ ...editVms, condominium_id: value?.id })
-                  }
+                  renderInput={(params) => <TextField {...params} label="Condomínio" fullWidth />}
+                  onChange={(e, value) => setEditVms({ ...editVms, condominium_id: value?.id })}
                 />
               </Grid>
             </Grid>

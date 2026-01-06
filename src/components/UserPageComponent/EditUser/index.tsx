@@ -23,18 +23,18 @@ import { CloseRounded, SendRounded } from "@mui/icons-material";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { TransitionProps } from "@mui/material/transitions";
 import { forwardRef, useState, useEffect } from "react";
-import { Permission, User } from "../../../types/users.type";
+import { Permission, UserType } from "../../../types/users.type";
 import { api } from "../../../service";
-import { Condominium } from "../../../types/condominium.type";
+import { CondominiumType } from "../../../types/condominium.type";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
 import { PatternFormat } from "react-number-format";
 
 type EditUserProps = {
-  userSelect: User;
-  condominium: Condominium[];
+  userSelect: UserType;
+  condominium: CondominiumType[];
   screens: Screen[];
-  setUser: React.Dispatch<React.SetStateAction<User[]>>;
+  setUser: React.Dispatch<React.SetStateAction<UserType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -46,12 +46,7 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const EditUser: React.FC<EditUserProps> = ({
-  userSelect,
-  condominium,
-  screens,
-  setUser,
-}) => {
+const EditUser: React.FC<EditUserProps> = ({ userSelect, condominium, screens, setUser }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useAuthContext();
@@ -63,7 +58,7 @@ const EditUser: React.FC<EditUserProps> = ({
   const [messageAlertError, setMessageAlertError] = useState("");
   const [openErrorEmail, setOpenErrorEmail] = useState(false);
 
-  const [editUser, setEditUser] = useState<User>(userSelect);
+  const [editUser, setEditUser] = useState<UserType>(userSelect);
   const [password, setPassword] = useState("");
 
   const handleCloseAlertSucess = () => {
@@ -144,11 +139,7 @@ const EditUser: React.FC<EditUserProps> = ({
             <IconButton onClick={handleCloseDialog}>
               <CloseRounded />
             </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
+            <Button variant="contained" startIcon={<SendRounded />} type="submit">
               Enviar
             </Button>
           </Toolbar>
@@ -171,9 +162,7 @@ const EditUser: React.FC<EditUserProps> = ({
                   label="Nome"
                   value={editUser.name}
                   fullWidth
-                  onChange={(e) =>
-                    setEditUser({ ...editUser, name: e.target.value })
-                  }
+                  onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -181,9 +170,7 @@ const EditUser: React.FC<EditUserProps> = ({
                   label="Nome de login"
                   value={editUser.username}
                   fullWidth
-                  onChange={(e) =>
-                    setEditUser({ ...editUser, username: e.target.value })
-                  }
+                  onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -193,9 +180,7 @@ const EditUser: React.FC<EditUserProps> = ({
                   helperText={openErrorEmail && "Email já cadastrado"}
                   value={editUser.email}
                   fullWidth
-                  onChange={(e) =>
-                    setEditUser({ ...editUser, email: e.target.value })
-                  }
+                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -236,9 +221,7 @@ const EditUser: React.FC<EditUserProps> = ({
                       condominium_id: value.map((v) => v._id),
                     })
                   }
-                  renderInput={(params) => (
-                    <TextField {...params} label="Condomínios" />
-                  )}
+                  renderInput={(params) => <TextField {...params} label="Condomínios" />}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -268,18 +251,14 @@ const EditUser: React.FC<EditUserProps> = ({
                     multiple
                     options={screens}
                     getOptionLabel={(option) => option.name}
-                    value={screens.filter((screen) =>
-                      editUser.screen_id.includes(screen._id)
-                    )}
+                    value={screens.filter((screen) => editUser.screen_id.includes(screen._id))}
                     onChange={(e, value) =>
                       setEditUser({
                         ...editUser,
                         screen_id: value.map((v) => v._id),
                       })
                     }
-                    renderInput={(params) => (
-                      <TextField {...params} label="Telas" />
-                    )}
+                    renderInput={(params) => <TextField {...params} label="Telas" />}
                   />
                 </Grid>
               )}

@@ -3,13 +3,13 @@ import { GetServerSideProps } from "next";
 import { useState } from "react";
 import { withAllPermission } from "../hocs";
 import { getAPIClient } from "../service";
-import { Condominium } from "../types/condominium.type";
+import { CondominiumType } from "../types/condominium.type";
 import DashboardGrafic from "../components/DashbordPageComponent/DashboardGrafic";
 import AppBarLayoutPage from "../layout/AppBar";
 import BaseMainLayoutPage from "../layout/BaseMain";
 
 type DashboardProps = {
-  initialCondominium: Condominium[];
+  initialCondominium: CondominiumType[];
 };
 
 const Deshboard: React.FC<DashboardProps> = ({ initialCondominium }) => {
@@ -32,7 +32,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
 
   try {
-    const { data } = await api.get<Condominium[]>("/condominium?query=all");
+    const { data } = await api.get<CondominiumType[]>("/condominium?query=all");
 
     return {
       props: {

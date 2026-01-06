@@ -7,7 +7,7 @@ import { Banner } from "../../types/banner.type";
 import { CondominiumMessageType } from "../../types/condominium-message.type";
 import { CondominiumType } from "../../types/condominium.type";
 import { Rss } from "../../types/rss.type";
-import { Permission, User } from "../../types/users.type";
+import { Permission, UserType } from "../../types/users.type";
 import { VMS } from "../../types/vms.type";
 import { Noticies } from "../../types/noticies.type";
 
@@ -27,7 +27,7 @@ type BaseMainLayoutPageProps = {
   setCondominium?: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
   setRss?: React.Dispatch<React.SetStateAction<Rss[]>>;
   setBanner?: React.Dispatch<React.SetStateAction<Banner[]>>;
-  setUser?: React.Dispatch<React.SetStateAction<User[]>>;
+  setUser?: React.Dispatch<React.SetStateAction<UserType[]>>;
   setCondominiumMesseger?: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
   setVms?: React.Dispatch<React.SetStateAction<VMS[]>>;
   setNoticies?: React.Dispatch<React.SetStateAction<Noticies[]>>;

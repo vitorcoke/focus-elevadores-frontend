@@ -28,14 +28,14 @@ import { useControlerButtonPagesContext } from "../../../context/ControlerButton
 import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
 import { api } from "../../../service";
 import Rezide from "react-image-file-resizer";
-import { CondominiumMessage } from "../../../types/condominium-message.type";
+import { CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
 import { useAuthContext } from "../../../context/AuthContext";
 import { Permission } from "../../../types/users.type";
 
 type AddCondominiumMessegerProps = {
-  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessage[]>>;
+  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
 const Transition = forwardRef(function Transition(
@@ -47,11 +47,16 @@ const Transition = forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ setCondominiumMesseger }) => {
+const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
+  setCondominiumMesseger,
+}) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger, setCheckboxCondominiumMessenger } =
-    useControlerButtonPagesContext();
+  const {
+    openDialogCreateCondominiumMessenger,
+    setOpenDialogCreateCondominiumMessenger,
+    setCheckboxCondominiumMessenger,
+  } = useControlerButtonPagesContext();
   const { user } = useAuthContext();
 
   const [nameMessage, setNameMessage] = useState("");
@@ -227,7 +232,12 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   }, [select]);
 
   return (
-    <Dialog fullScreen open={openDialogCreateCondominiumMessenger} onClose={handleCloseDialog} TransitionComponent={Transition}>
+    <Dialog
+      fullScreen
+      open={openDialogCreateCondominiumMessenger}
+      onClose={handleCloseDialog}
+      TransitionComponent={Transition}
+    >
       <Box component={"form"} onSubmit={handleSubmit}>
         <AppBar>
           <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -239,16 +249,34 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
             </Button>
           </Toolbar>
         </AppBar>
-        <Box width="100%" height="100%" display="flex" flexDirection="column" alignItems="center" gap={2} p={3}>
+        <Box
+          width="100%"
+          height="100%"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          gap={2}
+          p={3}
+        >
           <Toolbar />
 
-          <Box maxWidth="100%" display="flex" flexDirection={smDown ? "column" : "row"} justifyContent="space-evenly" gap={2}>
+          <Box
+            maxWidth="100%"
+            display="flex"
+            flexDirection={smDown ? "column" : "row"}
+            justifyContent="space-evenly"
+            gap={2}
+          >
             <Box width={smDown ? "100%" : "40%"} alignItems={smDown ? "flex-start" : "center"}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <FormControl fullWidth focused>
                     <InputLabel>Selecione o tipo da mensagem</InputLabel>
-                    <Select label="Selecione o tipo da mensagem" value={select} onChange={(e) => setSelect(e.target.value as number)}>
+                    <Select
+                      label="Selecione o tipo da mensagem"
+                      value={select}
+                      onChange={(e) => setSelect(e.target.value as number)}
+                    >
                       <MenuItem value={0}>Mensagem texto</MenuItem>
                       <MenuItem value={1}>Mensagem JPG</MenuItem>
                     </Select>
@@ -299,9 +327,10 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                           value={time_exibition}
                           type={"number"}
                           sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                              display: "none",
-                            },
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                              {
+                                display: "none",
+                              },
                             "& input[type=number]": {
                               MozAppearance: "textfield",
                             },
@@ -331,9 +360,10 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                           value={time_exibition}
                           type={"number"}
                           sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                              display: "none",
-                            },
+                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+                              {
+                                display: "none",
+                              },
                             "& input[type=number]": {
                               MozAppearance: "textfield",
                             },
@@ -350,7 +380,12 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                           <Typography>Selecione uma imagem</Typography>
                         ) : (
                           <Card>
-                            <CardMedia component="img" image={infosImage.url} width={200} height={200} />
+                            <CardMedia
+                              component="img"
+                              image={infosImage.url}
+                              width={200}
+                              height={200}
+                            />
                             <CardContent>
                               <Typography>{infosImage.name} </Typography>
                             </CardContent>
@@ -359,7 +394,13 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                       </Box>
                     </Grid>
                     <Grid item xs={12}>
-                      <Button variant="contained" component="label" disabled={!!nameMessage} fullWidth startIcon={<FileUploadRounded />}>
+                      <Button
+                        variant="contained"
+                        component="label"
+                        disabled={!!nameMessage}
+                        fullWidth
+                        startIcon={<FileUploadRounded />}
+                      >
                         Upload imagem
                         <input hidden accept="image/jpeg" type="file" onChange={handleLogotipo} />
                       </Button>
@@ -369,7 +410,13 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
               </Grid>
             </Box>
             {!smDown && <Divider orientation="vertical" />}
-            <Box width={smDown ? "100%" : "40%"} display="flex" textAlign="center" alignItems={smDown ? "flex-start" : "center"} mt={smDown ? 10 : 0}>
+            <Box
+              width={smDown ? "100%" : "40%"}
+              display="flex"
+              textAlign="center"
+              alignItems={smDown ? "flex-start" : "center"}
+              mt={smDown ? 10 : 0}
+            >
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <Typography>Validade : </Typography>

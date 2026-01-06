@@ -14,12 +14,12 @@ import { useState } from "react";
 import { withAdminAndSindicoPermission } from "../hocs";
 import { PatternFormat } from "react-number-format";
 import { api, getAPIClient } from "../service";
-import { User } from "../types/users.type";
+import { UserType } from "../types/users.type";
 import AppBarLayoutPage from "../layout/AppBar";
 import BaseMainLayoutPage from "../layout/BaseMain";
 
 type ProfileProps = {
-  initialUser: User;
+  initialUser: UserType;
 };
 
 const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
@@ -45,14 +45,14 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
     e.preventDefault();
     try {
       password
-        ? await api.patch<User>(`/users/${user._id}`, {
+        ? await api.patch<UserType>(`/users/${user._id}`, {
             name: user.name,
             username: user.username,
             email: user.email,
             phone: user.phone,
             password: password,
           })
-        : await api.patch<User>(`/users/${user._id}`, {
+        : await api.patch<UserType>(`/users/${user._id}`, {
             name: user.name,
             username: user.username,
             email: user.email,
@@ -143,9 +143,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <Alert severity="info">
-                  Ultilize os campos abaixo para alterar sua senha
-                </Alert>
+                <Alert severity="info">Ultilize os campos abaixo para alterar sua senha</Alert>
               </Grid>
               <Grid item xs={12}>
                 <TextField
@@ -190,7 +188,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
 
   try {
-    const { data } = await api.get<User>("/users/profile");
+    const { data } = await api.get<UserType>("/users/profile");
     return {
       props: {
         initialUser: data,
