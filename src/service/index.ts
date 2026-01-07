@@ -2,13 +2,17 @@ import axios from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
 import { parseCookies, setCookie } from "nookies";
 
-const URL_SERVER = process.env.NEXT_PUBLIC_URL_SERVER;
+const URL_SERVER =
+  process.env.NEXT_PUBLIC_URL_SERVER || "https://focus-elevadores-backend.onrender.com/api";
+
+console.log("URL_SERVER:", URL_SERVER);
+console.log("NEXT_PUBLIC_URL_SERVER:", process.env.NEXT_PUBLIC_URL_SERVER);
 export const getAPIClient = (ctx?: any) => {
   const { "focus-elevador-token": token, "focus-elevador-refreshToken": refresh_token } =
     parseCookies(ctx);
 
   const axiosInstance = axios.create({
-    baseURL: "/api",
+    baseURL: URL_SERVER,
   });
 
   if (token) {
