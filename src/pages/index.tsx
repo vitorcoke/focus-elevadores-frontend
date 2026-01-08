@@ -21,7 +21,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <>
+    <Box component="main" bgcolor="#f7f4f4ff">
       <Head>
         <title>Login</title>
         <meta name="description" content="Minha Portaria" />
@@ -40,20 +40,15 @@ const Login: React.FC = () => {
           onSubmit={handleSubmit(handleSubmitSingin)}
         >
           <Image
-            src="/logo-minhaportaria-color.png"
+            src="/logo.png"
             alt="logo"
             layout="fixed"
-            width={110}
-            height={50}
+            width={400}
+            height={150}
             priority={true}
           />
           <TextField label="Usuário" fullWidth {...register("username")} />
-          <TextField
-            label="Senha"
-            fullWidth
-            type="password"
-            {...register("password")}
-          />
+          <TextField label="Senha" fullWidth type="password" {...register("password")} />
           {loginFailed && (
             <Alert
               variant="filled"
@@ -69,7 +64,7 @@ const Login: React.FC = () => {
           </Button>
         </Box>
       </Container>
-    </>
+    </Box>
   );
 };
 
@@ -87,7 +82,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     };
   }
 
-  return {  
+  return {
     props: {},
   };
 };

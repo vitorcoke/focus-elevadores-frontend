@@ -1,13 +1,13 @@
 @font-face {
-    font-family: 'MyriadWeb';
-    src: local('MyriadWeb'), url(../../public/fonts/MyriadWebBold.ttf) format('truetype')
+  font-family: "MyriadWeb";
+  src: local("MyriadWeb"), url(../../public/fonts/MyriadWebBold.ttf) format("truetype");
 }
 
 ::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #ab120e;
-    border-radius: 5px;
+  background: #0b1020;
+  border-radius: 5px;
 }

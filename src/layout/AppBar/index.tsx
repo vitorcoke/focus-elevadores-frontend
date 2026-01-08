@@ -74,12 +74,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                 <Menu />
               </IconButton>
             ) : (
-              <Box
-                component="img"
-                src="/logo-minhaportaria-dark.png"
-                width="6rem"
-                height="2.5rem"
-              />
+              <Box component="img" src="/logo-sem-fundo.png" width="12rem" height="4.5rem" />
             )}
             <IconButton onClick={singOut}>
               <LogoutRounded />
