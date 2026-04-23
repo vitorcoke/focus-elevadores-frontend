@@ -51,6 +51,14 @@ const permissionLabel: Record<Permission, string> = {
   [Permission.ADMIN]: "Administrador",
 };
 
+const getPermissionLabel = (permission?: number) => {
+  if (permission === undefined) return "";
+  if (permission in permissionLabel) {
+    return permissionLabel[permission as Permission];
+  }
+  return "";
+};
+
 const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
   const theme = useTheme();
   const lgDown = useMediaQuery(theme.breakpoints.down("lg"));
@@ -228,7 +236,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
           {isExpanded && (
             <Box overflow="hidden">
               <Typography fontSize={13} fontWeight={700} noWrap>{user?.name || "Painel Administrativo"}</Typography>
-              <Typography fontSize={11} color="text.secondary" noWrap>{user?.permission !== undefined ? permissionLabel[user.permission] : ""}</Typography>
+              <Typography fontSize={11} color="text.secondary" noWrap>{getPermissionLabel(user?.permission)}</Typography>
             </Box>
           )}
         </Box>
@@ -282,7 +290,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
               </Avatar>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
                 <Typography fontSize={13} fontWeight={700} lineHeight={1.1}>{user?.name || "Painel Administrativo"}</Typography>
-                <Typography fontSize={11} color="text.secondary" lineHeight={1.1}>{user?.permission !== undefined ? permissionLabel[user.permission] : ""}</Typography>
+                <Typography fontSize={11} color="text.secondary" lineHeight={1.1}>{getPermissionLabel(user?.permission)}</Typography>
               </Box>
               <IconButton onClick={singOut} size="small" title="Sair">
                 <LogoutRounded fontSize="small" />
