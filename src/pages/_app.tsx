@@ -22,7 +22,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Minha Portaria</title>
+        <title>Painel Administrativo</title>
       </Head>
       <AuthProvider>
         <AppThemeProvider>

@@ -156,7 +156,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
           </Box>
           {isExpanded && (
             <Box>
-              <Typography fontSize={15} fontWeight={800} color="common.white">Minha Portaria</Typography>
+              <Typography fontSize={15} fontWeight={800} color="common.white">Painel Administrativo</Typography>
               <Typography fontSize={11} color="text.secondary">Painel administrativo</Typography>
             </Box>
           )}
@@ -227,7 +227,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
           </Avatar>
           {isExpanded && (
             <Box overflow="hidden">
-              <Typography fontSize={13} fontWeight={700} noWrap>{user?.name || "Minha Portaria"}</Typography>
+              <Typography fontSize={13} fontWeight={700} noWrap>{user?.name || "Painel Administrativo"}</Typography>
               <Typography fontSize={11} color="text.secondary" noWrap>{user?.permission !== undefined ? permissionLabel[user.permission] : ""}</Typography>
             </Box>
           )}
@@ -267,7 +267,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
               </IconButton>
             )}
             <Box>
-              <Typography variant="h6" fontWeight={800} letterSpacing="-0.03em">Minha Portaria</Typography>
+              <Typography variant="h6" fontWeight={800} letterSpacing="-0.03em">Painel Administrativo</Typography>
               <Typography fontSize={12} color="text.secondary">Gerenciamento de comunicacao e exibicao</Typography>
             </Box>
           </Box>
@@ -281,7 +281,7 @@ const LayoutPage: React.FC<LayoutPageProps> = ({ children }) => {
                 {user?.name?.charAt(0).toUpperCase() || "M"}
               </Avatar>
               <Box sx={{ display: { xs: "none", sm: "block" } }}>
-                <Typography fontSize={13} fontWeight={700} lineHeight={1.1}>{user?.name || "Minha Portaria"}</Typography>
+                <Typography fontSize={13} fontWeight={700} lineHeight={1.1}>{user?.name || "Painel Administrativo"}</Typography>
                 <Typography fontSize={11} color="text.secondary" lineHeight={1.1}>{user?.permission !== undefined ? permissionLabel[user.permission] : ""}</Typography>
               </Box>
               <IconButton onClick={singOut} size="small" title="Sair">

@@ -34,7 +34,7 @@ const Login: React.FC = () => {
     >
       <Head>
         <title>Login</title>
-        <meta name="description" content="Minha Portaria" />
+        <meta name="description" content="Painel Administrativo" />
         <link rel="icon" href="/icon-minhaportaria.png" />
       </Head>
       <Box
@@ -90,7 +90,7 @@ const Login: React.FC = () => {
               <ApartmentRoundedIcon sx={{ fontSize: 34, color: "#fff" }} />
             </Box>
             <Typography variant="h3" fontWeight={800} letterSpacing="-0.04em">
-              Minha Portaria
+              Painel Administrativo
             </Typography>
             <Typography mt={1} color="text.secondary">
               Acesse o painel administrativo

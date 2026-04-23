@@ -246,7 +246,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         </Box>
 
         <Chip
-          label={user?.name || "Minha Portaria"}
+          label={user?.name || "Painel Administrativo"}
           sx={{
             height: 34,
             borderRadius: 999,
