@@ -1,248 +1,71 @@
-import { CloseRounded, FileUploadRounded, SendRounded } from "@mui/icons-material";
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  ClickAwayListener,
-  Dialog,
-  Grid,
-  IconButton,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
-import { Dispatch, forwardRef, SetStateAction, useState } from "react";
-import { BlockPicker } from "react-color";
+import { useEffect, useMemo, useState } from "react";
+import produce from "immer";
+import { ActionButton, Field, InlineNotice, Modal, TextArea, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { api } from "../../../service";
 import { Banner } from "../../../types/banner.type";
 import { base64toFile } from "../../../utils/fileBase64";
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 type EditBannerDialogProps = {
   banner: Banner;
-  setBanner: Dispatch<SetStateAction<Banner[]>>;
+  setBanner: React.Dispatch<React.SetStateAction<Banner[]>>;
 };
 
 const EditBannerDialog: React.FC<EditBannerDialogProps> = ({ banner, setBanner }) => {
   const { openDialogEditBanner, setOpenDialogEditBanner, setCheckboxBanner } = useControlerButtonPagesContext();
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [form, setForm] = useState(banner);
 
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
+  useEffect(() => { setForm(banner); setPreview(banner.image); setImage(null); }, [banner]);
 
-  const [editBanner, setEditBanner] = useState(banner);
-  const [image, setImage] = useState<File>();
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [openPickerColorBackground, setOpenPickerColorBackground] = useState(false);
-  const [openPickerColorFont, setOpenPickerColorFont] = useState(false);
+  const actions = useMemo(() => (
+    <>
+      <ActionButton type="button" variant="ghost" onClick={() => { setOpenDialogEditBanner(false); setCheckboxBanner([]); }}>Cancelar</ActionButton>
+      <ActionButton type="submit" form="edit-banner-form">Salvar alteracoes</ActionButton>
+    </>
+  ), [setCheckboxBanner, setOpenDialogEditBanner]);
 
-  const handleOpenPickerColorBackground = () => {
-    setOpenPickerColorBackground((prev) => !prev);
+  const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.includes("image")) return;
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
   };
 
-  const handleOpenPickerColorFont = () => {
-    setOpenPickerColorFont((prev) => !prev);
-  };
-
-  const handleClickedAwayBackground = () => {
-    setOpenPickerColorBackground(false);
-  };
-
-  const handleClickedAwayFont = () => {
-    setOpenPickerColorFont(false);
-  };
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialogEditBanner(false);
-    setCheckboxBanner([]);
-  };
-
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = e.target.files;
-    if (files) {
-      let file = files[0];
-      if (file && file.type.includes("image")) {
-        let url = window.URL || window.webkitURL;
-        let objectUrl = url.createObjectURL(file);
-        let img = new Image();
-        img.src = objectUrl;
-        img.onload = () => {
-          setImage(file);
-        };
-      } else {
-        alert("O arquivo deve ser uma imagem");
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    let base64 = image !== undefined && (await base64toFile(image));
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      const newBanner = await api.patch(`/banner/${editBanner._id}`, {
-        name: editBanner.name,
-        image: base64 ? base64 : editBanner.image,
-        description: editBanner.description,
-        background_color: editBanner.background_color,
-        font_color: editBanner.font_color,
-      });
-      setBanner((old) => {
-        let index = old.findIndex((item) => item._id === editBanner._id);
-        old[index] = newBanner.data;
-        return [...old];
-      });
-      setOpenAlertSucess(true);
+      const payload = image ? await base64toFile(image) : form.image;
+      const response = await api.patch(`/banner/${form._id}`, { ...form, image: payload });
+      setBanner((current) => produce(current, (draft) => {
+        const index = draft.findIndex((item) => item._id === form._id);
+        if (index >= 0) draft[index] = response.data;
+      }));
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
   return (
-    <Dialog open={openDialogEditBanner} onClose={handleCloseDialog} fullScreen TransitionComponent={Transition}>
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box width="100%" height="100vh" display="flex" flexDirection="column" alignItems="center" gap={2} p={3}>
-          <Toolbar />
-
-          <Box
-            maxWidth={smDown ? "90%" : "30%"}
-            flexGrow={1}
-            sx={{
-              wordBreak: "break-word",
-            }}
-          >
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editBanner.name}
-                  label="Nome"
-                  fullWidth
-                  onChange={(e) => setEditBanner({ ...editBanner, name: e.target.value })}
-                  helperText={`${editBanner.name.length}/30`}
-                  inputProps={{
-                    maxLength: 30,
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button variant="contained" component="label" fullWidth startIcon={<FileUploadRounded />}>
-                  Imagem do Banner
-                  <input hidden accept="image/*" multiple type="file" onChange={handleImage} />
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editBanner.description}
-                  label="Descrição"
-                  fullWidth
-                  onChange={(e) =>
-                    setEditBanner({
-                      ...editBanner,
-                      description: e.target.value,
-                    })
-                  }
-                  helperText={`${editBanner.description.length}/250`}
-                  inputProps={{ maxLength: 250 }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <ClickAwayListener onClickAway={handleClickedAwayBackground}>
-                  <Box>
-                    <Button variant="contained" fullWidth onClick={handleOpenPickerColorBackground}>
-                      Selecione uma cor
-                    </Button>
-                    {openPickerColorBackground && (
-                      <Box marginTop="1rem" width="100%" display="flex" justifyContent="center">
-                        <BlockPicker
-                          color={editBanner.background_color}
-                          onChange={(e) =>
-                            setEditBanner({
-                              ...editBanner,
-                              background_color: e.hex,
-                            })
-                          }
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </ClickAwayListener>
-              </Grid>
-              <Grid item xs={12}>
-                <ClickAwayListener onClickAway={handleClickedAwayFont}>
-                  <Box>
-                    <Button variant="contained" fullWidth onClick={handleOpenPickerColorFont}>
-                      Selecione uma cor
-                    </Button>
-                    {openPickerColorFont && (
-                      <Box marginTop="1rem" width="100%" display="flex" justifyContent="center">
-                        <BlockPicker
-                          color={editBanner.font_color}
-                          onChange={(e) =>
-                            setEditBanner({
-                              ...editBanner,
-                              font_color: e.hex,
-                            })
-                          }
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </ClickAwayListener>
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogEditBanner} onClose={() => setOpenDialogEditBanner(false)} title="Editar banner" description="Atualize o banner selecionado mantendo as integracoes existentes." actions={actions}>
+      <form id="edit-banner-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status === "success" ? <InlineNotice tone="success">Banner atualizado com sucesso.</InlineNotice> : null}
+        {status === "error" ? <InlineNotice tone="error">Nao foi possivel atualizar o banner.</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Nome" required hint={`${form.name.length}/30`}><TextInput value={form.name} maxLength={30} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Nova imagem"><TextInput type="file" accept="image/*" onChange={handleImage} /></Field>
+          <div className="ds-form-grid--full">
+            <Field label="Descricao" required hint={`${form.description.length}/250`}><TextArea value={form.description} maxLength={250} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+          </div>
+          <Field label="Cor de fundo"><TextInput type="color" value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} style={{ padding: 6 }} /></Field>
+          <Field label="Cor da fonte"><TextInput type="color" value={form.font_color} onChange={(e) => setForm({ ...form, font_color: e.target.value })} style={{ padding: 6 }} /></Field>
+        </div>
+        {preview ? <div aria-label="preview" style={{ width: 240, height: 140, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
+      </form>
+    </Modal>
   );
 };
 

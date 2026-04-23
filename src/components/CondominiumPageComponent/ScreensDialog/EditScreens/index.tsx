@@ -1,36 +1,27 @@
+import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
+import axios from "axios";
 import {
-  Alert,
-  Box,
-  Button,
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  Snackbar,
-  TextField,
-  useMediaQuery,
-  useTheme,
-  Autocomplete,
-  Typography,
-  Dialog,
-} from "@mui/material";
-import { useEffect, useState } from "react";
+  ActionButton,
+  Field,
+  InlineNotice,
+  MultiSelectChips,
+  SelectInput,
+  SurfaceCard,
+  TextInput,
+} from "../../../design-system";
 import { useControlerButtonPagesContext } from "../../../../context/ControlerButtonPagesContext";
 import { api } from "../../../../service";
 import { Screen } from "../../../../types/screens.type";
-import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { CondominiumType } from "../../../../types/condominium.type";
 import { Rss } from "../../../../types/rss.type";
 import { City } from "../../../../types/city.type";
 import { State } from "../../../../types/state.type";
 import { Banner } from "../../../../types/banner.type";
 import { CondominiumMessageType } from "../../../../types/condominium-message.type";
+import { Noticies } from "../../../../types/noticies.type";
 import { useAuthContext } from "../../../../context/AuthContext";
 import { Permission } from "../../../../types/users.type";
-import axios from "axios";
-import { Noticies } from "../../../../types/noticies.type";
 
 type EditScreensProps = {
   condominium: CondominiumType;
@@ -51,11 +42,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
   condominiumMesseger,
   setCondominiumMesseger,
 }) => {
-  const theme = useTheme();
-  const mdDown = useMediaQuery(theme.breakpoints.down("md"));
-
   const { user } = useAuthContext();
-
   const { checkboxScreens } = useControlerButtonPagesContext();
 
   const [screenCondominium, setScreenCondominium] = useState<Screen>({
@@ -70,145 +57,164 @@ const EditScreens: React.FC<EditScreensProps> = ({
     city: "",
     vms_camera: [],
   });
-
-  const [state, setState] = useState<State[]>([]);
-  const [city, setCity] = useState<City[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
   const [cityValue, setCityValue] = useState("");
-  const [messege_id, setMessegeId] = useState("");
-  const [rssIdAdd, setRssIdAdd] = useState<string[]>([]);
-  const [rssScreensId, setRssScreensId] = useState<string[]>([]);
-  const [rssIdRemove, setRssIdRemove] = useState<string[]>([]);
-  const [noticiesIdAdd, setNoticiesIdAdd] = useState<string[]>([]);
-  const [noticiesScreensId, setNoticiesScreensId] = useState<string[]>([]);
-  const [noticiesIdRemove, setNoticiesIdRemove] = useState<string[]>([]);
-
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-
-  const [openDialog, setOpenDialog] = useState(false);
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
+  const [newMessageId, setNewMessageId] = useState("");
+  const [newMessageStart, setNewMessageStart] = useState("");
+  const [newMessageEnd, setNewMessageEnd] = useState("");
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
-    checkboxScreens.map((id) => {
-      api.get(`/screens/${id}`).then((response) => setScreenCondominium(response.data));
+    const selectedId = checkboxScreens[0];
+    if (!selectedId) return;
+
+    api.get(`/screens/${selectedId}`).then((response) => {
+      setScreenCondominium(response.data);
+      setStateValue(response.data.state || "");
+      setCityValue(response.data.city || "");
     });
   }, [checkboxScreens]);
 
   useEffect(() => {
-    axios.get("https://servicodados.ibge.gov.br/api/v1/localidades/estados").then((response) => {
-      setState(response.data);
-    });
+    axios
+      .get("https://servicodados.ibge.gov.br/api/v1/localidades/estados")
+      .then((response) => setStates(response.data));
   }, []);
 
-  const handleGetCity = (state: string) => {
-    axios
-      .get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${state}/municipios`)
-      .then((response) => {
-        setCity(response.data);
-      });
-  };
+  useEffect(() => {
+    const selectedState = states.find((item) => item.nome === stateValue);
+    if (!selectedState) return;
 
-  const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    axios
+      .get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedState.sigla}/municipios`)
+      .then((response) => setCities(response.data));
+  }, [stateValue, states]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     try {
+      const previousScreen = await api.get<Screen>(`/screens/${screenCondominium._id}`);
+      const previousRss = previousScreen.data.source_rss || [];
+      const previousNoticies = previousScreen.data.noticies || [];
+
       await api.patch(`/screens/${screenCondominium._id}`, {
         name: screenCondominium.name,
         banner: screenCondominium.banner,
         source_rss: screenCondominium.source_rss,
         noticies: screenCondominium.noticies,
         condominium_message: screenCondominium.condominium_message,
-        state: stateValue ? stateValue : screenCondominium.state,
-        city: cityValue ? cityValue : screenCondominium.city,
+        state: stateValue || screenCondominium.state,
+        city: cityValue || screenCondominium.city,
       });
 
-      if (rssIdRemove.length > 0) {
-        rssIdRemove.map(async (id) => {
-          await api.patch(`/source-rss/${id}`, {
-            screen_id: rssScreensId.filter((screen) => screen !== id),
-          });
-        });
-      }
-
-      if (rssIdAdd.length > 0) {
-        rssIdAdd.map(async (id) => {
-          const rss = await api.get(`/source-rss/${id}`);
-          if (rss.data.screen_id.includes(screenCondominium._id)) {
-            return;
-          } else {
+      await Promise.all(
+        previousRss
+          .filter((id) => !screenCondominium.source_rss.includes(id))
+          .map(async (id) => {
+            const response = await api.get(`/source-rss/${id}`);
             await api.patch(`/source-rss/${id}`, {
-              screen_id: rssScreensId.concat(id),
+              screen_id: (response.data.screen_id || []).filter((screenId: string) => screenId !== screenCondominium._id),
             });
-          }
-        });
-      }
+          })
+      );
 
-      if (noticiesIdRemove.length > 0) {
-        noticiesIdRemove.map(async (id) => {
-          await api.patch(`/noticies/${id}`, {
-            screen_id: noticiesScreensId.filter((screen) => screen !== id),
-          });
-        });
-      }
+      await Promise.all(
+        screenCondominium.source_rss
+          .filter((id) => !previousRss.includes(id))
+          .map(async (id) => {
+            const response = await api.get(`/source-rss/${id}`);
+            const screenIds = response.data.screen_id || [];
+            if (!screenIds.includes(screenCondominium._id)) {
+              await api.patch(`/source-rss/${id}`, {
+                screen_id: [...screenIds, screenCondominium._id],
+              });
+            }
+          })
+      );
 
-      if (noticiesIdAdd.length > 0) {
-        noticiesIdAdd.map(async (id) => {
-          const noticie = await api.get(`/noticies/${id}`);
-          if (noticie.data.screen_id.includes(screenCondominium._id)) {
-            return;
-          } else {
+      await Promise.all(
+        previousNoticies
+          .filter((id) => !screenCondominium.noticies.includes(id))
+          .map(async (id) => {
+            const response = await api.get(`/noticies/${id}`);
             await api.patch(`/noticies/${id}`, {
-              screen_id: noticiesScreensId.concat(id),
+              screen_id: (response.data.screen_id || []).filter((screenId: string) => screenId !== screenCondominium._id),
             });
-          }
-        });
-      }
+          })
+      );
 
-      condominiumMesseger.map(async (messege) => {
-        if (screenCondominium.condominium_message?.includes(messege._id)) {
-          await api.patch(`/condominium-message/${messege._id}`, {
-            starttime: messege.starttime,
-            endtime: messege.endtime,
-          });
-        }
-      });
-      setOpenAlertSucess(true);
+      await Promise.all(
+        screenCondominium.noticies
+          .filter((id) => !previousNoticies.includes(id))
+          .map(async (id) => {
+            const response = await api.get(`/noticies/${id}`);
+            const screenIds = response.data.screen_id || [];
+            if (!screenIds.includes(screenCondominium._id)) {
+              await api.patch(`/noticies/${id}`, {
+                screen_id: [...screenIds, screenCondominium._id],
+              });
+            }
+          })
+      );
+
+      await Promise.all(
+        condominiumMesseger
+          .filter((message) => screenCondominium.condominium_message?.includes(message._id))
+          .map((message) =>
+            api.patch(`/condominium-message/${message._id}`, {
+              starttime: message.starttime,
+              endtime: message.endtime,
+            })
+          )
+      );
+
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
   const handleSubmitNewMessage = async () => {
+    if (!newMessageId) return;
+
     try {
-      const newScreen = await api.patch(`/screens/${screenCondominium._id}`, {
-        condominium_message: screenCondominium.condominium_message?.concat(messege_id),
+      const nextMessageIds = Array.from(
+        new Set([...(screenCondominium.condominium_message || []), newMessageId])
+      );
+
+      const updatedScreen = await api.patch(`/screens/${screenCondominium._id}`, {
+        condominium_message: nextMessageIds,
       });
-      condominiumMesseger.map(async (messege) => {
-        if (messege._id === messege_id) {
-          await api.patch(`/condominium-message/${messege._id}`, {
-            starttime: messege.starttime,
-            endtime: messege.endtime,
-            screen_id: condominiumMesseger
-              .find((item) => item._id === messege._id)
-              ?.screen_id?.concat(screenCondominium._id),
-          });
-        }
+
+      const selectedMessage = condominiumMesseger.find((item) => item._id === newMessageId);
+      await api.patch(`/condominium-message/${newMessageId}`, {
+        starttime: newMessageStart ? new Date(newMessageStart) : selectedMessage?.starttime,
+        endtime: newMessageEnd ? new Date(newMessageEnd) : selectedMessage?.endtime,
+        screen_id: Array.from(new Set([...(selectedMessage?.screen_id || []), screenCondominium._id])),
       });
-      setScreenCondominium(newScreen.data);
-      setOpenAlertSucess(true);
+
+      setScreenCondominium(updatedScreen.data);
+      setCondominiumMesseger((old) =>
+        old.map((item) =>
+          item._id === newMessageId
+            ? {
+                ...item,
+                starttime: newMessageStart ? new Date(newMessageStart) : item.starttime,
+                endtime: newMessageEnd ? new Date(newMessageEnd) : item.endtime,
+                screen_id: Array.from(new Set([...(item.screen_id || []), screenCondominium._id])),
+              }
+            : item
+        )
+      );
+      setNewMessageId("");
+      setNewMessageStart("");
+      setNewMessageEnd("");
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
@@ -219,416 +225,287 @@ const EditScreens: React.FC<EditScreensProps> = ({
       await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
       await api.delete(`/source-rss/screen/${screenCondominium._id}`);
       await api.delete(`/noticies/screen/${screenCondominium._id}`);
-      setCondominium((old) => [
-        ...old.map((item) =>
+
+      setCondominium((old) =>
+        old.map((item) =>
           item._id === condominium._id
             ? {
                 ...item,
-                screens: item.screens?.filter((item) => item !== screenCondominium._id),
+                screens: item.screens?.filter((screenId) => screenId !== screenCondominium._id),
               }
             : item
-        ),
-      ]);
-      setOpenAlertSucess(true);
+        )
+      );
+
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
-  const handleDeleteMesseger = async (id: string) => {
+  const handleDeleteMessage = async (id: string) => {
     try {
-      await api.delete(`/condominium-message/screen/${screenCondominium._id}`);
-      const newScreenCondominium = await api.patch(`/screens/${screenCondominium._id}`, {
-        condominium_message: screenCondominium.condominium_message?.filter((item) => item !== id),
+      await api.patch(`/screens/${screenCondominium._id}`, {
+        condominium_message: (screenCondominium.condominium_message || []).filter((item) => item !== id),
       });
 
-      setScreenCondominium(newScreenCondominium.data);
+      const message = condominiumMesseger.find((item) => item._id === id);
+      await api.patch(`/condominium-message/${id}`, {
+        screen_id: (message?.screen_id || []).filter((screenId) => screenId !== screenCondominium._id),
+      });
 
-      setOpenAlertSucess(true);
+      setScreenCondominium((old) => ({
+        ...old,
+        condominium_message: (old.condominium_message || []).filter((item) => item !== id),
+      }));
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
+  const rssOptions = useMemo(
+    () => rss.map((item) => ({ value: item._id, label: item.name, description: item.url })),
+    [rss]
+  );
+
+  const noticiesOptions = useMemo(
+    () =>
+      noticies.map((item) => ({
+        value: item._id,
+        label: item.name,
+        description: `${item.category} - ${item.city || "Sem cidade"}`,
+      })),
+    [noticies]
+  );
+
+  const existingMessages = useMemo(
+    () =>
+      condominiumMesseger.filter((item) =>
+        screenCondominium.condominium_message?.includes(item._id)
+      ),
+    [condominiumMesseger, screenCondominium.condominium_message]
+  );
+
+  const availableMessages = useMemo(
+    () =>
+      condominiumMesseger.filter(
+        (item) => !screenCondominium.condominium_message?.includes(item._id)
+      ),
+    [condominiumMesseger, screenCondominium.condominium_message]
+  );
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box width="100%" display="flex" alignContent="center" justifyContent="center">
-        <Box
-          component={"form"}
-          p={3}
-          width={mdDown ? "100%" : "45%"}
-          display="flex"
-          flexDirection="column"
-          gap={3}
-          onSubmit={handleSubmit}
-        >
-          <TextField
-            label="Nome"
-            fullWidth
+    <form className="ds-stack" onSubmit={handleSubmit}>
+      {status === "success" ? <InlineNotice tone="success">Alteracoes salvas com sucesso.</InlineNotice> : null}
+      {status === "error" ? <InlineNotice tone="error">Nao foi possivel salvar as alteracoes.</InlineNotice> : null}
+
+      <div className="ds-form-grid">
+        <Field label="Nome" hint={`${screenCondominium.name.length}/30`} required>
+          <TextInput
             value={screenCondominium.name}
-            onChange={(e) =>
-              setScreenCondominium({
-                ...screenCondominium,
-                name: e.target.value,
-              })
+            maxLength={30}
+            onChange={(event) =>
+              setScreenCondominium((old) => ({ ...old, name: event.target.value }))
             }
-            helperText={`${screenCondominium.name.length}/30`}
-            inputProps={{ maxLength: 30 }}
+            required
           />
+        </Field>
 
-          {user?.permission === Permission.ADMIN && screenCondominium.banner && (
-            <Autocomplete
-              options={banner}
-              getOptionLabel={(option) => option.name}
-              value={banner.find((item) => item._id === screenCondominium.banner)}
-              fullWidth
-              onChange={(event, newValue) => {
-                setScreenCondominium({
-                  ...screenCondominium,
-                  banner: newValue ? newValue._id : "",
-                });
-              }}
-              renderInput={(params) => <TextField {...params} label="Banner" fullWidth />}
-            />
-          )}
+        <Field label="Validade">
+          <TextInput value={screenCondominium.validity ? dayjs(screenCondominium.validity).format("YYYY-MM-DD") : ""} disabled />
+        </Field>
 
-          {user?.permission === Permission.ADMIN && !screenCondominium.banner && (
-            <Autocomplete
-              options={banner}
-              getOptionLabel={(option) => option.name}
-              fullWidth
-              onChange={(event, newValue) => {
-                setScreenCondominium({
-                  ...screenCondominium,
-                  banner: newValue ? newValue._id : "",
-                });
-              }}
-              renderInput={(params) => <TextField {...params} label="Banner" fullWidth />}
-            />
-          )}
+        <Field label="Banner">
+          <SelectInput
+            value={screenCondominium.banner || ""}
+            onChange={(event) =>
+              setScreenCondominium((old) => ({ ...old, banner: event.target.value }))
+            }
+          >
+            <option value="">Sem banner</option>
+            {banner.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
 
-          <Button variant="contained" onClick={() => setOpenDialog(true)}>
-            Ver mensagens
-          </Button>
+        <Field label="Estado atual" required>
+          <SelectInput
+            value={stateValue}
+            onChange={(event) => {
+              const next = event.target.value;
+              setStateValue(next);
+              setCityValue("");
+            }}
+            required
+          >
+            <option value="">Selecione um estado</option>
+            {states.map((item) => (
+              <option key={item.id} value={item.nome}>
+                {item.nome}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
 
-          <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">
-            <Box p="20px 25px 0px 25px" width="56rem">
-              <Alert severity="success">Mensagens cadastradas</Alert>
-            </Box>
-            {screenCondominium.condominium_message &&
-              screenCondominium.condominium_message
-                .filter((id) => {
-                  if (condominiumMesseger.find((item) => item._id === id)) {
-                    return true;
-                  }
-                })
-                .map((idMessage, index) => {
-                  return (
-                    <Box key={index} width="56rem" p={3}>
-                      <Box
-                        display="flex"
-                        gap={2}
-                        border="1px solid #ab120e"
-                        borderRadius="8px"
-                        p={3}
-                      >
-                        <Autocomplete
-                          options={condominiumMesseger}
-                          getOptionLabel={(option) => option.name}
-                          value={condominiumMesseger.find((item) => item._id === idMessage)}
-                          onChange={(event, newValue) => {
-                            setScreenCondominium((old) => ({
-                              ...old,
-                              condominium_message: old.condominium_message?.map((item) =>
-                                item === idMessage ? (newValue ? newValue._id : "") : item
-                              ),
-                            }));
-                          }}
-                          fullWidth
-                          renderInput={(params) => (
-                            <TextField {...params} label="Mensagem" fullWidth />
-                          )}
-                        />
-                        <Box
-                          display="flex"
-                          gap={1}
-                          width="100%"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          <TextField
-                            label="Data Inicial"
-                            type="datetime-local"
-                            value={dayjs(
-                              condominiumMesseger.find((item) => item._id === idMessage)?.starttime
-                            ).format("YYYY-MM-DDTHH:mm")}
-                            onChange={(e) => {
-                              setCondominiumMesseger((old) => [
-                                ...old.map((item) =>
-                                  item._id === idMessage
-                                    ? {
-                                        ...item,
-                                        starttime: new Date(e.target.value),
-                                      }
-                                    : item
-                                ),
-                              ]);
-                            }}
-                            InputLabelProps={{
-                              shrink: true,
-                            }}
-                            fullWidth
-                          />
-                          <Typography>ATÉ</Typography>
-                          <TextField
-                            label="Data Final"
-                            type="datetime-local"
-                            value={dayjs(
-                              condominiumMesseger.find((item) => item._id === idMessage)?.endtime
-                            ).format("YYYY-MM-DDTHH:mm")}
-                            onChange={(e) => {
-                              setCondominiumMesseger((old) => [
-                                ...old.map((item) =>
-                                  item._id === idMessage
-                                    ? {
-                                        ...item,
-                                        endtime: new Date(e.target.value),
-                                      }
-                                    : item
-                                ),
-                              ]);
-                            }}
-                            InputLabelProps={{
-                              shrink: true,
-                            }}
-                            fullWidth
-                          />
-                        </Box>
-                        <Box display="flex" justifyContent="end" gap={2}>
-                          <Button
-                            variant="contained"
-                            onClick={() => handleDeleteMesseger(idMessage)}
-                          >
-                            Excluir
-                          </Button>
-                        </Box>
-                      </Box>
-                    </Box>
-                  );
-                })}
-            <Box px={3} width="56rem">
-              <Alert severity="info">Inserir uma nova mensagem</Alert>
-            </Box>
+        <Field label="Cidade atual" required>
+          <SelectInput
+            value={cityValue}
+            onChange={(event) => setCityValue(event.target.value)}
+            disabled={!stateValue}
+            required
+          >
+            <option value="">Selecione uma cidade</option>
+            {cities.map((item) => (
+              <option key={item.id} value={item.nome}>
+                {item.nome}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+      </div>
 
-            <Box p={3} width="56rem">
-              <Box display="flex" gap={3} border="1px solid #ab120e" borderRadius="8px" p={3}>
-                <Autocomplete
-                  options={condominiumMesseger.filter(
-                    (item) => !screenCondominium.condominium_message?.includes(item._id)
-                  )}
-                  isOptionEqualToValue={(option, value) => option._id === value._id}
-                  getOptionLabel={(option) => option.name}
-                  onChange={(event, newValue) => {
-                    setMessegeId(newValue ? newValue._id : "");
+      {rssOptions.length > 0 ? (
+        <Field label="Fontes RSS">
+          <MultiSelectChips
+            options={rssOptions}
+            values={screenCondominium.source_rss}
+            onChange={(values) =>
+              setScreenCondominium((old) => ({ ...old, source_rss: values }))
+            }
+          />
+        </Field>
+      ) : null}
+
+      {noticiesOptions.length > 0 ? (
+        <Field label="Noticias">
+          <MultiSelectChips
+            options={noticiesOptions}
+            values={screenCondominium.noticies}
+            onChange={(values) =>
+              setScreenCondominium((old) => ({ ...old, noticies: values }))
+            }
+          />
+        </Field>
+      ) : null}
+
+      <SurfaceCard className="ds-stack">
+        <div>
+          <h3 className="ds-section-title">Mensagens vinculadas</h3>
+          <p className="ds-section-copy">Edite janelas de exibicao e remova mensagens sem sair do modal principal.</p>
+        </div>
+        {existingMessages.length === 0 ? <InlineNotice tone="info">Nenhuma mensagem vinculada a esta tela.</InlineNotice> : null}
+        {existingMessages.map((message) => (
+          <SurfaceCard key={message._id} className="ds-stack ds-subcard">
+            <div className="ds-form-grid">
+              <Field label="Mensagem">
+                <SelectInput
+                  value={message._id}
+                  onChange={(event) => {
+                    const nextId = event.target.value;
+                    setScreenCondominium((old) => ({
+                      ...old,
+                      condominium_message: (old.condominium_message || []).map((item) =>
+                        item === message._id ? nextId : item
+                      ),
+                    }));
                   }}
-                  fullWidth
-                  renderInput={(params) => <TextField {...params} label="Mensagem" fullWidth />}
-                />
-                <Box
-                  display="flex"
-                  gap={1}
-                  width="100%"
-                  alignItems="center"
-                  justifyContent="center"
                 >
-                  <TextField
-                    label="Data Inicial"
-                    type="datetime-local"
-                    onChange={(e) => {
-                      setCondominiumMesseger((old) => [
-                        ...old.map((item) =>
-                          item._id === messege_id
-                            ? {
-                                ...item,
-                                starttime: new Date(e.target.value),
-                              }
-                            : item
-                        ),
-                      ]);
-                    }}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    fullWidth
-                  />
-                  <Typography>ATÉ</Typography>
-                  <TextField
-                    label="Data Final"
-                    type="datetime-local"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e) => {
-                      setCondominiumMesseger((old) => [
-                        ...old.map((item) =>
-                          item._id === messege_id
-                            ? {
-                                ...item,
-                                endtime: new Date(e.target.value),
-                              }
-                            : item
-                        ),
-                      ]);
-                    }}
-                    fullWidth
-                  />
-                </Box>
-                <Box display="flex" justifyContent="end" gap={2}>
-                  <Button
-                    variant="contained"
-                    onClick={() => handleSubmitNewMessage()}
-                    disabled={!messege_id}
-                  >
-                    Adicionar
-                  </Button>
-                </Box>
-              </Box>
-            </Box>
-          </Dialog>
+                  {condominiumMesseger.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
 
-          <Box display="flex" gap={3} width="100%">
-            <TextField label="Estado atual" fullWidth value={screenCondominium.state} disabled />
-            <TextField label="Cidade atual" fullWidth disabled value={screenCondominium.city} />
-          </Box>
+              <Field label="Data inicial">
+                <TextInput
+                  type="datetime-local"
+                  value={message.starttime ? dayjs(message.starttime).format("YYYY-MM-DDTHH:mm") : ""}
+                  onChange={(event) => {
+                    const nextDate = new Date(event.target.value);
+                    setCondominiumMesseger((old) =>
+                      old.map((item) =>
+                        item._id === message._id ? { ...item, starttime: nextDate } : item
+                      )
+                    );
+                  }}
+                />
+              </Field>
 
-          <Box display="flex" gap={3} width="100%">
-            <Autocomplete
-              options={state}
-              getOptionLabel={(option) => option.nome}
-              fullWidth
-              onChange={(event, newValue) => {
-                setStateValue(newValue ? newValue.nome : "");
-                if (newValue) handleGetCity(newValue.sigla);
-              }}
-              renderInput={(params) => <TextField {...params} label="Estado" fullWidth />}
-            />
+              <Field label="Data final">
+                <TextInput
+                  type="datetime-local"
+                  value={message.endtime ? dayjs(message.endtime).format("YYYY-MM-DDTHH:mm") : ""}
+                  onChange={(event) => {
+                    const nextDate = new Date(event.target.value);
+                    setCondominiumMesseger((old) =>
+                      old.map((item) =>
+                        item._id === message._id ? { ...item, endtime: nextDate } : item
+                      )
+                    );
+                  }}
+                />
+              </Field>
+            </div>
+            <div className="ds-split">
+              <ActionButton type="button" variant="danger" onClick={() => handleDeleteMessage(message._id)}>
+                Remover mensagem
+              </ActionButton>
+            </div>
+          </SurfaceCard>
+        ))}
+      </SurfaceCard>
 
-            <Autocomplete
-              options={city}
-              getOptionLabel={(option) => option.nome}
-              fullWidth
-              disabled={!stateValue}
-              onChange={(event, newValue) => {
-                setCityValue(newValue ? newValue.nome : "");
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Cidade" value={screenCondominium.city} fullWidth />
-              )}
-              autoComplete
-            />
-          </Box>
-          {rss.length > 0 && screenCondominium && (
-            <FormControl>
-              {/* <FormGroup row>
-                {rss.map((item) => (
-                  <FormControlLabel
-                    key={item._id}
-                    control={
-                      <Checkbox
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setScreenCondominium({
-                              ...screenCondominium,
-
-                              source_rss: [...screenCondominium.source_rss, item._id],
-                            });
-                            setRssIdAdd((old) => [...old, item._id]);
-                            setRssIdRemove((old) => old.filter((id) => id !== item._id));
-                            setRssScreensId(item.screen_id);
-                          } else {
-                            setRssIdRemove((old) => [...old, item._id]);
-                            setRssIdAdd((old) => old.filter((id) => id !== item._id));
-                            setScreenCondominium({
-                              ...screenCondominium,
-                              source_rss: screenCondominium.source_rss.filter(
-                                (id) => id !== item._id
-                              ),
-                            });
-                          }
-                        }}
-                        checked={screenCondominium.source_rss.includes(item._id)}
-                        name={item._id}
-                      />
-                    }
-                    label={item.name}
-                  />
+      {availableMessages.length > 0 ? (
+        <SurfaceCard className="ds-stack">
+          <div>
+            <h3 className="ds-section-title">Adicionar mensagem</h3>
+            <p className="ds-section-copy">Inclua uma mensagem existente e configure a janela de exibicao.</p>
+          </div>
+          <div className="ds-form-grid">
+            <Field label="Mensagem">
+              <SelectInput value={newMessageId} onChange={(event) => setNewMessageId(event.target.value)}>
+                <option value="">Selecione uma mensagem</option>
+                {availableMessages.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {item.name}
+                  </option>
                 ))}
-              </FormGroup> */}
-              <FormGroup row>
-                {noticies.map((item) => (
-                  <FormControlLabel
-                    key={item._id}
-                    control={
-                      <Checkbox
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setScreenCondominium({
-                              ...screenCondominium,
+              </SelectInput>
+            </Field>
 
-                              noticies: [...screenCondominium.noticies, item._id],
-                            });
-                            setNoticiesIdAdd((old) => [...old, item._id]);
-                            setNoticiesIdRemove((old) => old.filter((id) => id !== item._id));
-                            setNoticiesScreensId(item.screen_id);
-                          } else {
-                            setNoticiesIdRemove((old) => [...old, item._id]);
-                            setNoticiesIdAdd((old) => old.filter((id) => id !== item._id));
-                            setScreenCondominium({
-                              ...screenCondominium,
-                              noticies: screenCondominium.noticies.filter((id) => id !== item._id),
-                            });
-                          }
-                        }}
-                        checked={screenCondominium.noticies.includes(item._id)}
-                        name={item._id}
-                      />
-                    }
-                    label={item.name}
-                  />
-                ))}
-              </FormGroup>
-            </FormControl>
-          )}
+            <Field label="Data inicial">
+              <TextInput type="datetime-local" value={newMessageStart} onChange={(event) => setNewMessageStart(event.target.value)} />
+            </Field>
 
-          <Box display="flex" justifyContent="space-between" gap={2}>
-            {user?.permission === Permission.ADMIN && (
-              <Button variant="contained" onClick={handleDelete} fullWidth>
-                Deletar
-              </Button>
-            )}
-            <Button variant="contained" type="submit" fullWidth>
-              Enviar
-            </Button>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </LocalizationProvider>
+            <Field label="Data final">
+              <TextInput type="datetime-local" value={newMessageEnd} onChange={(event) => setNewMessageEnd(event.target.value)} />
+            </Field>
+          </div>
+          <div className="ds-split">
+            <ActionButton type="button" variant="secondary" disabled={!newMessageId} onClick={handleSubmitNewMessage}>
+              Adicionar mensagem
+            </ActionButton>
+          </div>
+        </SurfaceCard>
+      ) : null}
+
+      <SurfaceCard className="ds-form-actions">
+        <div className="ds-split">
+          {user?.permission === Permission.ADMIN ? (
+            <ActionButton type="button" variant="danger" onClick={handleDelete}>
+              Excluir tela
+            </ActionButton>
+          ) : null}
+          <ActionButton type="submit">Salvar alteracoes</ActionButton>
+        </div>
+      </SurfaceCard>
+    </form>
   );
 };
 

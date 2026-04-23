@@ -1,15 +1,13 @@
-import { Box } from "@mui/material";
-import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { DataTable, PageToolbar, TagList } from "../../components/design-system";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import { UserType } from "../../types/users.type";
-import { getAPIClient } from "../../service";
-import { GetServerSideProps } from "next";
-import { CondominiumType } from "../../types/condominium.type";
 import { withAdminAndSindicoPermission } from "../../hocs";
-import { Screen } from "../../types/screens.type";
 import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
+import { GetServerSideProps } from "next";
+import { getAPIClient } from "../../service";
+import { CondominiumType } from "../../types/condominium.type";
+import { Screen } from "../../types/screens.type";
+import { Permission, UserType } from "../../types/users.type";
 import AddUser from "../../components/UserPageComponent/AddUser";
 import EditUser from "../../components/UserPageComponent/EditUser";
 
@@ -19,69 +17,69 @@ type UserProps = {
   initialScreens: Screen[];
 };
 
-const User: React.FC<UserProps> = ({ initialUser, initialCondominium, initialScreens }) => {
-  const { checkboxUser, setCheckboxUser } = useControlerButtonPagesContext();
+type UserRow = UserType & {
+  id: string;
+  roleLabel: string;
+  condominiumNames: string[];
+  screenNames: string[];
+};
 
-  const [condominium] = useState(initialCondominium);
+const permissionLabel = {
+  [Permission.ZELADOR]: "Zelador",
+  [Permission.SINDICO]: "Sindico",
+  [Permission.ADMIN]: "Administrador",
+};
+
+const UserPage: React.FC<UserProps> = ({ initialUser, initialCondominium, initialScreens }) => {
+  const { checkboxUser, setCheckboxUser, setOpenDialogCreateUser, setOpenDialogEditUser } = useControlerButtonPagesContext();
   const [user, setUser] = useState(initialUser);
-  const [screens] = useState(initialScreens);
-  const [editUser, setEditUser] = useState<UserType>();
+  const [editing, setEditing] = useState<UserType | null>(null);
 
-  const columns: GridColDef[] = [
-    { field: "name", headerName: "Nome", flex: 2 },
-    { field: "username", headerName: "Nome de login", flex: 3 },
-    { field: "email", headerName: "Email", flex: 3 },
-  ];
+  const rows = useMemo<UserRow[]>(() => user.map((item) => ({
+    ...item,
+    id: item._id,
+    roleLabel: permissionLabel[item.permission as Permission],
+    condominiumNames: initialCondominium.filter((condominium) => item.condominium_id.includes(condominium._id)).map((condominium) => condominium.name),
+    screenNames: initialScreens.filter((screen) => item.screen_id.includes(screen._id)).map((screen) => screen.name),
+  })), [initialCondominium, initialScreens, user]);
 
-  const rows = user.map((user) => {
-    return {
-      id: user._id,
-      _id: user._id,
-      name: user.name,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
-      permission: user.permission,
-      condominium_id: user.condominium_id,
-      screen_id: user.screen_id,
-    };
-  });
+  const openEdit = () => {
+    if (checkboxUser.length !== 1) return;
+    const found = user.find((item) => item._id === checkboxUser[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditUser(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage page="user" title="Usuário" setUser={setUser}>
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            checkboxSelection
-            selectionModel={checkboxUser}
-            onSelectionModelChange={(e) => setCheckboxUser(e)}
-            components={{
-              Toolbar: GridToolbar,
-            }}
-            rows={rows}
-            columns={columns}
-            onCellClick={(params) =>
-              checkboxUser.length === 0
-                ? setEditUser(params.row as UserType)
-                : setEditUser(undefined)
-            }
-          />
-          <AddUser setUser={setUser} condominium={condominium} screens={screens} />
-          {editUser && condominium && (
-            <EditUser
-              userSelect={editUser}
-              condominium={condominium}
-              screens={screens}
-              setUser={setUser}
-            />
-          )}
-        </Box>
-      </BaseMainLayoutPage>
+      <div className="ds-stack">
+        <PageToolbar title="Usuarios" onNew={() => setOpenDialogCreateUser(true)} onEdit={openEdit} hasSelection={checkboxUser.length === 1} />
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxUser}
+          onSelectionChange={setCheckboxUser}
+          onRowClick={(row) => {
+            setEditing(row);
+            if (checkboxUser.length === 0) setOpenDialogEditUser(true);
+          }}
+          searchPlaceholder="Buscar por nome, login ou email"
+          columns={[
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => row.name },
+            { key: "username", header: "Login", render: (row) => row.username, searchValue: (row) => row.username },
+            { key: "email", header: "Email", render: (row) => row.email, searchValue: (row) => row.email },
+            { key: "permission", header: "Perfil", render: (row) => row.roleLabel, searchValue: (row) => row.roleLabel },
+            { key: "condominiums", header: "Condominios", render: (row) => <TagList values={row.condominiumNames} /> },
+          ]}
+        />
+      </div>
+      <AddUser setUser={setUser} condominium={initialCondominium} screens={initialScreens} />
+      {editing ? <EditUser userSelect={editing} condominium={initialCondominium} screens={initialScreens} setUser={setUser} /> : null}
     </LayoutPage>
   );
 };
 
-export default withAdminAndSindicoPermission(User);
+export default withAdminAndSindicoPermission(UserPage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const apiClient = getAPIClient(ctx);
@@ -89,20 +87,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     const users = await apiClient.get<UserType[]>("/users");
     const condominium = await apiClient.get<CondominiumType[]>("/condominium?query=all");
     const screens = await apiClient.get<Screen[]>("/screens");
-    return {
-      props: {
-        initialUser: users.data,
-        initialCondominium: condominium.data,
-        initialScreens: screens.data,
-      },
-    };
+    return { props: { initialUser: users.data, initialCondominium: condominium.data, initialScreens: screens.data } };
   } catch {
-    return {
-      props: {
-        initialUser: [],
-        initialCondominium: [],
-        initialScreens: [],
-      },
-    };
+    return { props: { initialUser: [], initialCondominium: [], initialScreens: [] } };
   }
 };

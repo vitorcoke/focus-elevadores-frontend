@@ -1,601 +1,113 @@
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Dialog,
-  Grid,
-  IconButton,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
-import { Dispatch, forwardRef, SetStateAction, useEffect, useState } from "react";
-import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
-import { api } from "../../../service";
+import { useEffect, useMemo, useState } from "react";
+import produce from "immer";
 import Rezide from "react-image-file-resizer";
+import { ActionButton, DataTable, Field, InlineNotice, Modal, SelectInput, TextArea, TextInput } from "../../design-system";
+import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
+import { useAuthContext } from "../../../context/AuthContext";
+import { api } from "../../../service";
 import { CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
-import dayjs from "dayjs";
 import { Permission } from "../../../types/users.type";
-import { useAuthContext } from "../../../context/AuthContext";
 
 type EditCondominiumMessegerProps = {
   condominiumMesseger: CondominiumMessageType;
-  setCondominiumMesseger: Dispatch<SetStateAction<CondominiumMessageType[]>>;
+  setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+type ScreenRow = { id: string; name: string };
 
-const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
-  condominiumMesseger,
-  setCondominiumMesseger,
-}) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const {
-    openDialogEditCondominiumMessenger,
-    setOpenDialogEditCondominiumMessenger,
-    setCheckboxCondominiumMessenger,
-  } = useControlerButtonPagesContext();
+const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({ condominiumMesseger, setCondominiumMesseger }) => {
   const { user } = useAuthContext();
-
-  const [editCondominiumMesseger, setEditCondominiumMesseger] = useState(condominiumMesseger);
-
-  const [jpg_file, setJpgFile] = useState<File>();
+  const { openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger, setCheckboxCondominiumMessenger } = useControlerButtonPagesContext();
   const [screen, setScreen] = useState<Screen[]>([]);
-  const [screenAvailable, setScreenAvailable] = useState<Screen[]>([]);
-  const [checkboxScreenRegistered, setCheckboxScreenRegistered] = useState<GridRowId[] | string[]>(
-    []
-  );
-  const [checkboxScreenAvailable, setCheckboxScreenAvailable] = useState<GridRowId[] | string[]>(
-    []
-  );
-  const [infosImage, setInfosImage] = useState({ url: "", name: "" });
-
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialogEditCondominiumMessenger(false);
-    setInfosImage({ url: "", name: "" });
-    setCheckboxCondominiumMessenger([]);
-  };
-
-  const handleLogotipo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = e.target.files;
-    if (files && files.length > 0) {
-      let file = files[0];
-      if (file && file.type.includes("image")) {
-        resizeFile(file);
-      } else {
-        setInfosImage({ url: "", name: "" });
-        setJpgFile(undefined);
-        alert("O arquivo deve ser uma imagem");
-      }
-    }
-  };
-
-  const resizeFile = (file: File) => {
-    Rezide.imageFileResizer(
-      file,
-      960, // largura desejada
-      750, // altura desejada
-      "JPEG", // formato
-      200, // qualidade
-      0, // rotação
-      (url: string | File | Blob | ProgressEvent<FileReader>) => {
-        if (url instanceof File) {
-          setInfosImage({ url: URL.createObjectURL(url), name: file.name });
-          setJpgFile(url);
-        }
-      },
-      "file" // formato de saída
-    );
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    let nameFile = null;
-
-    const formData = new FormData();
-    if (jpg_file) {
-      formData.append("file", jpg_file);
-
-      const nameFileResponse = await api.post("/condominium-message/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      nameFile = nameFileResponse.data;
-    }
-
-    try {
-      if (!editCondominiumMesseger.jpg_file) {
-        const newMessege = await api.patch(`/condominium-message/${editCondominiumMesseger._id}`, {
-          name: editCondominiumMesseger.name,
-          title: editCondominiumMesseger.title,
-          message: editCondominiumMesseger.message,
-          starttime: editCondominiumMesseger.starttime,
-          endtime: editCondominiumMesseger.endtime,
-          screen_id: editCondominiumMesseger.screen_id?.concat(checkboxScreenAvailable as string[]),
-          time_exibition:
-            editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
-        });
-
-        if (checkboxScreenAvailable.length > 0) {
-          checkboxScreenAvailable.forEach(async (screen) => {
-            await api.patch(`/screens/message/${screen}`, {
-              condominium_message: newMessege.data._id,
-            });
-          });
-        }
-
-        setCondominiumMesseger((old) => {
-          let index = old.findIndex((item) => item._id === editCondominiumMesseger._id);
-          old[index] = newMessege.data;
-          return [...old];
-        });
-
-        const newMessegeScreen = await api.get(
-          `/screens/condominiumMessage/${condominiumMesseger._id}`
-        );
-        setScreen(newMessegeScreen.data);
-
-        const newMessage = await api.get("/screens/");
-        setScreenAvailable(newMessage.data);
-
-        setOpenAlertSucess(true);
-      } else {
-        const newMessege = await api.patch(`/condominium-message/${editCondominiumMesseger._id}`, {
-          name: editCondominiumMesseger.name,
-          jpg_file: !nameFile ? editCondominiumMesseger.jpg_file : nameFile,
-          starttime: editCondominiumMesseger.starttime,
-          endtime: editCondominiumMesseger.endtime,
-          screen_id: editCondominiumMesseger.screen_id?.concat(checkboxScreenAvailable as string[]),
-          time_exibition:
-            editCondominiumMesseger.time_exibition && editCondominiumMesseger.time_exibition * 1000,
-        });
-        if (checkboxScreenAvailable.length > 0) {
-          checkboxScreenAvailable.forEach(async (screen) => {
-            await api.patch(`/screens/message/${screen}`, {
-              condominium_message: newMessege.data._id,
-            });
-          });
-        }
-        setCondominiumMesseger((old) => {
-          let index = old.findIndex((item) => item._id === editCondominiumMesseger._id);
-          old[index] = newMessege.data;
-          return [...old];
-        });
-
-        const newMessegeScreen = await api.get(
-          `/screens/condominiumMessage/${condominiumMesseger._id}`
-        );
-        setScreen(newMessegeScreen.data);
-
-        const newMessage = await api.get("/screens/");
-        setScreenAvailable(newMessage.data);
-        setOpenAlertSucess(true);
-      }
-    } catch (err) {
-      setOpenAlertError(true);
-    }
-  };
-
-  const handleDeleteScreen = async () => {
-    try {
-      if (checkboxScreenRegistered.length > 0) {
-        checkboxScreenRegistered.forEach(async (item) => {
-          await api.delete(`/condominium-message/screen/${item}`);
-          await api.delete(`/screens/message/${editCondominiumMesseger._id}/screen/${item}`);
-
-          const newMessegeScreen = await api.get(
-            `/screens/condominiumMessage/${condominiumMesseger._id}`
-          );
-          const newMessage = await api.get("/screens/");
-          const newCondominiumMesseger = await api.get(
-            `/condominium-message/${editCondominiumMesseger._id}`
-          );
-          setScreen(newMessegeScreen.data);
-          setScreenAvailable(newMessage.data);
-          setEditCondominiumMesseger(newCondominiumMesseger.data);
-          setCondominiumMesseger((old) => {
-            let index = old.findIndex((item) => item._id === editCondominiumMesseger._id);
-            old[index] = newCondominiumMesseger.data;
-            return [...old];
-          });
-        });
-
-        setOpenAlertSucess(true);
-      }
-    } catch {
-      setOpenAlertError(true);
-    }
-  };
-
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 1 },
-  ];
-
-  const rows = screen?.map((item) => {
-    return {
-      id: item._id,
-      name: item.name,
-    };
-  });
-
-  const columnsAvailable: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 1 },
-  ];
-
-  const filterScreem = screenAvailable.filter((item) => {
-    return !item.condominium_message?.includes(editCondominiumMesseger._id);
-  });
-
-  const rowsAvailable = filterScreem?.map((item) => {
-    return {
-      id: item._id,
-      name: item.name,
-    };
-  });
+  const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [form, setForm] = useState(condominiumMesseger);
 
   useEffect(() => {
-    setEditCondominiumMesseger(condominiumMesseger);
+    setForm(condominiumMesseger);
+    setSelectedScreens(condominiumMesseger.screen_id || []);
+    setPreview(condominiumMesseger.jpg_file || "");
+    setImage(null);
   }, [condominiumMesseger]);
+  useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, [openDialogEditCondominiumMessenger]);
 
-  useEffect(() => {
-    api.get(`/screens/condominiumMessage/${condominiumMesseger._id}`).then((res) => {
-      setScreen(res.data);
-    });
-    api.get("/screens/").then((res) => {
-      setScreenAvailable(res.data);
-    });
-  }, [openDialogEditCondominiumMessenger]);
+  const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => { setOpenDialogEditCondominiumMessenger(false); setCheckboxCondominiumMessenger([]); }}>Cancelar</ActionButton><ActionButton type="submit" form="edit-message-form">Salvar alteracoes</ActionButton></>), [setCheckboxCondominiumMessenger, setOpenDialogEditCondominiumMessenger]);
+  const mode = form.jpg_file ? "image" : "text";
+
+  const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.includes("image")) return;
+    Rezide.imageFileResizer(file, 960, 750, "JPEG", 200, 0, (url) => {
+      if (url instanceof File) {
+        setImage(url);
+        setPreview(URL.createObjectURL(url));
+      }
+    }, "file");
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      let imageName = form.jpg_file || "";
+      if (mode === "image" && image) {
+        const formData = new FormData();
+        formData.append("file", image);
+        const upload = await api.post("/condominium-message/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
+        imageName = upload.data;
+      }
+
+      const previousScreens = form.screen_id || [];
+      const addedScreens = selectedScreens.filter((id) => !previousScreens.includes(id));
+      const removedScreens = previousScreens.filter((id) => !selectedScreens.includes(id));
+
+      const response = await api.patch(`/condominium-message/${form._id}`, {
+        ...form,
+        title: mode === "text" ? form.title : undefined,
+        message: mode === "text" ? form.message : undefined,
+        jpg_file: mode === "image" ? imageName : undefined,
+        screen_id: selectedScreens,
+        time_exibition: form.time_exibition,
+      });
+
+      addedScreens.forEach(async (screenId) => {
+        await api.patch(`/screens/message/${screenId}`, { condominium_message: response.data._id });
+      });
+      removedScreens.forEach(async (screenId) => {
+        await api.delete(`/screens/message/${form._id}/screen/${screenId}`);
+      });
+
+      setCondominiumMesseger((current) => produce(current, (draft) => {
+        const index = draft.findIndex((item) => item._id === form._id);
+        if (index >= 0) draft[index] = response.data;
+      }));
+      setStatus("success");
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogEditCondominiumMessenger}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100%"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box
-            maxWidth="100%"
-            display="flex"
-            flexDirection={smDown ? "column" : "row"}
-            justifyContent="space-evenly"
-            gap={2}
-          >
-            <Box width={smDown ? "100%" : "40%"} alignItems={smDown ? "flex-start" : "center"}>
-              {!editCondominiumMesseger.jpg_file ? (
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      required
-                      disabled={!!editCondominiumMesseger.jpg_file}
-                      label="Nome"
-                      value={!!editCondominiumMesseger.jpg_file ? "" : editCondominiumMesseger.name}
-                      fullWidth
-                      onChange={(e) =>
-                        setEditCondominiumMesseger({
-                          ...editCondominiumMesseger,
-                          name: e.target.value,
-                        })
-                      }
-                      helperText={`${editCondominiumMesseger?.name?.length}/30`}
-                      inputProps={{ maxLength: 30 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      required
-                      disabled={!!editCondominiumMesseger.jpg_file}
-                      label="Titulo"
-                      value={editCondominiumMesseger.title}
-                      fullWidth
-                      onChange={(e) =>
-                        setEditCondominiumMesseger({
-                          ...editCondominiumMesseger,
-                          title: e.target.value,
-                        })
-                      }
-                      helperText={`${editCondominiumMesseger?.title?.length}/30`}
-                      inputProps={{ maxLength: 30 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      required
-                      disabled={!!editCondominiumMesseger.jpg_file}
-                      label="Mensagem"
-                      value={editCondominiumMesseger.message}
-                      fullWidth
-                      onChange={(e) =>
-                        setEditCondominiumMesseger({
-                          ...editCondominiumMesseger,
-                          message: e.target.value,
-                        })
-                      }
-                      helperText={`${editCondominiumMesseger?.message?.length}/400`}
-                      inputProps={{ maxLength: 400 }}
-                    />
-                  </Grid>
-                  {user?.permission === Permission.ADMIN && (
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Exibição em segundos"
-                        value={editCondominiumMesseger.time_exibition}
-                        type={"number"}
-                        sx={{
-                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                            {
-                              display: "none",
-                            },
-                          "& input[type=number]": {
-                            MozAppearance: "textfield",
-                          },
-                        }}
-                        onChange={(e) =>
-                          setEditCondominiumMesseger({
-                            ...editCondominiumMesseger,
-                            time_exibition: Number(e.target.value),
-                          })
-                        }
-                        helperText={`${String(editCondominiumMesseger.time_exibition).length}/3`}
-                        inputProps={{ maxLength: 3 }}
-                      />
-                    </Grid>
-                  )}
-                </Grid>
-              ) : (
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                      required
-                      disabled={!!editCondominiumMesseger.title}
-                      label="Nome"
-                      value={!!editCondominiumMesseger.title ? "" : editCondominiumMesseger.name}
-                      fullWidth
-                      onChange={(e) =>
-                        setEditCondominiumMesseger({
-                          ...editCondominiumMesseger,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                  </Grid>
-                  {user?.permission === Permission.ADMIN && (
-                    <Grid item xs={12}>
-                      <TextField
-                        label="Exibição em segundos"
-                        value={editCondominiumMesseger.time_exibition}
-                        type={"number"}
-                        sx={{
-                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                            {
-                              display: "none",
-                            },
-                          "& input[type=number]": {
-                            MozAppearance: "textfield",
-                          },
-                        }}
-                        onChange={(e) =>
-                          setEditCondominiumMesseger({
-                            ...editCondominiumMesseger,
-                            time_exibition: Number(e.target.value),
-                          })
-                        }
-                        helperText={`${String(editCondominiumMesseger.time_exibition).length}/3`}
-                        inputProps={{ maxLength: 3 }}
-                      />
-                    </Grid>
-                  )}
-                  <Grid item xs={12}>
-                    <Box width="100%" display="flex" justifyContent="center" alignItems="center">
-                      {!infosImage.url && !editCondominiumMesseger.jpg_file ? (
-                        <Typography>Selecione uma imagem</Typography>
-                      ) : (
-                        <Card>
-                          <CardMedia
-                            component="img"
-                            image={
-                              !infosImage.url ? editCondominiumMesseger.jpg_file : infosImage.url
-                            }
-                            width={200}
-                            height={200}
-                          />
-                          <CardContent>
-                            <Typography>
-                              {!infosImage.name
-                                ? editCondominiumMesseger.jpg_file.split("/")[5]
-                                : infosImage.name}{" "}
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Button
-                      variant="contained"
-                      component="label"
-                      disabled={!!editCondominiumMesseger.title}
-                      fullWidth
-                      startIcon={<FileUploadRounded />}
-                    >
-                      Upload imagem
-                      <input hidden accept="image/jpeg" type="file" onChange={handleLogotipo} />
-                    </Button>
-                  </Grid>
-                </Grid>
-              )}
-            </Box>
-            <Box
-              width={smDown ? "100%" : "40%"}
-              display="flex"
-              textAlign="center"
-              alignItems={smDown ? "flex-start" : "center"}
-              mt={smDown ? 10 : 0}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography>Validade : </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    value={dayjs(editCondominiumMesseger.starttime).format("YYYY-MM-DDTHH:mm")}
-                    type="datetime-local"
-                    label="Data inicial"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e) =>
-                      setEditCondominiumMesseger({
-                        ...editCondominiumMesseger,
-                        starttime: new Date(e.target.value),
-                      })
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography>ATÉ</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    value={dayjs(editCondominiumMesseger.endtime).format("YYYY-MM-DDTHH:mm")}
-                    type="datetime-local"
-                    label="Data final"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e) =>
-                      setEditCondominiumMesseger({
-                        ...editCondominiumMesseger,
-                        endtime: new Date(e.target.value),
-                      })
-                    }
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          </Box>
-          <Box
-            width={smDown ? "100%" : "70%"}
-            height="30rem"
-            mt={10}
-            display="flex"
-            flexDirection="column"
-            gap={2}
-          >
-            <Typography variant="h5">Telas já cadastradas :</Typography>
-            <DataGridPro
-              rows={rows}
-              columns={columns}
-              checkboxSelection
-              onSelectionModelChange={(e) => setCheckboxScreenRegistered(e)}
-              components={{
-                Toolbar: GridToolbar,
-              }}
-            />
-            {checkboxScreenRegistered.length > 0 && (
-              <Button variant="contained" onClick={() => handleDeleteScreen()}>
-                Excluir
-              </Button>
-            )}
-          </Box>
-
-          <Box
-            width={smDown ? "100%" : "70%"}
-            height="30rem"
-            mt={10}
-            display="flex"
-            flexDirection="column"
-            gap={2}
-          >
-            <Typography variant="h5">Telas disponiveis :</Typography>
-            <DataGridPro
-              rows={rowsAvailable}
-              columns={columnsAvailable}
-              checkboxSelection
-              onSelectionModelChange={(e) => setCheckboxScreenAvailable(e)}
-              components={{
-                Toolbar: GridToolbar,
-              }}
-            />
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogEditCondominiumMessenger} onClose={() => setOpenDialogEditCondominiumMessenger(false)} title="Editar mensagem" description="Atualize conteudo, agenda e telas vinculadas na interface nova." actions={actions} size="xl">
+      <form id="edit-message-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status === "success" ? <InlineNotice tone="success">Mensagem atualizada com sucesso.</InlineNotice> : null}
+        {status === "error" ? <InlineNotice tone="error">Nao foi possivel atualizar a mensagem.</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Tipo"><SelectInput value={mode} disabled><option value={mode}>{mode === "image" ? "Imagem" : "Texto"}</option></SelectInput></Field>
+          <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          {mode === "text" ? <Field label="Titulo" required><TextInput value={form.title || ""} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field> : <Field label="Nova imagem"><TextInput type="file" accept="image/jpeg" onChange={handleImage} /></Field>}
+          <Field label="Inicio" required><TextInput type="datetime-local" value={form.starttime ? new Date(form.starttime).toISOString().slice(0,16) : ""} onChange={(e) => setForm({ ...form, starttime: new Date(e.target.value) })} /></Field>
+          <Field label="Fim" required><TextInput type="datetime-local" value={form.endtime ? new Date(form.endtime).toISOString().slice(0,16) : ""} onChange={(e) => setForm({ ...form, endtime: new Date(e.target.value) })} /></Field>
+          {user?.permission === Permission.ADMIN ? <Field label="Exibicao (s)"><TextInput type="number" value={String(form.time_exibition || 15)} onChange={(e) => setForm({ ...form, time_exibition: Number(e.target.value) })} /></Field> : null}
+          {mode === "text" ? <div className="ds-form-grid--full"><Field label="Mensagem" required><TextArea value={form.message || ""} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field></div> : null}
+        </div>
+        {mode === "image" && preview ? <div aria-label="preview" style={{ width: 260, height: 180, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
+        <DataTable rows={rows} selectedIds={selectedScreens} onSelectionChange={setSelectedScreens} searchPlaceholder="Buscar tela" columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]} />
+      </form>
+    </Modal>
   );
 };
 

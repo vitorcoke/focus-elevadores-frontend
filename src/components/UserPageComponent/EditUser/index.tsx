@@ -1,34 +1,13 @@
-import {
-  Alert,
-  AppBar,
-  Autocomplete,
-  Box,
-  Button,
-  Dialog,
-  FormControl,
-  Grid,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  Slide,
-  Snackbar,
-  Stack,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { CloseRounded, SendRounded } from "@mui/icons-material";
+import { useEffect, useMemo, useState } from "react";
+import produce from "immer";
+import { PatternFormat } from "react-number-format";
+import { ActionButton, Field, InlineNotice, Modal, MultiSelectChips, SelectInput, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState, useEffect } from "react";
-import { Permission, UserType } from "../../../types/users.type";
+import { useAuthContext } from "../../../context/AuthContext";
 import { api } from "../../../service";
 import { CondominiumType } from "../../../types/condominium.type";
-import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
-import { PatternFormat } from "react-number-format";
+import { Permission, UserType } from "../../../types/users.type";
 
 type EditUserProps = {
   userSelect: UserType;
@@ -37,252 +16,55 @@ type EditUserProps = {
   setUser: React.Dispatch<React.SetStateAction<UserType[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 const EditUser: React.FC<EditUserProps> = ({ userSelect, condominium, screens, setUser }) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useAuthContext();
-  const { openDialogEditUser, setOpenDialogEditUser, setCheckboxUser } =
-    useControlerButtonPagesContext();
-
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [messageAlertError, setMessageAlertError] = useState("");
-  const [openErrorEmail, setOpenErrorEmail] = useState(false);
-
-  const [editUser, setEditUser] = useState<UserType>(userSelect);
+  const { openDialogEditUser, setOpenDialogEditUser, setCheckboxUser } = useControlerButtonPagesContext();
+  const [form, setForm] = useState(userSelect);
   const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [emailError, setEmailError] = useState("");
 
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-  const handleCloseDialog = () => {
-    setOpenDialogEditUser(false);
-    setCheckboxUser([]);
-    setOpenErrorEmail(false);
-  };
+  useEffect(() => { setForm(userSelect); setPassword(""); }, [userSelect]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => { setOpenDialogEditUser(false); setCheckboxUser([]); }}>Cancelar</ActionButton><ActionButton type="submit" form="edit-user-form">Salvar alteracoes</ActionButton></>), [setCheckboxUser, setOpenDialogEditUser]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      if (password) {
-        const newUser = await api.patch(`/users/${editUser._id}`, {
-          name: editUser.name,
-          username: editUser.username,
-          email: editUser.email,
-          phone: editUser.phone,
-          condominium_id: editUser.condominium_id,
-          screen_id: editUser.screen_id,
-          password: password,
-          permission: editUser.permission,
-        });
-        setUser((old) => {
-          const index = old.findIndex((user) => user._id === editUser._id);
-          old[index] = newUser.data;
-          return [...old];
-        });
-        setOpenAlertSucess(true);
-      } else {
-        const newUser = await api.patch(`/users/${editUser._id}`, {
-          name: editUser.name,
-          username: editUser.username,
-          email: editUser.email,
-          phone: editUser.phone,
-          condominium_id: editUser.condominium_id,
-          screen_id: editUser.screen_id,
-          permission: editUser.permission,
-        });
-        setUser((old) => {
-          const index = old.findIndex((user) => user._id === editUser._id);
-          old[index] = newUser.data;
-          return [...old];
-        });
-        setOpenAlertSucess(true);
-      }
+      const payload = password ? { ...form, password } : form;
+      const response = await api.patch(`/users/${form._id}`, payload);
+      setUser((current) => produce(current, (draft) => {
+        const index = draft.findIndex((item) => item._id === form._id);
+        if (index >= 0) draft[index] = response.data;
+      }));
+      setStatus({ tone: "success", message: "Usuario atualizado com sucesso." });
+      setEmailError("");
     } catch (err: any) {
-      if (err.response.data.message.match(/email_1 dup key/)) {
-        setMessageAlertError("Email já cadastrado");
-        setOpenAlertError(true);
-        setOpenErrorEmail(true);
-      } else {
-        setMessageAlertError("Erro ao cadastrar usuário");
-        setOpenAlertError(true);
+      if (err.response?.data?.message?.match(/email_1 dup key/)) {
+        setEmailError("Email ja cadastrado");
       }
+      setStatus({ tone: "error", message: "Nao foi possivel atualizar o usuario." });
     }
   };
 
-  useEffect(() => {
-    setEditUser(userSelect);
-  }, [userSelect]);
-
   return (
-    <Dialog
-      fullScreen
-      open={openDialogEditUser}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nome"
-                  value={editUser.name}
-                  fullWidth
-                  onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nome de login"
-                  value={editUser.username}
-                  fullWidth
-                  onChange={(e) => setEditUser({ ...editUser, username: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Email"
-                  error={openErrorEmail}
-                  helperText={openErrorEmail && "Email já cadastrado"}
-                  value={editUser.email}
-                  fullWidth
-                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <PatternFormat
-                  required
-                  label="Telefone"
-                  value={editUser.phone}
-                  format="(##) #####-####"
-                  fullWidth
-                  customInput={TextField}
-                  onChange={(e) => {
-                    setEditUser({
-                      ...editUser,
-                      phone: e.target.value,
-                    });
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Senha"
-                  type="password"
-                  fullWidth
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Autocomplete
-                  multiple
-                  options={condominium}
-                  getOptionLabel={(option) => option.name}
-                  value={condominium.filter((condominium) =>
-                    editUser.condominium_id.includes(condominium._id)
-                  )}
-                  onChange={(e, value) =>
-                    setEditUser({
-                      ...editUser,
-                      condominium_id: value.map((v) => v._id),
-                    })
-                  }
-                  renderInput={(params) => <TextField {...params} label="Condomínios" />}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Permissão</InputLabel>
-                  <Select
-                    value={editUser.permission}
-                    label="Permissão"
-                    onChange={(e) =>
-                      setEditUser({
-                        ...editUser,
-                        permission: e.target.value as number,
-                      })
-                    }
-                  >
-                    <MenuItem value={0}>Zelador(a)</MenuItem>
-                    <MenuItem value={1}>Sindico(a)</MenuItem>
-                    {user?.permission !== Permission.SINDICO && (
-                      <MenuItem value={2}>Administrador(a)</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Grid>
-              {editUser.permission === Permission.ZELADOR && (
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={screens}
-                    getOptionLabel={(option) => option.name}
-                    value={screens.filter((screen) => editUser.screen_id.includes(screen._id))}
-                    onChange={(e, value) =>
-                      setEditUser({
-                        ...editUser,
-                        screen_id: value.map((v) => v._id),
-                      })
-                    }
-                    renderInput={(params) => <TextField {...params} label="Telas" />}
-                  />
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">{messageAlertError}</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogEditUser} onClose={() => setOpenDialogEditUser(false)} title="Editar usuario" description="Atualize dados de acesso e vinculos do usuario selecionado." actions={actions} size="xl">
+      <form id="edit-user-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Nome de login" required><TextInput value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
+          <Field label="Email" required error={emailError}><TextInput value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+          <Field label="Telefone"><PatternFormat customInput={TextInput as any} format="(##) #####-####" value={form.phone} onValueChange={(values) => setForm({ ...form, phone: values.formattedValue })} /></Field>
+          <Field label="Nova senha"><TextInput type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+          <Field label="Permissao"><SelectInput value={String(form.permission)} onChange={(e) => setForm({ ...form, permission: Number(e.target.value) })}><option value={Permission.ZELADOR}>Zelador</option><option value={Permission.SINDICO}>Sindico</option>{user?.permission !== Permission.SINDICO ? <option value={Permission.ADMIN}>Administrador</option> : null}</SelectInput></Field>
+          <div className="ds-form-grid--full">
+            <Field label="Condominios"><MultiSelectChips options={condominium.map((item) => ({ value: item._id, label: item.name }))} values={form.condominium_id} onChange={(values) => setForm({ ...form, condominium_id: values })} /></Field>
+          </div>
+          {form.permission === Permission.ZELADOR ? <div className="ds-form-grid--full"><Field label="Telas"><MultiSelectChips options={screens.map((item) => ({ value: item._id, label: item.name }))} values={form.screen_id} onChange={(values) => setForm({ ...form, screen_id: values })} /></Field></div> : null}
+        </div>
+      </form>
+    </Modal>
   );
 };
 

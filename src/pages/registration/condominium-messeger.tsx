@@ -1,122 +1,81 @@
-import { Box } from "@mui/material";
-import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import { GetServerSideProps } from "next";
-import { useState } from "react";
-import { getAPIClient } from "../../service";
-import { CondominiumMessageType } from "../../types/condominium-message.type";
+import { useMemo, useState } from "react";
+import { DataTable, PageToolbar } from "../../components/design-system";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { withAllPermission } from "../../hocs";
+import LayoutPage from "../../layout/AppBar";
+import { GetServerSideProps } from "next";
+import { getAPIClient } from "../../service";
+import { CondominiumMessageType } from "../../types/condominium-message.type";
+import { UserType } from "../../types/users.type";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
-import { UserType } from "../../types/users.type";
+import dayjs from "dayjs";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessageType[];
   initialUsers: UserType[];
 };
 
-const CondominiumMessage: React.FC<CondominiumMessegerProps> = ({
-  initialCondominiumMessege,
-  initialUsers,
-}) => {
-  const { checkboxCondominiumMessenger, setCheckboxCondominiumMessenger } =
-    useControlerButtonPagesContext();
+type MessageRow = CondominiumMessageType & { id: string; createdBy: string; screens: number; window: string };
 
-  const [condominiumMesseger, setCondominiumMesseger] = useState(initialCondominiumMessege);
+const CondominiumMessagePage: React.FC<CondominiumMessegerProps> = ({ initialCondominiumMessege, initialUsers }) => {
+  const { checkboxCondominiumMessenger, setCheckboxCondominiumMessenger, setOpenDialogCreateCondominiumMessenger, setOpenDialogEditCondominiumMessenger } = useControlerButtonPagesContext();
+  const [messages, setMessages] = useState(initialCondominiumMessege);
+  const [editing, setEditing] = useState<CondominiumMessageType | null>(null);
 
-  const [users, setUsers] = useState(initialUsers);
+  const rows = useMemo<MessageRow[]>(() => messages.map((message) => ({
+    ...message,
+    id: message._id,
+    createdBy: initialUsers.find((user) => user._id === message.user_id)?.name || "Sistema",
+    screens: message.screen_id?.length || 0,
+    window: `${message.starttime ? dayjs(message.starttime).format("DD/MM HH:mm") : "-"} - ${message.endtime ? dayjs(message.endtime).format("DD/MM HH:mm") : "-"}`,
+  })), [initialUsers, messages]);
 
-  const [editCondominiumMesseger, setEditCondominiumMesseger] = useState<CondominiumMessageType>();
-
-  const columns: GridColDef[] = [
-    { field: "name", headerName: "Nome", flex: 2 },
-    { field: "screens", headerName: "Qtds.Telas", flex: 2 },
-    { field: "user_id", headerName: "Criado por", flex: 2 },
-  ];
-
-  const rows = condominiumMesseger.map((message) => {
-    return {
-      id: message._id,
-      _id: message._id,
-      name: message.name,
-      title: message.title,
-      starttime: message.starttime,
-      endtime: message.endtime,
-      message: message.message,
-      jpg_file: message.jpg_file,
-      screens: message.screen_id?.length,
-      screen_id: message.screen_id,
-      user_id: users.find((user) => user._id === message.user_id)?.name,
-      time_exibition: message.time_exibition && message.time_exibition / 1000,
-    };
-  });
+  const openEdit = () => {
+    if (checkboxCondominiumMessenger.length !== 1) return;
+    const found = messages.find((item) => item._id === checkboxCondominiumMessenger[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditCondominiumMessenger(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage
-        page="condominium-messeger"
-        title="Mensagens"
-        setCondominiumMesseger={setCondominiumMesseger}
-      >
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            rows={rows}
-            columns={columns}
-            checkboxSelection
-            selectionModel={checkboxCondominiumMessenger}
-            components={{
-              Toolbar: GridToolbar,
-            }}
-            onSelectionModelChange={(e) => {
-              setCheckboxCondominiumMessenger(e);
-            }}
-            onCellClick={(params) => {
-              checkboxCondominiumMessenger.length === 0
-                ? setEditCondominiumMesseger(params.row as CondominiumMessageType)
-                : setEditCondominiumMesseger(undefined);
-            }}
-            onRowClick={(params) => {
-              checkboxCondominiumMessenger.length === 0
-                ? setEditCondominiumMesseger(params.row as CondominiumMessageType)
-                : setEditCondominiumMesseger(undefined);
-            }}
-          />
-          <AddCondominiumMessegerDialog setCondominiumMesseger={setCondominiumMesseger} />
-          {editCondominiumMesseger && (
-            <EditCondominiumMessegerDialog
-              condominiumMesseger={editCondominiumMesseger}
-              setCondominiumMesseger={setCondominiumMesseger}
-            />
-          )}
-        </Box>
-      </BaseMainLayoutPage>
+      <div className="ds-stack">
+        <PageToolbar title="Mensagens" onNew={() => setOpenDialogCreateCondominiumMessenger(true)} onEdit={openEdit} hasSelection={checkboxCondominiumMessenger.length === 1} />
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxCondominiumMessenger}
+          onSelectionChange={setCheckboxCondominiumMessenger}
+          onRowClick={(row) => {
+            setEditing(row);
+            if (checkboxCondominiumMessenger.length === 0) setOpenDialogEditCondominiumMessenger(true);
+          }}
+          searchPlaceholder="Buscar por nome, titulo ou criador"
+          columns={[
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => `${row.name} ${row.title || ""}` },
+            { key: "type", header: "Tipo", render: (row) => row.jpg_file ? "Imagem" : "Texto" },
+            { key: "createdBy", header: "Criado por", render: (row) => row.createdBy, searchValue: (row) => row.createdBy },
+            { key: "window", header: "Janela", render: (row) => row.window },
+            { key: "screens", header: "Telas", width: "120px", render: (row) => row.screens },
+          ]}
+        />
+      </div>
+      <AddCondominiumMessegerDialog setCondominiumMesseger={setMessages} />
+      {editing ? <EditCondominiumMessegerDialog condominiumMesseger={editing} setCondominiumMesseger={setMessages} /> : null}
     </LayoutPage>
   );
 };
 
-export default withAllPermission(CondominiumMessage);
+export default withAllPermission(CondominiumMessagePage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
-
   try {
     const condominiumMessages = await api.get<CondominiumMessageType[]>("/condominium-message");
     const users = await api.get<UserType[]>("/users/all");
-
-    return {
-      props: {
-        initialCondominiumMessege: condominiumMessages.data,
-        initialUsers: users.data,
-      },
-    };
+    return { props: { initialCondominiumMessege: condominiumMessages.data, initialUsers: users.data } };
   } catch {
-    return {
-      props: {
-        initialCondominiumMessege: [],
-        initialUsers: [],
-      },
-    };
+    return { props: { initialCondominiumMessege: [], initialUsers: [] } };
   }
 };

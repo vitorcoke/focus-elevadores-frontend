@@ -1,486 +1,96 @@
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardMedia,
-  Dialog,
-  Divider,
-  FormControl,
-  Grid,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState, useEffect } from "react";
-import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CloseRounded, SendRounded, FileUploadRounded } from "@mui/icons-material";
-import { api } from "../../../service";
+import { useEffect, useMemo, useState } from "react";
 import Rezide from "react-image-file-resizer";
+import { ActionButton, DataTable, Field, InlineNotice, Modal, SelectInput, TextArea, TextInput } from "../../design-system";
+import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
+import { useAuthContext } from "../../../context/AuthContext";
+import { api } from "../../../service";
 import { CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
-import { DataGridPro, GridColDef, GridRowId, GridToolbar } from "@mui/x-data-grid-pro";
-import { useAuthContext } from "../../../context/AuthContext";
 import { Permission } from "../../../types/users.type";
 
 type AddCondominiumMessegerProps = {
   setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+type ScreenRow = { id: string; name: string };
 
-const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({
-  setCondominiumMesseger,
-}) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const {
-    openDialogCreateCondominiumMessenger,
-    setOpenDialogCreateCondominiumMessenger,
-    setCheckboxCondominiumMessenger,
-  } = useControlerButtonPagesContext();
+const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ setCondominiumMesseger }) => {
   const { user } = useAuthContext();
-
-  const [nameMessage, setNameMessage] = useState("");
-  const [nameJpg, setNameJpg] = useState("");
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [jpg_file, setJpgFile] = useState<File>();
+  const { openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger, setCheckboxCondominiumMessenger } = useControlerButtonPagesContext();
   const [screen, setScreen] = useState<Screen[]>([]);
-  const [starttime, setStarttime] = useState<Date>();
-  const [endtime, setEndtime] = useState<Date>();
-  const [time_exibition, setTimeExibition] = useState("");
+  const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [mode, setMode] = useState("text");
+  const [form, setForm] = useState({ name: "", title: "", message: "", starttime: "", endtime: "", time_exibition: "15" });
 
-  const [select, setSelect] = useState(0);
-  const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
+  useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, []);
+  const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateCondominiumMessenger(false)}>Cancelar</ActionButton><ActionButton type="submit" form="create-message-form">Salvar mensagem</ActionButton></>), [setOpenDialogCreateCondominiumMessenger]);
 
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [infosImage, setInfosImage] = useState({ url: "", name: "" });
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialogCreateCondominiumMessenger(false);
-    setCheckboxCondominiumMessenger([]);
-    setNameMessage("");
-    setNameJpg("");
-    setInfosImage({ url: "", name: "" });
-    setTitle("");
-    setMessage("");
-    setJpgFile(undefined);
-    setScreen([]);
-  };
-
-  const handleLogotipo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = e.target.files;
-    if (files && files.length > 0) {
-      let file = files[0];
-      if (file && file.type.includes("image")) {
-        resizeFile(file);
-      } else {
-        setInfosImage({ url: "", name: "" });
-        setJpgFile(undefined);
-        alert("O arquivo deve ser uma imagem");
+  const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.includes("image")) return;
+    Rezide.imageFileResizer(file, 960, 750, "JPEG", 200, 0, (url) => {
+      if (url instanceof File) {
+        setImage(url);
+        setPreview(URL.createObjectURL(url));
       }
-    } else {
-      setInfosImage({ url: "", name: "" });
-      setJpgFile(undefined);
-    }
+    }, "file");
   };
 
-  const resizeFile = (file: File) => {
-    Rezide.imageFileResizer(
-      file,
-      960, // largura desejada
-      750, // altura desejada
-      "JPEG", // formato
-      200, // qualidade
-      0, // rotação
-      (url: string | File | Blob | ProgressEvent<FileReader>) => {
-        if (url instanceof File) {
-          setInfosImage({ url: URL.createObjectURL(url), name: file.name });
-          setJpgFile(url);
-        }
-      },
-      "file" // formato de saída
-    );
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    let nameFile = "";
-
-    const formData = new FormData();
-    if (jpg_file) {
-      formData.append("file", jpg_file);
-
-      const nameFileResponse = await api.post("/condominium-message/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      nameFile = nameFileResponse.data;
-    }
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      if (select === 0) {
-        const newMessege = await api.post("/condominium-message", {
-          name: nameMessage,
-          title,
-          message,
-          starttime,
-          endtime,
-          screen_id: checkboxScreens ? checkboxScreens : [],
-          time_exibition: time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
-        });
-        if (checkboxScreens.length > 0) {
-          checkboxScreens.map(async (screen) => {
-            await api.patch(`/screens/message/${screen}`, {
-              condominium_message: newMessege.data._id,
-            });
-          });
-        }
-        setCondominiumMesseger((old) => [...old, newMessege.data]);
-        setMessage("");
-        setTitle("");
-        setNameMessage("");
-        setJpgFile(undefined);
-        setInfosImage({ url: "", name: "" });
-        setTimeExibition("");
-
-        setOpenAlertSucess(true);
-      } else if (select === 1 && jpg_file) {
-        const newMessege = await api.post("/condominium-message", {
-          name: nameJpg,
-          jpg_file: nameFile,
-          starttime,
-          endtime,
-          screen_id: checkboxScreens ? checkboxScreens : [],
-          time_exibition: time_exibition !== "" ? Number(time_exibition) * 1000 : 15000,
-        });
-
-        if (checkboxScreens.length > 0) {
-          checkboxScreens.map(async (screen) => {
-            await api.patch(`/screens/message/${screen}`, {
-              condominium_message: newMessege.data._id,
-            });
-          });
-        }
-        setCondominiumMesseger((old) => [...old, newMessege.data]);
-        setMessage("");
-        setTitle("");
-        setNameMessage("");
-        setInfosImage({ url: "", name: "" });
-        setJpgFile(undefined);
-        setTimeExibition("");
-        setOpenAlertSucess(true);
-      } else {
-        alert("Selecione uma imagem");
+      let imageName = "";
+      if (mode === "image" && image) {
+        const formData = new FormData();
+        formData.append("file", image);
+        const upload = await api.post("/condominium-message/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
+        imageName = upload.data;
       }
+      const response = await api.post("/condominium-message", {
+        name: form.name,
+        title: mode === "text" ? form.title : undefined,
+        message: mode === "text" ? form.message : undefined,
+        jpg_file: mode === "image" ? imageName : undefined,
+        starttime: new Date(form.starttime),
+        endtime: new Date(form.endtime),
+        screen_id: selectedScreens,
+        time_exibition: Number(form.time_exibition || "15") * 1000,
+      });
+      if (selectedScreens.length) {
+        selectedScreens.forEach(async (screenId) => {
+          await api.patch(`/screens/message/${screenId}`, { condominium_message: response.data._id });
+        });
+      }
+      setCondominiumMesseger((current) => [...current, response.data]);
+      setCheckboxCondominiumMessenger([]);
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
-
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 1 },
-  ];
-
-  const rows = screen?.map((item) => {
-    return {
-      id: item._id,
-      name: item.name,
-    };
-  });
-
-  useEffect(() => {
-    api.get(`/screens`).then((response) => {
-      setScreen(response.data);
-    });
-  }, []);
-
-  useEffect(() => {
-    setNameJpg("");
-    setNameMessage("");
-    setInfosImage({ url: "", name: "" });
-  }, [select]);
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogCreateCondominiumMessenger}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100%"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box
-            maxWidth="100%"
-            display="flex"
-            flexDirection={smDown ? "column" : "row"}
-            justifyContent="space-evenly"
-            gap={2}
-          >
-            <Box width={smDown ? "100%" : "40%"} alignItems={smDown ? "flex-start" : "center"}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <FormControl fullWidth focused>
-                    <InputLabel>Selecione o tipo da mensagem</InputLabel>
-                    <Select
-                      label="Selecione o tipo da mensagem"
-                      value={select}
-                      onChange={(e) => setSelect(e.target.value as number)}
-                    >
-                      <MenuItem value={0}>Mensagem texto</MenuItem>
-                      <MenuItem value={1}>Mensagem JPG</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                {select === 0 ? (
-                  <>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        disabled={!!nameJpg}
-                        value={nameMessage}
-                        label="Nome"
-                        fullWidth
-                        onChange={(e) => setNameMessage(e.target.value)}
-                        helperText={`${nameMessage.length}/30`}
-                        inputProps={{ maxLength: 30 }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        value={title}
-                        disabled={!!nameJpg}
-                        label="Titulo"
-                        fullWidth
-                        onChange={(e) => setTitle(e.target.value)}
-                        helperText={`${title.length}/30`}
-                        inputProps={{ maxLength: 30 }}
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        value={message}
-                        disabled={!!nameJpg}
-                        label="Mensagem"
-                        fullWidth
-                        onChange={(e) => setMessage(e.target.value)}
-                        helperText={`${message.length}/400`}
-                        inputProps={{ maxLength: 400 }}
-                      />
-                    </Grid>
-                    {user?.permission === Permission.ADMIN && (
-                      <Grid item xs={12}>
-                        <TextField
-                          label="Exibição em segundos"
-                          value={time_exibition}
-                          type={"number"}
-                          sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                              {
-                                display: "none",
-                              },
-                            "& input[type=number]": {
-                              MozAppearance: "textfield",
-                            },
-                          }}
-                          onChange={(e) => setTimeExibition(e.target.value.slice(0, 3))}
-                          helperText={`${time_exibition?.toString().length}/3`}
-                        />
-                      </Grid>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <Grid item xs={12}>
-                      <TextField
-                        required
-                        value={nameJpg}
-                        disabled={!!nameMessage}
-                        label="Nome"
-                        fullWidth
-                        onChange={(e) => setNameJpg(e.target.value)}
-                      />
-                    </Grid>
-                    {user?.permission === Permission.ADMIN && (
-                      <Grid item xs={12}>
-                        <TextField
-                          label="Exibição em segundos"
-                          value={time_exibition}
-                          type={"number"}
-                          sx={{
-                            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                              {
-                                display: "none",
-                              },
-                            "& input[type=number]": {
-                              MozAppearance: "textfield",
-                            },
-                          }}
-                          onChange={(e) => setTimeExibition(e.target.value.slice(0, 3))}
-                          helperText={`${time_exibition?.toString().length}/3`}
-                        />
-                      </Grid>
-                    )}
-
-                    <Grid item xs={12}>
-                      <Box width="100%" display="flex" justifyContent="center" alignItems="center">
-                        {!infosImage.url ? (
-                          <Typography>Selecione uma imagem</Typography>
-                        ) : (
-                          <Card>
-                            <CardMedia
-                              component="img"
-                              image={infosImage.url}
-                              width={200}
-                              height={200}
-                            />
-                            <CardContent>
-                              <Typography>{infosImage.name} </Typography>
-                            </CardContent>
-                          </Card>
-                        )}
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Button
-                        variant="contained"
-                        component="label"
-                        disabled={!!nameMessage}
-                        fullWidth
-                        startIcon={<FileUploadRounded />}
-                      >
-                        Upload imagem
-                        <input hidden accept="image/jpeg" type="file" onChange={handleLogotipo} />
-                      </Button>
-                    </Grid>
-                  </>
-                )}
-              </Grid>
-            </Box>
-            {!smDown && <Divider orientation="vertical" />}
-            <Box
-              width={smDown ? "100%" : "40%"}
-              display="flex"
-              textAlign="center"
-              alignItems={smDown ? "flex-start" : "center"}
-              mt={smDown ? 10 : 0}
-            >
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <Typography>Validade : </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    type="datetime-local"
-                    label="Data inicial"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e) => setStarttime(new Date(e.target.value))}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography>ATÉ</Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    required
-                    fullWidth
-                    type="datetime-local"
-                    label="Data final"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    onChange={(e) => setEndtime(new Date(e.target.value))}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          </Box>
-          <Box width={smDown ? "100%" : "70%"} height="25rem" mt={10}>
-            <DataGridPro
-              rows={rows}
-              columns={columns}
-              checkboxSelection
-              onSelectionModelChange={(e) => setCheckboxScreens(e)}
-              components={{
-                Toolbar: GridToolbar,
-              }}
-            />
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogCreateCondominiumMessenger} onClose={() => setOpenDialogCreateCondominiumMessenger(false)} title="Nova mensagem" description="Crie uma mensagem em texto ou imagem na nova interface." actions={actions} size="xl">
+      <form id="create-message-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status === "success" ? <InlineNotice tone="success">Mensagem criada com sucesso.</InlineNotice> : null}
+        {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar a mensagem.</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Tipo"><SelectInput value={mode} onChange={(e) => setMode(e.target.value)}><option value="text">Texto</option><option value="image">Imagem</option></SelectInput></Field>
+          <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          {mode === "text" ? <Field label="Titulo" required><TextInput value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field> : <Field label="Arquivo" required><TextInput type="file" accept="image/jpeg" onChange={handleImage} /></Field>}
+          <Field label="Inicio" required><TextInput type="datetime-local" value={form.starttime} onChange={(e) => setForm({ ...form, starttime: e.target.value })} /></Field>
+          <Field label="Fim" required><TextInput type="datetime-local" value={form.endtime} onChange={(e) => setForm({ ...form, endtime: e.target.value })} /></Field>
+          {user?.permission === Permission.ADMIN ? <Field label="Exibicao (s)"><TextInput type="number" value={form.time_exibition} onChange={(e) => setForm({ ...form, time_exibition: e.target.value.slice(0, 3) })} /></Field> : null}
+          {mode === "text" ? <div className="ds-form-grid--full"><Field label="Mensagem" required><TextArea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field></div> : null}
+        </div>
+        {mode === "image" && preview ? <div aria-label="preview" style={{ width: 260, height: 180, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
+        <DataTable rows={rows} selectedIds={selectedScreens} onSelectionChange={setSelectedScreens} searchPlaceholder="Buscar tela" columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]} />
+      </form>
+    </Modal>
   );
 };
 

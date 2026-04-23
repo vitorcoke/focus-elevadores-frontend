@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Chip, Paper, Typography, alpha, useMediaQuery, useTheme } from "@mui/material";
 import produce from "immer";
 import { useAuthContext } from "../../context/AuthContext";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
@@ -6,10 +6,10 @@ import { api } from "../../service";
 import { Banner } from "../../types/banner.type";
 import { CondominiumMessageType } from "../../types/condominium-message.type";
 import { CondominiumType } from "../../types/condominium.type";
+import { Noticies } from "../../types/noticies.type";
 import { Rss } from "../../types/rss.type";
 import { Permission, UserType } from "../../types/users.type";
 import { VMS } from "../../types/vms.type";
-import { Noticies } from "../../types/noticies.type";
 
 type BaseMainLayoutPageProps = {
   children: React.ReactNode;
@@ -31,6 +31,23 @@ type BaseMainLayoutPageProps = {
   setCondominiumMesseger?: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
   setVms?: React.Dispatch<React.SetStateAction<VMS[]>>;
   setNoticies?: React.Dispatch<React.SetStateAction<Noticies[]>>;
+};
+
+const pageDescriptions: Record<BaseMainLayoutPageProps["page"], string> = {
+  condominium: "Gerencie condominios com a nova interface do painel.",
+  rss: "Organize as fontes de conteudo exibidas nas telas.",
+  user: "Controle acessos e perfis de usuarios da plataforma.",
+  banner: "Atualize banners e campanhas exibidas nos displays.",
+  profile: "Consulte e ajuste os dados do seu perfil.",
+  dashboard: "Visao geral do desempenho operacional da plataforma.",
+  "condominium-messeger": "Publique mensagens para os condominios conectados.",
+  vms: "Configure a integracao do VMS do ambiente.",
+  noticies: "Gerencie noticias e destaques do ecossistema.",
+};
+
+const actionPanelSx = {
+  backgroundImage: "none",
+  flexWrap: "wrap",
 };
 
 const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
@@ -90,7 +107,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setCondominium &&
           setCondominium((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -108,7 +125,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setRss &&
           setRss((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -126,7 +143,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setBanner &&
           setBanner((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -143,7 +160,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setUser &&
           setUser((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -161,7 +178,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setCondominiumMesseger &&
           setCondominiumMesseger((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -178,7 +195,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setVms &&
           setVms((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -196,7 +213,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         setNoticies &&
           setNoticies((prev) =>
             produce(prev, (draft) => {
-              let index = draft.findIndex((item) => item._id === id);
+              const index = draft.findIndex((item) => item._id === id);
               draft.splice(index, 1);
             })
           );
@@ -208,7 +225,38 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
 
   return (
     <Box display="flex" flexDirection="column" gap={3}>
-      <Typography variant="h4">{title}</Typography>
+      <Box
+        className="glass-panel"
+        sx={{
+          p: { xs: 2.25, md: 3 },
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "flex-start", md: "center" },
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={800} letterSpacing="-0.04em">
+            {title}
+          </Typography>
+          <Typography mt={0.75} fontSize={14} color="text.secondary">
+            {pageDescriptions[page]}
+          </Typography>
+        </Box>
+
+        <Chip
+          label={user?.name || "Minha Portaria"}
+          sx={{
+            height: 34,
+            borderRadius: 999,
+            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: alpha(theme.palette.common.white, 0.04),
+            color: "text.primary",
+            fontWeight: 600,
+          }}
+        />
+      </Box>
 
       {page === "condominium" && (
         <Box
@@ -221,9 +269,10 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
               ? "hidden"
               : "visible"
           }
+          sx={actionPanelSx}
         >
           {user?.permission === Permission.ADMIN && (
-            <Box display="flex" gap={2}>
+            <Box display="flex" gap={2} flexWrap="wrap">
               <Button
                 variant="contained"
                 onClick={() => setOpenDialogCreateCondominium(true)}
@@ -235,7 +284,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
               {checkboxCondominium.length > 0 && (
                 <>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     onClick={() =>
                       checkboxCondominium.length > 1
                         ? (alert("Altera um condominio por vez"), setCheckboxCondominium([]))
@@ -246,6 +295,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                     Alterar
                   </Button>
                   <Button
+                    color="error"
                     variant="contained"
                     onClick={handleDeleteCondominium}
                     size={smDown ? "small" : "medium"}
@@ -273,36 +323,10 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           )}
         </Box>
       )}
-      {/* {page === "rss" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
-            <Button variant="contained" onClick={() => setOpenDialogCreateRss(true)}>
-              Novo
-            </Button>
 
-            {checkboxRss.length > 0 && (
-              <>
-                <Button
-                  variant="contained"
-                  onClick={() =>
-                    checkboxRss.length > 1
-                      ? (alert("Altere um rss por vez"), setCheckboxRss([]))
-                      : setOpenDialogEditRss(true)
-                  }
-                >
-                  Alterar
-                </Button>
-                <Button variant="contained" onClick={handleDeleteRss}>
-                  Excluir
-                </Button>
-              </>
-            )}
-          </Box>
-        </Box>
-      )} */}
       {page === "noticies" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
+        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2} sx={actionPanelSx}>
+          <Box display="flex" gap={2} flexWrap="wrap">
             <Button variant="contained" onClick={() => setOpenDialogCreateNoticies(true)}>
               Novo
             </Button>
@@ -310,7 +334,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
             {checkboxNoticies.length > 0 && (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={() =>
                     checkboxNoticies.length > 1
                       ? (alert("Altere uma noticia por vez"), setCheckboxNoticies([]))
@@ -319,7 +343,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                 >
                   Alterar
                 </Button>
-                <Button variant="contained" onClick={handleDeleteNoticies}>
+                <Button color="error" variant="contained" onClick={handleDeleteNoticies}>
                   Excluir
                 </Button>
               </>
@@ -327,9 +351,10 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           </Box>
         </Box>
       )}
+
       {page === "banner" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
+        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2} sx={actionPanelSx}>
+          <Box display="flex" gap={2} flexWrap="wrap">
             <Button variant="contained" onClick={() => setOpenDialogCreateBanner(true)}>
               Novo
             </Button>
@@ -337,7 +362,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
             {checkboxBanner.length > 0 && (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={() =>
                     checkboxBanner.length > 1
                       ? (alert("Altere um banner por vez"), setCheckboxBanner([]))
@@ -346,7 +371,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                 >
                   Alterar
                 </Button>
-                <Button variant="contained" onClick={handleDeleteBanner}>
+                <Button color="error" variant="contained" onClick={handleDeleteBanner}>
                   Excluir
                 </Button>
               </>
@@ -354,9 +379,10 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           </Box>
         </Box>
       )}
+
       {page === "user" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
+        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2} sx={actionPanelSx}>
+          <Box display="flex" gap={2} flexWrap="wrap">
             <Button variant="contained" onClick={() => setOpenDialogCreateUser(true)}>
               Novo
             </Button>
@@ -364,16 +390,16 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
             {checkboxUser.length > 0 && (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={() =>
-                    checkboxBanner.length > 1
-                      ? (alert("Altere um usuário por vez"), setCheckboxUser([]))
+                    checkboxUser.length > 1
+                      ? (alert("Altere um usuario por vez"), setCheckboxUser([]))
                       : setOpenDialogEditUser(true)
                   }
                 >
                   Alterar
                 </Button>
-                <Button variant="contained" onClick={handleDeleteUser}>
+                <Button color="error" variant="contained" onClick={handleDeleteUser}>
                   Excluir
                 </Button>
               </>
@@ -381,20 +407,18 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           </Box>
         </Box>
       )}
+
       {page === "condominium-messeger" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
-            <Button
-              variant="contained"
-              onClick={() => setOpenDialogCreateCondominiumMessenger(true)}
-            >
+        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2} sx={actionPanelSx}>
+          <Box display="flex" gap={2} flexWrap="wrap">
+            <Button variant="contained" onClick={() => setOpenDialogCreateCondominiumMessenger(true)}>
               Novo
             </Button>
 
             {checkboxCondominiumMessenger.length > 0 && (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={() =>
                     checkboxCondominiumMessenger.length > 1
                       ? (alert("Altera um condominio por vez"), setCheckboxCondominiumMessenger([]))
@@ -403,7 +427,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
                 >
                   Alterar
                 </Button>
-                <Button variant="contained" onClick={handleDeleteCondominiumMessenger}>
+                <Button color="error" variant="contained" onClick={handleDeleteCondominiumMessenger}>
                   Excluir
                 </Button>
               </>
@@ -411,9 +435,10 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
           </Box>
         </Box>
       )}
+
       {page === "vms" && (
-        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2}>
-          <Box display="flex" gap={2}>
+        <Box component={Paper} p={2} display="flex" justifyContent="space-between" gap={2} sx={actionPanelSx}>
+          <Box display="flex" gap={2} flexWrap="wrap">
             <Button variant="contained" onClick={() => setOpenDialogCreateVms(true)}>
               Novo
             </Button>
@@ -421,16 +446,16 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
             {checkboxVms.length > 0 && (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   onClick={() =>
-                    checkboxCondominiumMessenger.length > 1
-                      ? (alert("Altera um condominio por vez"), setCheckboxVms([]))
+                    checkboxVms.length > 1
+                      ? (alert("Altera um VMS por vez"), setCheckboxVms([]))
                       : setOpenDialogEditVms(true)
                   }
                 >
                   Alterar
                 </Button>
-                <Button variant="contained" onClick={handleDeleteVms}>
+                <Button color="error" variant="contained" onClick={handleDeleteVms}>
                   Excluir
                 </Button>
               </>
@@ -439,7 +464,7 @@ const BaseMainLayoutPage: React.FC<BaseMainLayoutPageProps> = ({
         </Box>
       )}
 
-      <Box>{children}</Box>
+      <Box sx={{ display: "grid", gap: 3 }}>{children}</Box>
     </Box>
   );
 };

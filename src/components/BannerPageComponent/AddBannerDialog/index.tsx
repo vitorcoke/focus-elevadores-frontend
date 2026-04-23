@@ -1,281 +1,64 @@
-import {
-  CloseRounded,
-  FileUploadRounded,
-  SendRounded,
-} from "@mui/icons-material";
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  Grid,
-  IconButton,
-  Snackbar,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-  Slide,
-  ClickAwayListener,
-} from "@mui/material";
-import { TransitionProps } from "@mui/material/transitions";
-import { Dispatch, forwardRef, SetStateAction, useState } from "react";
+import { useMemo, useState } from "react";
+import { ActionButton, Field, InlineNotice, Modal, TextArea, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { Banner } from "../../../types/banner.type";
-import { BlockPicker } from "react-color";
 import { api } from "../../../service";
+import { Banner } from "../../../types/banner.type";
 import { base64toFile } from "../../../utils/fileBase64";
 
-type AddCondominiumProps = {
-  setBanner: Dispatch<SetStateAction<Banner[]>>;
+type AddBannerDialogProps = {
+  setBanner: React.Dispatch<React.SetStateAction<Banner[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+const AddBannerDialog: React.FC<AddBannerDialogProps> = ({ setBanner }) => {
+  const { openDialogCreateBanner, setOpenDialogCreateBanner } = useControlerButtonPagesContext();
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [form, setForm] = useState({ name: "", description: "", background_color: "#000000", font_color: "#ffffff" });
 
-const AddBannerDialog: React.FC<AddCondominiumProps> = ({ setBanner }) => {
-  const { openDialogCreateBanner, setOpenDialogCreateBanner } =
-    useControlerButtonPagesContext();
+  const actions = useMemo(() => (
+    <>
+      <ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateBanner(false)}>Cancelar</ActionButton>
+      <ActionButton type="submit" form="create-banner-form">Salvar banner</ActionButton>
+    </>
+  ), [setOpenDialogCreateBanner]);
 
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-
-  const [name, setName] = useState("");
-  const [image, setImage] = useState<File>();
-  const [description, setDescription] = useState("");
-  const [background_color, setBackgroundColor] = useState("#000000");
-  const [font_color, setFontColor] = useState("#000000");
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [openPickerColorBackground, setOpenPickerColorBackground] =
-    useState(false);
-  const [openPickerColorFont, setOpenPickerColorFont] = useState(false);
-
-  const handleOpenPickerColorBackground = () => {
-    setOpenPickerColorBackground((prev) => !prev);
+  const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.includes("image")) return;
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
   };
 
-  const handleOpenPickerColorFont = () => {
-    setOpenPickerColorFont((prev) => !prev);
-  };
-
-  const handleClickedAwayBackground = () => {
-    setOpenPickerColorBackground(false);
-  };
-
-  const handleClickedAwayFont = () => {
-    setOpenPickerColorFont(false);
-  };
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialogCreateBanner(false);
-    setName("");
-    setImage(undefined);
-  };
-
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = e.target.files;
-    if (files) {
-      let file = files[0];
-      if (file && file.type.includes("image")) {
-        let url = window.URL || window.webkitURL;
-        let objectUrl = url.createObjectURL(file);
-        let img = new Image();
-        img.src = objectUrl;
-        img.onload = () => {
-          if (img.width <= 426 && img.height <= 240) {
-            setImage(file);
-          } else {
-            alert("A imagem deve ter no máximo 426x240");
-          }
-        };
-      } else {
-        alert("O arquivo deve ser uma imagem");
-      }
-    }
-  };
-
-  const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    let base64 = image !== undefined && (await base64toFile(image));
     try {
-      const banner = await api.post("/banner", {
-        name,
-        image: base64,
-        description,
-        background_color,
-        font_color,
-      });
-      setBanner((prev) => [...prev, banner.data]);
-      setOpenAlertSucess(true);
+      const payload = await base64toFile(image as File);
+      const response = await api.post("/banner", { ...form, image: payload });
+      setBanner((current) => [...current, response.data]);
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
   return (
-    <Dialog
-      open={openDialogCreateBanner}
-      onClose={handleCloseDialog}
-      fullScreen
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="Nome"
-                  fullWidth
-                  onChange={(e) => setName(e.target.value)}
-                  helperText={`${name.length}/30`}
-                  inputProps={{ maxLength: 30 }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  component="label"
-                  fullWidth
-                  startIcon={<FileUploadRounded />}
-                >
-                  Imagem do Banner
-                  <input
-                    required
-                    hidden
-                    accept="image/*"
-                    multiple
-                    type="file"
-                    onChange={handleImage}
-                  />
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex">
-                  <TextField
-                    required
-                    label="Descrição"
-                    fullWidth
-                    onChange={(e) => setDescription(e.target.value)}
-                    helperText={`${description.length}/250`}
-                    inputProps={{ maxLength: 250 }}
-                  />
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <ClickAwayListener onClickAway={handleClickedAwayBackground}>
-                  <Box>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleOpenPickerColorBackground}
-                    >
-                      Selecione uma cor de fundo
-                    </Button>
-                    {openPickerColorBackground && (
-                      <Box
-                        marginTop="1rem"
-                        width="100%"
-                        display="flex"
-                        justifyContent="center"
-                      >
-                        <BlockPicker
-                          color={background_color}
-                          onChange={(e) => setBackgroundColor(e.hex)}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </ClickAwayListener>
-              </Grid>
-              <Grid item xs={12}>
-                <ClickAwayListener onClickAway={handleClickedAwayFont}>
-                  <Box>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      onClick={handleOpenPickerColorFont}
-                    >
-                      Selecione uma cor de fonte
-                    </Button>
-                    {openPickerColorFont && (
-                      <Box
-                        marginTop="1rem"
-                        width="100%"
-                        display="flex"
-                        justifyContent="center"
-                      >
-                        <BlockPicker
-                          color={font_color}
-                          onChange={(e) => setFontColor(e.hex)}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                </ClickAwayListener>
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogCreateBanner} onClose={() => setOpenDialogCreateBanner(false)} title="Novo banner" description="Crie uma nova peca visual seguindo os tokens do design system." actions={actions}>
+      <form id="create-banner-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status === "success" ? <InlineNotice tone="success">Banner criado com sucesso.</InlineNotice> : null}
+        {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar o banner.</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Nome" required hint={`${form.name.length}/30`}><TextInput value={form.name} maxLength={30} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Imagem" required><TextInput type="file" accept="image/*" onChange={handleImage} /></Field>
+          <div className="ds-form-grid--full">
+            <Field label="Descricao" required hint={`${form.description.length}/250`}><TextArea value={form.description} maxLength={250} onChange={(e) => setForm({ ...form, description: e.target.value })} /></Field>
+          </div>
+          <Field label="Cor de fundo"><TextInput type="color" value={form.background_color} onChange={(e) => setForm({ ...form, background_color: e.target.value })} style={{ padding: 6 }} /></Field>
+          <Field label="Cor da fonte"><TextInput type="color" value={form.font_color} onChange={(e) => setForm({ ...form, font_color: e.target.value })} style={{ padding: 6 }} /></Field>
+        </div>
+        {preview ? <div aria-label="preview" style={{ width: 240, height: 140, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
+      </form>
+    </Modal>
   );
 };
 

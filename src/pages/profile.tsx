@@ -1,183 +1,88 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Grid,
-  Paper,
-  Snackbar,
-  TextField,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
 import { GetServerSideProps } from "next";
 import { useState } from "react";
-import { withAdminAndSindicoPermission } from "../hocs";
 import { PatternFormat } from "react-number-format";
+import { ActionButton, Field, InlineNotice, PageHero, SurfaceCard, TextInput } from "../components/design-system";
+import { withAdminAndSindicoPermission } from "../hocs";
+import AppBarLayoutPage from "../layout/AppBar";
 import { api, getAPIClient } from "../service";
 import { UserType } from "../types/users.type";
-import AppBarLayoutPage from "../layout/AppBar";
-import BaseMainLayoutPage from "../layout/BaseMain";
 
 type ProfileProps = {
   initialUser: UserType;
 };
 
 const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-
   const [user, setUser] = useState(initialUser);
   const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [emailError, setEmailError] = useState("");
 
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [messageAlertError, setMessageAlertError] = useState("");
-  const [openErrorEmail, setOpenErrorEmail] = useState(false);
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      password
-        ? await api.patch<UserType>(`/users/${user._id}`, {
-            name: user.name,
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
-            password: password,
-          })
-        : await api.patch<UserType>(`/users/${user._id}`, {
-            name: user.name,
-            username: user.username,
-            email: user.email,
-            phone: user.phone,
-          });
-      setOpenAlertSucess(true);
-      setOpenErrorEmail(false);
-    } catch (err: any) {
-      if (err.response.data.message.match(/email_1 dup key/)) {
-        setMessageAlertError("Email já cadastrado");
-        setOpenErrorEmail(true);
-        setOpenAlertError(true);
+      if (password) {
+        await api.patch<UserType>(`/users/${user._id}`, { ...user, password });
       } else {
-        setMessageAlertError("Erro ao cadastrar usuário");
-        setOpenAlertError(true);
+        await api.patch<UserType>(`/users/${user._id}`, {
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+        });
       }
+      setStatus({ tone: "success", message: "Perfil atualizado com sucesso." });
+      setEmailError("");
+      setPassword("");
+    } catch (err: any) {
+      if (err.response?.data?.message?.match(/email_1 dup key/)) {
+        setEmailError("Email ja cadastrado");
+      }
+      setStatus({ tone: "error", message: "Nao foi possivel salvar as informacoes." });
     }
   };
 
   return (
     <AppBarLayoutPage>
-      <BaseMainLayoutPage title="Meu Perfil" page="profile">
-        <Box
-          component="form"
-          width="100%"
-          height="auto"
-          display="flex"
-          justifyContent="center"
-          p={2.5}
-          onSubmit={handleSubmit}
-        >
-          <Box width={smDown ? "100%" : "60%"} component={Paper} p={3}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nome"
-                  value={user.name}
-                  onChange={(e) =>
-                    setUser({
-                      ...user,
-                      name: e.target.value,
-                    })
-                  }
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Nome de login"
-                  value={user.username}
-                  onChange={(e) =>
-                    setUser({
-                      ...user,
-                      username: e.target.value,
-                    })
-                  }
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Email"
-                  value={user.email}
-                  error={openErrorEmail}
-                  helperText={openErrorEmail && "Email já cadastrado"}
-                  onChange={(e) =>
-                    setUser({
-                      ...user,
-                      email: e.target.value,
-                    })
-                  }
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
+      <div className="ds-stack">
+        <PageHero
+          title="Meu perfil"
+          description="Atualize seus dados de acesso e mantenha o cadastro alinhado com a operacao do painel."
+        />
+
+        <SurfaceCard style={{ padding: 28 }}>
+          <form className="ds-stack" onSubmit={handleSubmit}>
+            {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
+            <div className="ds-form-grid">
+              <Field label="Nome" required>
+                <TextInput value={user.name} onChange={(e) => setUser({ ...user, name: e.target.value })} />
+              </Field>
+              <Field label="Nome de login" required>
+                <TextInput value={user.username} onChange={(e) => setUser({ ...user, username: e.target.value })} />
+              </Field>
+              <Field label="Email" required error={emailError}>
+                <TextInput value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} />
+              </Field>
+              <Field label="Telefone">
                 <PatternFormat
-                  label="Telefone"
-                  value={user.phone}
-                  customInput={TextField}
-                  onChange={(e) =>
-                    setUser({
-                      ...user,
-                      phone: e.target.value,
-                    })
-                  }
-                  fullWidth
+                  customInput={TextInput as any}
                   format="(##) #####-####"
+                  value={user.phone}
+                  onValueChange={(values) => setUser({ ...user, phone: values.formattedValue })}
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <Alert severity="info">Ultilize os campos abaixo para alterar sua senha</Alert>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Senha"
-                  type="password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button variant="contained" type="submit" fullWidth>
-                  Salvar informações
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-          <Snackbar
-            open={openAlertSucess}
-            autoHideDuration={3000}
-            onClose={handleCloseAlertSucess}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert severity="success">Enviado com sucesso</Alert>
-          </Snackbar>
-          <Snackbar
-            open={openAlertError}
-            autoHideDuration={3000}
-            onClose={handleCloseAlertError}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert severity="error">{messageAlertError}</Alert>
-          </Snackbar>
-        </Box>
-      </BaseMainLayoutPage>
+              </Field>
+              <div className="ds-form-grid--full">
+                <InlineNotice tone="info">Preencha a senha apenas se quiser altera-la.</InlineNotice>
+              </div>
+              <Field label="Nova senha" hint="Deixe em branco para manter a senha atual.">
+                <TextInput type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </Field>
+            </div>
+            <div className="ds-split">
+              <ActionButton type="submit">Salvar informacoes</ActionButton>
+            </div>
+          </form>
+        </SurfaceCard>
+      </div>
     </AppBarLayoutPage>
   );
 };
@@ -186,19 +91,10 @@ export default withAdminAndSindicoPermission(Profile);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
-
   try {
     const { data } = await api.get<UserType>("/users/profile");
-    return {
-      props: {
-        initialUser: data,
-      },
-    };
+    return { props: { initialUser: data } };
   } catch {
-    return {
-      props: {
-        initialUser: [],
-      },
-    };
+    return { props: { initialUser: [] } };
   }
 };

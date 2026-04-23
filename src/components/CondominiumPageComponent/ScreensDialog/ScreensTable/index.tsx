@@ -1,14 +1,21 @@
-import { Box } from "@mui/material";
-import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
+import { DataTable } from "../../../design-system";
 import { useControlerButtonPagesContext } from "../../../../context/ControlerButtonPagesContext";
 import { api } from "../../../../service";
 import { CondominiumType } from "../../../../types/condominium.type";
 import { Screen } from "../../../../types/screens.type";
-import dayjs from "dayjs";
 
 type ScreenTableProps = {
   selectedCondominium: CondominiumType;
+};
+
+type ScreenRow = {
+  id: string;
+  screen: string;
+  validity: string;
+  sourceCount: number;
+  newsCount: number;
 };
 
 const ScreenTable: React.FC<ScreenTableProps> = ({ selectedCondominium }) => {
@@ -16,39 +23,30 @@ const ScreenTable: React.FC<ScreenTableProps> = ({ selectedCondominium }) => {
   const [screenCondominium, setScreenCondominium] = useState<Screen[]>([]);
 
   useEffect(() => {
-    api.get(`/screens/condominiun_id/${selectedCondominium._id}`).then((response) => {
-      setScreenCondominium(response.data);
-    });
+    api.get(`/screens/condominiun_id/${selectedCondominium._id}`).then((response) => setScreenCondominium(response.data));
   }, [selectedCondominium]);
 
-  const column: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 3 },
-    { field: "screen", headerName: "Tela", flex: 3 },
-    { field: "validity", headerName: "Validade", flex: 1 },
-    { field: "source_rss", headerName: "RSS ativo", flex: 1 },
-    { field: "noticies", headerName: "Notícias ativas", flex: 1 },
-  ];
+  const rows = useMemo<ScreenRow[]>(() => screenCondominium.map((screen) => ({
+    id: screen._id,
+    screen: screen.name,
+    validity: dayjs(screen.validity).format("DD/MM/YYYY"),
+    sourceCount: screen.source_rss.length,
+    newsCount: screen.noticies.length,
+  })), [screenCondominium]);
 
-  const rows = screenCondominium.map((screen) => {
-    return {
-      id: screen._id,
-      screen: screen.name,
-      validity: dayjs(screen.validity).format("DD/MM/YYYY"),
-      source_rss: screen.source_rss.length,
-      noticies: screen.noticies.length,
-    };
-  });
   return (
-    <Box height="60vh" marginTop={4}>
-      <DataGridPro
-        columns={column}
-        components={{ Toolbar: GridToolbar }}
-        rows={rows}
-        checkboxSelection
-        onSelectionModelChange={(e) => setCheckboxScreens(e)}
-        selectionModel={checkboxScreens}
-      />
-    </Box>
+    <DataTable
+      rows={rows}
+      selectedIds={checkboxScreens}
+      onSelectionChange={setCheckboxScreens}
+      searchPlaceholder="Buscar tela"
+      columns={[
+        { key: "screen", header: "Tela", render: (row) => row.screen, searchValue: (row) => row.screen },
+        { key: "validity", header: "Validade", render: (row) => row.validity, sortValue: (row) => row.validity },
+        { key: "source", header: "RSS ativo", render: (row) => row.sourceCount, sortValue: (row) => row.sourceCount },
+        { key: "news", header: "Noticias ativas", render: (row) => row.newsCount, sortValue: (row) => row.newsCount },
+      ]}
+    />
   );
 };
 

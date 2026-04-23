@@ -1,87 +1,89 @@
-import { Box } from "@mui/material";
-import { DataGridPro, GridColDef } from "@mui/x-data-grid-pro";
+import { useMemo, useState } from "react";
+import { ActionButton, DataTable, PageHero } from "../../components/design-system";
+import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { useState } from "react";
 import { getAPIClient } from "../../service";
 import { CondominiumType } from "../../types/condominium.type";
 import { VMS } from "../../types/vms.type";
-import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import AddVmsDialog from "../../components/VmsPageComponent/AddVmsDialog";
 import EditVmsDialog from "../../components/VmsPageComponent/EditVmsDialog";
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
 
 type VmsProps = {
   initialVms: VMS[];
   initialCondominium: CondominiumType[];
 };
 
-const Vms: React.FC<VmsProps> = ({ initialVms, initialCondominium }) => {
-  const { checkboxVms, setCheckboxVms } = useControlerButtonPagesContext();
+type VmsRow = VMS & { id: string; condominiumName: string };
+
+const VmsPage: React.FC<VmsProps> = ({ initialVms, initialCondominium }) => {
+  const { checkboxVms, setCheckboxVms, setOpenDialogCreateVms, setOpenDialogEditVms } = useControlerButtonPagesContext();
   const [vms, setVms] = useState(initialVms);
-  const [editVms, setEditVms] = useState<VMS>();
+  const [editing, setEditing] = useState<VMS | null>(null);
 
-  const columns: GridColDef[] = [
-    { field: "name", headerName: "Nome", flex: 1 },
-    { field: "server", headerName: "IP", flex: 1 },
-    { field: "port", headerName: "Porta", flex: 1 },
-  ];
+  const rows = useMemo<VmsRow[]>(() => vms.map((item) => ({
+    ...item,
+    id: item._id,
+    condominiumName: initialCondominium.find((condominium) => condominium._id === item.condominium_id)?.name || "Nao vinculado",
+  })), [initialCondominium, vms]);
 
-  const rows = vms.map((vms) => {
-    return {
-      id: vms._id,
-      _id: vms._id,
-      name: vms.name,
-      server: vms.server,
-      port: vms.port,
-      receiver: vms.receiver,
-      account: vms.account,
-      username: vms.username,
-      condominium_id: vms.condominium_id,
-    };
-  });
+  const openEdit = () => {
+    if (checkboxVms.length !== 1) return;
+    const found = vms.find((item) => item._id === checkboxVms[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditVms(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage page="vms" title="VMS" setVms={setVms}>
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            rows={rows}
-            columns={columns}
-            checkboxSelection
-            selectionModel={checkboxVms}
-            onSelectionModelChange={(e) => setCheckboxVms(e)}
-            onCellClick={(params) =>
-              checkboxVms.length === 0 ? setEditVms(params.row as VMS) : setEditVms(undefined)
+      <div className="ds-stack">
+        <PageHero
+          title="VMS"
+          description="Gerencie conexoes de video, credenciais e vinculos por condominio dentro do novo ecossistema visual."
+          aside={<span className="ds-tag">{rows.length} conexoes</span>}
+        />
+
+        <div className="ds-split">
+          <ActionButton type="button" onClick={() => setOpenDialogCreateVms(true)}>Novo VMS</ActionButton>
+          <ActionButton type="button" variant="secondary" disabled={checkboxVms.length !== 1} onClick={openEdit}>Editar selecionado</ActionButton>
+        </div>
+
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxVms}
+          onSelectionChange={setCheckboxVms}
+          onRowClick={(row) => {
+            setEditing(row);
+            if (checkboxVms.length === 0) {
+              setOpenDialogEditVms(true);
             }
-          />
-          <AddVmsDialog setVms={setVms} condominium={initialCondominium} />
-          {editVms && <EditVmsDialog condominium={initialCondominium} vms={editVms} />}
-        </Box>
-      </BaseMainLayoutPage>
+          }}
+          searchPlaceholder="Buscar VMS por nome, IP ou condominio"
+          columns={[
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => row.name },
+            { key: "server", header: "Servidor", render: (row) => row.server, searchValue: (row) => row.server },
+            { key: "port", header: "Porta", width: "120px", render: (row) => row.port },
+            { key: "condominium", header: "Condominio", render: (row) => row.condominiumName, searchValue: (row) => row.condominiumName },
+          ]}
+        />
+      </div>
+
+      <AddVmsDialog setVms={setVms} condominium={initialCondominium} />
+      {editing ? <EditVmsDialog condominium={initialCondominium} vms={editing} setVms={setVms} /> : null}
     </LayoutPage>
   );
 };
 
-export default Vms;
+export default VmsPage;
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
   try {
     const vms = await api.get<VMS[]>("/vms");
     const condominium = await api.get<CondominiumType[]>("/condominium?query=all");
-    return {
-      props: {
-        initialVms: vms.data,
-        initialCondominium: condominium.data,
-      },
-    };
+    return { props: { initialVms: vms.data, initialCondominium: condominium.data } };
   } catch {
-    return {
-      props: {
-        initialVms: [],
-        initialCondominium: [],
-      },
-    };
+    return { props: { initialVms: [], initialCondominium: [] } };
   }
 };

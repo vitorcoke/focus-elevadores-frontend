@@ -1,63 +1,63 @@
-import { GridRowId } from "@mui/x-data-grid-pro";
 import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
+
+type SelectionIds = string[];
 
 type ControlerButtonPagesContextProps = {
   children: React.ReactNode;
 };
+
 type ControlerButtonPagesContextData = {
   openDialogCreateCondominium: boolean;
   setOpenDialogCreateCondominium: Dispatch<SetStateAction<boolean>>;
-  checkboxCondominium: GridRowId[];
-  setCheckboxCondominium: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxCondominium: SelectionIds;
+  setCheckboxCondominium: Dispatch<SetStateAction<SelectionIds>>;
   openDialogEditCondominium: boolean;
   setOpenDialogEditCondominium: Dispatch<SetStateAction<boolean>>;
   openDialogCreateScreens: boolean;
   setOpenDialogCreateScreens: Dispatch<SetStateAction<boolean>>;
-  checkboxScreens: GridRowId[];
-  setCheckboxScreens: Dispatch<SetStateAction<GridRowId[]>>;
-  checkboxRss: GridRowId[];
-  setCheckboxRss: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxScreens: SelectionIds;
+  setCheckboxScreens: Dispatch<SetStateAction<SelectionIds>>;
+  checkboxRss: SelectionIds;
+  setCheckboxRss: Dispatch<SetStateAction<SelectionIds>>;
   openDialogCreateRss: boolean;
   setOpenDialogCreateRss: Dispatch<SetStateAction<boolean>>;
   openDialogEditRss: boolean;
   setOpenDialogEditRss: Dispatch<SetStateAction<boolean>>;
-  checkboxBanner: GridRowId[];
-  setCheckboxBanner: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxBanner: SelectionIds;
+  setCheckboxBanner: Dispatch<SetStateAction<SelectionIds>>;
   openDialogCreateBanner: boolean;
   setOpenDialogCreateBanner: Dispatch<SetStateAction<boolean>>;
   openDialogEditBanner: boolean;
   setOpenDialogEditBanner: Dispatch<SetStateAction<boolean>>;
-  checkboxUser: GridRowId[];
-  setCheckboxUser: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxUser: SelectionIds;
+  setCheckboxUser: Dispatch<SetStateAction<SelectionIds>>;
   openDialogCreateUser: boolean;
   setOpenDialogCreateUser: Dispatch<SetStateAction<boolean>>;
   openDialogEditUser: boolean;
   setOpenDialogEditUser: Dispatch<SetStateAction<boolean>>;
-  checkboxCondominiumMessenger: GridRowId[];
-  setCheckboxCondominiumMessenger: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxCondominiumMessenger: SelectionIds;
+  setCheckboxCondominiumMessenger: Dispatch<SetStateAction<SelectionIds>>;
   openDialogCreateCondominiumMessenger: boolean;
   setOpenDialogCreateCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
   openDialogEditCondominiumMessenger: boolean;
   setOpenDialogEditCondominiumMessenger: Dispatch<SetStateAction<boolean>>;
   openDialogCreateVms: boolean;
   setOpenDialogCreateVms: Dispatch<SetStateAction<boolean>>;
-  checkboxVms: GridRowId[];
-  setCheckboxVms: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxVms: SelectionIds;
+  setCheckboxVms: Dispatch<SetStateAction<SelectionIds>>;
   openDialogEditVms: boolean;
   setOpenDialogEditVms: Dispatch<SetStateAction<boolean>>;
   openDialogCreateNoticies: boolean;
   setOpenDialogCreateNoticies: Dispatch<SetStateAction<boolean>>;
-  checkboxNoticies: GridRowId[];
-  setCheckboxNoticies: Dispatch<SetStateAction<GridRowId[]>>;
+  checkboxNoticies: SelectionIds;
+  setCheckboxNoticies: Dispatch<SetStateAction<SelectionIds>>;
   openDialogEditNoticies: boolean;
   setOpenDialogEditNoticies: Dispatch<SetStateAction<boolean>>;
 };
 
 const ControlerButtonPagesContext = createContext({} as ControlerButtonPagesContextData);
 
-export const useControlerButtonPagesContext = () => {
-  return useContext(ControlerButtonPagesContext);
-};
+export const useControlerButtonPagesContext = () => useContext(ControlerButtonPagesContext);
 
 const ControlerButtonPagesProvider: React.FC<ControlerButtonPagesContextProps> = ({ children }) => {
   const [openDialogCreateCondominium, setOpenDialogCreateCondominium] = useState(false);
@@ -71,20 +71,18 @@ const ControlerButtonPagesProvider: React.FC<ControlerButtonPagesContextProps> =
   const [openDialogEditUser, setOpenDialogEditUser] = useState(false);
   const [openDialogCreateNoticies, setOpenDialogCreateNoticies] = useState(false);
   const [openDialogEditNoticies, setOpenDialogEditNoticies] = useState(false);
-  const [openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger] =
-    useState(false);
-  const [openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger] =
-    useState(false);
+  const [openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger] = useState(false);
+  const [openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger] = useState(false);
   const [openDialogCreateVms, setOpenDialogCreateVms] = useState(false);
   const [openDialogEditVms, setOpenDialogEditVms] = useState(false);
-  const [checkboxCondominium, setCheckboxCondominium] = useState<GridRowId[]>([]);
-  const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
-  const [checkboxRss, setCheckboxRss] = useState<GridRowId[]>([]);
-  const [checkboxBanner, setCheckboxBanner] = useState<GridRowId[]>([]);
-  const [checkboxUser, setCheckboxUser] = useState<GridRowId[]>([]);
-  const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] = useState<GridRowId[]>([]);
-  const [checkboxVms, setCheckboxVms] = useState<GridRowId[]>([]);
-  const [checkboxNoticies, setCheckboxNoticies] = useState<GridRowId[]>([]);
+  const [checkboxCondominium, setCheckboxCondominium] = useState<SelectionIds>([]);
+  const [checkboxScreens, setCheckboxScreens] = useState<SelectionIds>([]);
+  const [checkboxRss, setCheckboxRss] = useState<SelectionIds>([]);
+  const [checkboxBanner, setCheckboxBanner] = useState<SelectionIds>([]);
+  const [checkboxUser, setCheckboxUser] = useState<SelectionIds>([]);
+  const [checkboxCondominiumMessenger, setCheckboxCondominiumMessenger] = useState<SelectionIds>([]);
+  const [checkboxVms, setCheckboxVms] = useState<SelectionIds>([]);
+  const [checkboxNoticies, setCheckboxNoticies] = useState<SelectionIds>([]);
 
   return (
     <ControlerButtonPagesContext.Provider

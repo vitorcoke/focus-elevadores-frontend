@@ -1,33 +1,12 @@
-import {
-  Alert,
-  AppBar,
-  Autocomplete,
-  Box,
-  Button,
-  Dialog,
-  FormControl,
-  Grid,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { CloseRounded, SendRounded } from "@mui/icons-material";
+import { useMemo, useState } from "react";
+import { PatternFormat } from "react-number-format";
+import { ActionButton, Field, InlineNotice, Modal, MultiSelectChips, SelectInput, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState } from "react";
-import { Permission, UserType } from "../../../types/users.type";
+import { useAuthContext } from "../../../context/AuthContext";
 import { api } from "../../../service";
 import { CondominiumType } from "../../../types/condominium.type";
-import { useAuthContext } from "../../../context/AuthContext";
 import { Screen } from "../../../types/screens.type";
-import { PatternFormat } from "react-number-format";
+import { Permission, UserType } from "../../../types/users.type";
 
 type AddUserProps = {
   setUser: React.Dispatch<React.SetStateAction<UserType[]>>;
@@ -35,209 +14,50 @@ type AddUserProps = {
   screens: Screen[];
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useAuthContext();
   const { openDialogCreateUser, setOpenDialogCreateUser } = useControlerButtonPagesContext();
+  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [emailError, setEmailError] = useState("");
+  const [form, setForm] = useState({ name: "", username: "", email: "", phone: "", password: "", condominium_id: [] as string[], screen_id: [] as string[], permission: String(Permission.ZELADOR) });
 
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [messageAlertError, setMessageAlertError] = useState("");
-  const [openErrorEmail, setOpenErrorEmail] = useState(false);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateUser(false)}>Cancelar</ActionButton><ActionButton type="submit" form="create-user-form">Salvar usuario</ActionButton></>), [setOpenDialogCreateUser]);
 
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [condominium_id, setCondominium_id] = useState<string[]>([]);
-  const [screen_id, setScreen_id] = useState<string[]>([]);
-  const [permission, setPermission] = useState("");
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-  const handleCloseDialog = () => {
-    setOpenDialogCreateUser(false);
-    setOpenErrorEmail(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      const user = await api.post<UserType>("/users", {
-        name,
-        username,
-        email,
-        phone,
-        password,
-        condominium_id,
-        screen_id,
-        permission: parseInt(permission),
-      });
-      setUser((prev) => [...prev, user.data]);
-      setOpenAlertSucess(true);
+      const response = await api.post<UserType>("/users", { ...form, permission: parseInt(form.permission, 10) });
+      setUser((current) => [...current, response.data]);
+      setStatus({ tone: "success", message: "Usuario criado com sucesso." });
+      setEmailError("");
     } catch (err: any) {
-      if (err.response.data.message.match(/email_1 dup key/)) {
-        setMessageAlertError("Email já cadastrado");
-        setOpenErrorEmail(true);
-        setOpenAlertError(true);
-      } else {
-        setMessageAlertError("Erro ao cadastrar usuário");
-        setOpenAlertError(true);
+      if (err.response?.data?.message?.match(/email_1 dup key/)) {
+        setEmailError("Email ja cadastrado");
       }
+      setStatus({ tone: "error", message: "Nao foi possivel criar o usuario." });
     }
   };
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogCreateUser}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="Nome"
-                  fullWidth
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="Nome de login"
-                  fullWidth
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  error={openErrorEmail}
-                  helperText={openErrorEmail && "Email já cadastrado"}
-                  label="Email"
-                  fullWidth
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <PatternFormat
-                  required
-                  label="Telefone"
-                  format="(##) #####-####"
-                  fullWidth
-                  customInput={TextField}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="Senha"
-                  type="password"
-                  fullWidth
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Autocomplete
-                  multiple
-                  options={condominium}
-                  getOptionLabel={(option) => option.name}
-                  onChange={(e, value) => setCondominium_id(value.map((item) => item._id))}
-                  renderInput={(params) => <TextField {...params} label="Condomínio" />}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Permissão</InputLabel>
-                  <Select
-                    required
-                    value={permission}
-                    label="Permissão"
-                    onChange={(e) => setPermission(e.target.value as string)}
-                  >
-                    <MenuItem value={0}>Zelador(a)</MenuItem>
-                    {user?.permission !== Permission.SINDICO && (
-                      <MenuItem value={1}>Sindico(a)</MenuItem>
-                    )}
-                    {user?.permission !== Permission.SINDICO && (
-                      <MenuItem value={2}>Administrador(a)</MenuItem>
-                    )}
-                  </Select>
-                </FormControl>
-              </Grid>
-              {permission == "0" && (
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={screens}
-                    getOptionLabel={(option) => option.name}
-                    onChange={(e, value) => setScreen_id(value.map((item) => item._id))}
-                    renderInput={(params) => <TextField {...params} label="Telas" />}
-                  />
-                </Grid>
-              )}
-            </Grid>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">{messageAlertError}</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogCreateUser} onClose={() => setOpenDialogCreateUser(false)} title="Novo usuario" description="Cadastre acessos e vinculos operacionais no novo frontend." actions={actions} size="xl">
+      <form id="create-user-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Nome de login" required><TextInput value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></Field>
+          <Field label="Email" required error={emailError}><TextInput value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+          <Field label="Telefone"><PatternFormat customInput={TextInput as any} format="(##) #####-####" value={form.phone} onValueChange={(values) => setForm({ ...form, phone: values.formattedValue })} /></Field>
+          <Field label="Senha" required><TextInput type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
+          <Field label="Permissao" required><SelectInput value={form.permission} onChange={(e) => setForm({ ...form, permission: e.target.value })}><option value={Permission.ZELADOR}>Zelador</option>{user?.permission !== Permission.SINDICO ? <option value={Permission.SINDICO}>Sindico</option> : null}{user?.permission !== Permission.SINDICO ? <option value={Permission.ADMIN}>Administrador</option> : null}</SelectInput></Field>
+          <div className="ds-form-grid--full">
+            <Field label="Condominios">
+              <MultiSelectChips options={condominium.map((item) => ({ value: item._id, label: item.name }))} values={form.condominium_id} onChange={(values) => setForm({ ...form, condominium_id: values })} />
+            </Field>
+          </div>
+          {form.permission === String(Permission.ZELADOR) ? <div className="ds-form-grid--full"><Field label="Telas"><MultiSelectChips options={screens.map((item) => ({ value: item._id, label: item.name }))} values={form.screen_id} onChange={(values) => setForm({ ...form, screen_id: values })} /></Field></div> : null}
+        </div>
+      </form>
+    </Modal>
   );
 };
 

@@ -1,315 +1,65 @@
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  Grid,
-  IconButton,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CloseRounded, SendRounded } from "@mui/icons-material";
-import { forwardRef, useState, useEffect } from "react";
-import { TransitionProps } from "@mui/material/transitions";
-import { CondominiumType } from "../../../types/condominium.type";
-import { api } from "../../../service";
-import { PatternFormat } from "react-number-format";
+import { useEffect, useMemo, useState } from "react";
 import produce from "immer";
+import { ActionButton, Field, InlineNotice, Modal, TextInput } from "../../design-system";
+import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
+import { api } from "../../../service";
+import { CondominiumType } from "../../../types/condominium.type";
 
 type EditCondominiumProps = {
   condominium: CondominiumType;
   setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
 const EditCondominium: React.FC<EditCondominiumProps> = ({ condominium, setCondominium }) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogEditCondominium, setOpenDialogEditCondominium } =
-    useControlerButtonPagesContext();
+  const { openDialogEditCondominium, setOpenDialogEditCondominium } = useControlerButtonPagesContext();
+  const [form, setForm] = useState(condominium);
+  const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
+  const [errors, setErrors] = useState({ cnpj: "", id: "" });
 
-  const [editCondominium, seteditCondominium] = useState(condominium);
+  useEffect(() => { setForm(condominium); }, [condominium]);
 
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [messageAlertError, setMessageAlertError] = useState("");
-  const [openErrorIdImodulo, setOpenErrorIdImodulo] = useState(false);
-  const [openErrorCnpj, setOpenErrorCnpj] = useState(false);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogEditCondominium(false)}>Cancelar</ActionButton><ActionButton type="submit" form="edit-condominium-form">Salvar alteracoes</ActionButton></>), [setOpenDialogEditCondominium]);
 
-  const handleCloseDialog = () => {
-    setOpenDialogEditCondominium(false);
-    setOpenErrorCnpj(false);
-    setOpenErrorIdImodulo(false);
-  };
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-
-  useEffect(() => {
-    seteditCondominium(condominium);
-  }, [condominium]);
-
-  const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      await api.patch(`/condominium/${condominium._id}`, {
-        name: editCondominium.name,
-        condominium_id_imodulo: editCondominium.condominium_id_imodulo,
-        cnpj: editCondominium.cnpj,
-        address: editCondominium.address,
-        district: editCondominium.district,
-        cep: editCondominium.cep,
-        complement: editCondominium.complement,
-        city: editCondominium.city,
-        state: editCondominium.state,
-      });
-      setCondominium((oldCondominium) =>
-        produce(oldCondominium, (draft) => {
-          const index = draft.findIndex((item) => item._id === condominium._id);
-          draft[index] = editCondominium;
-        })
-      );
-      setOpenAlertSucess(true);
+      await api.patch(`/condominium/${condominium._id}`, form);
+      setCondominium((current) => produce(current, (draft) => {
+        const index = draft.findIndex((item) => item._id === condominium._id);
+        if (index >= 0) draft[index] = form;
+      }));
+      setErrors({ cnpj: "", id: "" });
+      setStatus({ tone: "success", message: "Condominio atualizado com sucesso." });
     } catch (err: any) {
-      if (err.response.data.message.includes("cnpj_1 dup key")) {
-        setMessageAlertError("CNPJ já cadastrado");
-        setOpenErrorCnpj(true);
-        setOpenAlertError(true);
-      } else if (err.response.data.message.includes("condominium_id_imodulo_1 dup key")) {
-        setMessageAlertError("ID já cadastrado");
-        setOpenErrorIdImodulo(true);
-        setOpenAlertError(true);
+      if (err.response?.data?.message?.includes("cnpj_1 dup key")) {
+        setErrors({ cnpj: "CNPJ ja cadastrado", id: "" });
+        setStatus({ tone: "error", message: "CNPJ ja cadastrado." });
+      } else if (err.response?.data?.message?.includes("condominium_id_imodulo_1 dup key")) {
+        setErrors({ cnpj: "", id: "ID ja cadastrado" });
+        setStatus({ tone: "error", message: "ID ja cadastrado." });
       } else {
-        setMessageAlertError("Erro ao criar condomínio");
-        setOpenAlertError(true);
+        setStatus({ tone: "error", message: "Nao foi possivel atualizar o condominio." });
       }
     }
   };
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogEditCondominium}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button variant="contained" startIcon={<SendRounded />} type="submit">
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <TextField
-                  required
-                  label="ID"
-                  error={openErrorIdImodulo}
-                  helperText={openErrorIdImodulo && "ID já cadastrado"}
-                  value={editCondominium.condominium_id_imodulo}
-                  fullWidth
-                  type={"number"}
-                  sx={{
-                    "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                      display: "none",
-                    },
-                    "& input[type=number]": {
-                      MozAppearance: "textfield",
-                    },
-                  }}
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      condominium_id_imodulo: Number(e.target.value),
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={8}>
-                <TextField
-                  required
-                  value={editCondominium.name}
-                  label="Nome"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium((prev) =>
-                      produce(prev, (draft) => {
-                        draft.name = e.target.value;
-                      })
-                    )
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Grid item xs={12}>
-                  <PatternFormat
-                    required
-                    error={openErrorCnpj}
-                    helperText={openErrorCnpj && "CNPJ já cadastrado"}
-                    label="CNPJ"
-                    customInput={TextField}
-                    fullWidth
-                    value={editCondominium.cnpj}
-                    format="##.###.###/####-##"
-                    onChange={(e) =>
-                      seteditCondominium({
-                        ...editCondominium,
-                        cnpj: e.target.value,
-                      })
-                    }
-                  />
-                </Grid>
-              </Grid>
-              <Grid item xs={12}>
-                <Box display="flex">
-                  <TextField
-                    required
-                    value={editCondominium.cep}
-                    label="CEP"
-                    fullWidth
-                    type={"number"}
-                    sx={{
-                      "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
-                        display: "none",
-                      },
-                      "& input[type=number]": {
-                        MozAppearance: "textfield",
-                      },
-                    }}
-                    onChange={(e) =>
-                      seteditCondominium({
-                        ...editCondominium,
-                        cep: e.target.value,
-                      })
-                    }
-                  />
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editCondominium.address}
-                  label="Endereço"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      address: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editCondominium.district}
-                  label="Bairro"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      district: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Numero/Complemento"
-                  value={editCondominium.complement}
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      complement: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editCondominium.city}
-                  label="Cidade"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      city: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  value={editCondominium.state}
-                  label="Estado"
-                  fullWidth
-                  onChange={(e) =>
-                    seteditCondominium({
-                      ...editCondominium,
-                      state: e.target.value,
-                    })
-                  }
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">{messageAlertError}</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogEditCondominium} onClose={() => setOpenDialogEditCondominium(false)} title="Editar condominio" description="Atualize os dados cadastrais no novo frontend." actions={actions} size="xl">
+      <form id="edit-condominium-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="ID iModulo" required error={errors.id}><TextInput type="number" value={String(form.condominium_id_imodulo)} onChange={(e) => setForm({ ...form, condominium_id_imodulo: Number(e.target.value) })} /></Field>
+          <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="CNPJ" required error={errors.cnpj}><TextInput value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} /></Field>
+          <Field label="CEP" required><TextInput value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} /></Field>
+          <div className="ds-form-grid--full"><Field label="Endereco" required><TextInput value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></Field></div>
+          <Field label="Bairro" required><TextInput value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} /></Field>
+          <Field label="Numero/Complemento"><TextInput value={form.complement || ""} onChange={(e) => setForm({ ...form, complement: e.target.value })} /></Field>
+          <Field label="Cidade" required><TextInput value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
+          <Field label="Estado" required><TextInput value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></Field>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

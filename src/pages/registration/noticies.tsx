@@ -1,64 +1,56 @@
-import { Avatar, Box } from "@mui/material";
-import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import { GetServerSideProps } from "next";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { DataTable, PageToolbar } from "../../components/design-system";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import { withAllPermission } from "../../hocs";
-import { getAPIClient } from "../../service";
-import { Rss } from "../../types/rss.type";
 import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
-import AddRss from "../../components/RssPageComponent/AddRssDialog";
-import EditRss from "../../components/RssPageComponent/EditRssDialog";
+import { GetServerSideProps } from "next";
+import { getAPIClient } from "../../service";
 import { Noticies } from "../../types/noticies.type";
 import AddNoticies from "../../components/NoticiesPageComponent/AddNoticiesDialog";
 import EditNoticies from "../../components/NoticiesPageComponent/EditNoticiesDialog";
 
-type NoticiesProps = {
-  initialNoticies: Noticies[];
-};
+type NoticiesProps = { initialNoticies: Noticies[] };
+type NoticiesRow = Noticies & { id: string; screens: number };
 
 const NoticiesPage: React.FC<NoticiesProps> = ({ initialNoticies }) => {
-  const { checkboxNoticies, setCheckboxNoticies } = useControlerButtonPagesContext();
-
+  const { checkboxNoticies, setCheckboxNoticies, setOpenDialogCreateNoticies, setOpenDialogEditNoticies } = useControlerButtonPagesContext();
   const [noticies, setNoticies] = useState(initialNoticies);
-  const [editNoticies, setEditNoticies] = useState<Noticies>();
-  const columns: GridColDef[] = [
-    { field: "name", headerName: "Nome", flex: 2 },
-    { field: "screens", headerName: "Qtds. Telas", flex: 1 },
-  ];
+  const [editing, setEditing] = useState<Noticies | null>(null);
 
-  const rows = noticies.map((noticie: Noticies) => {
-    return {
-      id: noticie._id,
-      screens: noticie.screen_id.length > 0 ? noticie.screen_id.length : 0,
-      ...noticie,
-    };
-  });
+  const rows = useMemo<NoticiesRow[]>(() => noticies.map((item) => ({ ...item, id: item._id, screens: item.screen_id?.length || 0 })), [noticies]);
+
+  const openEdit = () => {
+    if (checkboxNoticies.length !== 1) return;
+    const found = noticies.find((item) => item._id === checkboxNoticies[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditNoticies(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage title="Noticias" page="noticies" setNoticies={setNoticies}>
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            checkboxSelection
-            selectionModel={checkboxNoticies}
-            onSelectionModelChange={(e) => setCheckboxNoticies(e)}
-            components={{
-              Toolbar: GridToolbar,
-            }}
-            rows={rows}
-            columns={columns}
-            onCellClick={(params) =>
-              checkboxNoticies.length === 0
-                ? setEditNoticies(params.row as Noticies)
-                : setEditNoticies(undefined)
-            }
-          />
-          <AddNoticies setNoticies={setNoticies} />
-          {editNoticies && <EditNoticies noticies={editNoticies} setNoticies={setNoticies} />}
-        </Box>
-      </BaseMainLayoutPage>
+      <div className="ds-stack">
+        <PageToolbar title="Noticias" onNew={() => setOpenDialogCreateNoticies(true)} onEdit={openEdit} hasSelection={checkboxNoticies.length === 1} />
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxNoticies}
+          onSelectionChange={setCheckboxNoticies}
+          onRowClick={(row) => {
+            setEditing(row);
+            if (checkboxNoticies.length === 0) setOpenDialogEditNoticies(true);
+          }}
+          searchPlaceholder="Buscar por nome, categoria, cidade ou estado"
+          columns={[
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => row.name },
+            { key: "search", header: "Busca", render: (row) => row.search, searchValue: (row) => row.search },
+            { key: "region", header: "Regiao", render: (row) => `${row.city || "-"} / ${row.state || "-"}`, searchValue: (row) => `${row.city} ${row.state}` },
+            { key: "category", header: "Categoria", render: (row) => row.category, searchValue: (row) => row.category },
+            { key: "screens", header: "Telas", width: "120px", render: (row) => row.screens },
+          ]}
+        />
+      </div>
+      <AddNoticies setNoticies={setNoticies} />
+      {editing ? <EditNoticies noticies={editing} setNoticies={setNoticies} /> : null}
     </LayoutPage>
   );
 };
@@ -67,17 +59,10 @@ export default withAllPermission(NoticiesPage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
-
   try {
     const { data } = await api.get<Noticies[]>("/noticies");
-
-    return {
-      props: { initialNoticies: data },
-    };
+    return { props: { initialNoticies: data } };
   } catch {
-    return {
-      props: { initialNoticies: [] },
-    };
+    return { props: { initialNoticies: [] } };
   }
 };
-

@@ -1,20 +1,18 @@
-import { GridColDef, DataGridPro, GridToolbar } from "@mui/x-data-grid-pro";
-import { Box } from "@mui/material";
+import { useMemo, useState } from "react";
+import { DataTable, PageToolbar } from "../../components/design-system";
+import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import { Banner } from "../../types/banner.type";
+import { CondominiumMessageType } from "../../types/condominium-message.type";
+import { CondominiumType } from "../../types/condominium.type";
+import { Noticies } from "../../types/noticies.type";
+import { Rss } from "../../types/rss.type";
+import { withAllPermission } from "../../hocs";
+import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
 import { getAPIClient } from "../../service";
-import { useState } from "react";
-import { CondominiumType } from "../../types/condominium.type";
-import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import { Rss } from "../../types/rss.type";
-import { Banner } from "../../types/banner.type";
-import { withAllPermission } from "../../hocs";
-import { CondominiumMessageType } from "../../types/condominium-message.type";
 import AddCondominium from "../../components/CondominiumPageComponent/AddCondominiumDialog";
 import EditCondominium from "../../components/CondominiumPageComponent/EditCondominiumDialog";
-import ScreensDialog from "../../components/CondominiumPageComponent/ScreensDialog/index";
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
-import { Noticies } from "../../types/noticies.type";
+import ScreensDialog from "../../components/CondominiumPageComponent/ScreensDialog";
 
 type CondominiumProps = {
   initialCondominium: CondominiumType[];
@@ -24,115 +22,88 @@ type CondominiumProps = {
   initialNoticies: Noticies[];
 };
 
-const Condominium: React.FC<CondominiumProps> = ({
-  initialCondominium,
-  initialRss,
-  initialNoticies,
-  initialBanner,
-  initialCondominiumMessege,
-}) => {
-  const { setCheckboxCondominium, checkboxCondominium } = useControlerButtonPagesContext();
+type CondominiumRow = CondominiumType & { id: string; screenLength: number };
+
+const CondominiumPage: React.FC<CondominiumProps> = ({ initialCondominium, initialRss, initialNoticies, initialBanner, initialCondominiumMessege }) => {
+  const { checkboxCondominium, setCheckboxCondominium, setOpenDialogCreateCondominium, setOpenDialogEditCondominium, setOpenDialogCreateScreens } = useControlerButtonPagesContext();
   const [condominium, setCondominium] = useState(initialCondominium);
-  const [rss, setRss] = useState(initialRss);
-  const [noticies, setNoticies] = useState(initialNoticies);
-  const [banner, setBanner] = useState(initialBanner);
+  const [rss] = useState(initialRss);
+  const [noticies] = useState(initialNoticies);
+  const [banner] = useState(initialBanner);
   const [condominiumMesseger, setCondominiumMesseger] = useState(initialCondominiumMessege);
+  const [editing, setEditing] = useState<CondominiumType | null>(null);
 
-  const [editCondominium, setEditCondominium] = useState<CondominiumType>();
+  const rows = useMemo<CondominiumRow[]>(() => condominium.map((item) => ({ ...item, id: item._id, screenLength: item.screens?.length || 0 })), [condominium]);
 
-  const columns: GridColDef[] = [
-    { field: "condominium_id_imodulo", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 3 },
-    { field: "district", headerName: "Bairro", flex: 3 },
-    { field: "city", headerName: "Cidade", flex: 3 },
-    { field: "screenLength", headerName: "Qtds.Telas", flex: 1 },
-  ];
-  const rows = condominium.map((condominium) => {
-    return {
-      id: condominium._id,
-      _id: condominium._id,
-      name: condominium.name,
-      condominium_id_imodulo: condominium.condominium_id_imodulo,
-      cnpj: condominium.cnpj,
-      cep: condominium.cep,
-      address: condominium.address,
-      district: condominium.district,
-      complement: condominium.complement,
-      city: condominium.city,
-      state: condominium.state,
-      screens: condominium.screens,
-      screenLength: condominium.screens?.length,
-    };
-  });
+  const openEdit = () => {
+    if (checkboxCondominium.length !== 1) return;
+    const found = condominium.find((item) => item._id === checkboxCondominium[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditCondominium(true);
+  };
+
+  const openScreens = () => {
+    if (checkboxCondominium.length !== 1) return;
+    const found = condominium.find((item) => item._id === checkboxCondominium[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogCreateScreens(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage title="Condomínio" page="condominium" setCondominium={setCondominium}>
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            columns={columns}
-            rows={rows}
-            components={{ Toolbar: GridToolbar }}
-            checkboxSelection
-            onSelectionModelChange={(e) => setCheckboxCondominium(e)}
-            selectionModel={checkboxCondominium}
-            onCellClick={(params) =>
-              checkboxCondominium.length === 0
-                ? setEditCondominium(params.row as CondominiumType)
-                : setEditCondominium(undefined)
-            }
-          />
-        </Box>
-      </BaseMainLayoutPage>
+      <div className="ds-stack">
+        <PageToolbar
+          title="Condominios"
+          onNew={() => setOpenDialogCreateCondominium(true)}
+          onEdit={openEdit}
+          hasSelection={checkboxCondominium.length === 1}
+          extraActions={
+            <button
+              type="button"
+              className="ds-button ds-button--secondary"
+              disabled={checkboxCondominium.length !== 1}
+              onClick={openScreens}
+            >
+              Gerenciar telas
+            </button>
+          }
+        />
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxCondominium}
+          onSelectionChange={setCheckboxCondominium}
+          onRowClick={(row) => setEditing(row)}
+          searchPlaceholder="Buscar por nome, ID, bairro ou cidade"
+          columns={[
+            { key: "id_imodulo", header: "ID", width: "120px", render: (row) => row.condominium_id_imodulo, searchValue: (row) => String(row.condominium_id_imodulo) },
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => row.name },
+            { key: "district", header: "Bairro", render: (row) => row.district, searchValue: (row) => row.district },
+            { key: "city", header: "Cidade", render: (row) => row.city, searchValue: (row) => row.city },
+            { key: "screens", header: "Telas", width: "120px", render: (row) => row.screenLength },
+          ]}
+        />
+      </div>
       <AddCondominium setCondominium={setCondominium} />
-      {editCondominium && (
-        <>
-          <EditCondominium condominium={editCondominium} setCondominium={setCondominium} />
-          <ScreensDialog
-            condominium={editCondominium}
-            setCondominium={setCondominium}
-            rss={rss}
-            banner={banner}
-            noticies={noticies}
-            condominiumMesseger={condominiumMesseger}
-            setCondominiumMesseger={setCondominiumMesseger}
-          />
-        </>
-      )}
+      {editing ? <EditCondominium condominium={editing} setCondominium={setCondominium} /> : null}
+      {editing ? <ScreensDialog condominium={editing} setCondominium={setCondominium} rss={rss} banner={banner} noticies={noticies} condominiumMesseger={condominiumMesseger} setCondominiumMesseger={setCondominiumMesseger} /> : null}
     </LayoutPage>
   );
 };
 
-export default withAllPermission(Condominium);
+export default withAllPermission(CondominiumPage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
-
   try {
     const condominium = await api.get<CondominiumType[]>("/condominium?query=all");
     const rss = await api.get<Rss[]>("/source-rss");
     const banner = await api.get<Banner[]>("/banner");
     const condominiumMessege = await api.get<CondominiumMessageType[]>("/condominium-message");
     const noticies = await api.get<Noticies[]>("/noticies");
-
-    return {
-      props: {
-        initialCondominium: condominium.data,
-        initialRss: rss.data,
-        initialBanner: banner.data,
-        initialCondominiumMessege: condominiumMessege.data,
-        initialNoticies: noticies.data,
-      },
-    };
+    return { props: { initialCondominium: condominium.data, initialRss: rss.data, initialBanner: banner.data, initialCondominiumMessege: condominiumMessege.data, initialNoticies: noticies.data } };
   } catch {
-    return {
-      props: {
-        initialCondominium: [],
-        initialRss: [],
-        initialBanner: [],
-        initialCondominiumMesseger: [],
-        initialNoticies: [],
-      },
-    };
+    return { props: { initialCondominium: [], initialRss: [], initialBanner: [], initialCondominiumMessege: [], initialNoticies: [] } };
   }
 };

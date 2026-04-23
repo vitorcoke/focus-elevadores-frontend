@@ -1,244 +1,63 @@
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Dialog,
-  Grid,
-  IconButton,
-  Slide,
-  Snackbar,
-  TextField,
-  Toolbar,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import {
-  CloseRounded,
-  SendRounded,
-  FileUploadRounded,
-} from "@mui/icons-material";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ActionButton, DataTable, Field, InlineNotice, Modal, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { api } from "../../../service";
-import { base64toFile } from "../../../utils/fileBase64";
 import { Rss } from "../../../types/rss.type";
-import {
-  DataGridPro,
-  GridColDef,
-  GridRowId,
-  GridToolbar,
-} from "@mui/x-data-grid-pro";
 import { Screen } from "../../../types/screens.type";
+import { base64toFile } from "../../../utils/fileBase64";
 
-type AddRssProps = {
-  setRss: React.Dispatch<React.SetStateAction<Rss[]>>;
-};
+type AddRssProps = { setRss: React.Dispatch<React.SetStateAction<Rss[]>> };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
+type ScreenRow = { id: string; name: string };
 
 const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
-  const theme = useTheme();
-  const smDown = useMediaQuery(theme.breakpoints.down("sm"));
-  const { openDialogCreateRss, setOpenDialogCreateRss } =
-    useControlerButtonPagesContext();
-
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [logotipo, setLogotipo] = useState<File>();
-
+  const { openDialogCreateRss, setOpenDialogCreateRss } = useControlerButtonPagesContext();
   const [screen, setScreen] = useState<Screen[]>([]);
-  const [checkboxScreens, setCheckboxScreens] = useState<GridRowId[]>([]);
+  const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [form, setForm] = useState({ name: "", url: "" });
 
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
+  useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, []);
 
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
-  };
-  const handleCloseDialog = () => {
-    setOpenDialogCreateRss(false);
-    setName("");
-  };
+  const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
+  const actions = useMemo(() => (
+    <>
+      <ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateRss(false)}>Cancelar</ActionButton>
+      <ActionButton type="submit" form="create-rss-form">Salvar fonte</ActionButton>
+    </>
+  ), [setOpenDialogCreateRss]);
 
-  const handleLogotipo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let files = e.target.files;
-    if (files) {
-      let file = files[0];
-      if (file && file.type.includes("image")) {
-        let url = window.URL || window.webkitURL;
-        let objectUrl = url.createObjectURL(file);
-        let img = new Image();
-        img.src = objectUrl;
-        img.onload = () => {
-          if (img.width <= 426 && img.height <= 240) {
-            setLogotipo(file);
-          } else {
-            alert("A imagem deve ter no máximo 426x240");
-          }
-        };
-      } else {
-        alert("O arquivo deve ser uma imagem");
-      }
-    }
-  };
-  const handleSubmit = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    let base64 = logotipo !== undefined && (await base64toFile(logotipo));
     try {
-      const rss = await api.post("/source-rss", {
-        name,
-        url,
-        logotipo: base64,
-        screen_id: checkboxScreens,
-      });
-
-      if (checkboxScreens.length > 0) {
-        checkboxScreens.map(async (screen) => {
-          await api.patch(`/screens/rss/${screen}`, {
-            source_rss: rss.data._id,
-          });
+      const payload = logo ? await base64toFile(logo) : "";
+      const response = await api.post("/source-rss", { ...form, logotipo: payload, screen_id: selectedScreens });
+      if (selectedScreens.length) {
+        selectedScreens.forEach(async (screenId) => {
+          await api.patch(`/screens/rss/${screenId}`, { source_rss: response.data._id });
         });
       }
-
-      setRss((prev) => [...prev, rss.data]);
-      setOpenAlertSucess(true);
+      setRss((current) => [...current, response.data]);
+      setStatus("success");
     } catch {
-      setOpenAlertError(true);
+      setStatus("error");
     }
   };
 
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 1 },
-  ];
-
-  const rows = screen?.map((item) => {
-    return {
-      id: item._id,
-      name: item.name,
-    };
-  });
-
-  useEffect(() => {
-    api.get(`/screens`).then((response) => {
-      setScreen(response.data);
-    });
-  }, []);
-
   return (
-    <Dialog
-      fullScreen
-      open={openDialogCreateRss}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box component={"form"} onSubmit={handleSubmit}>
-        <AppBar>
-          <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-            <Button
-              variant="contained"
-              startIcon={<SendRounded />}
-              type="submit"
-            >
-              Enviar
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box maxWidth={smDown ? "90%" : "30%"} flexGrow={1}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="Nome"
-                  fullWidth
-                  onChange={(e) => setName(e.target.value)}
-                  helperText={`${name.length}/30`}
-                  inputProps={{ maxLength: 30 }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  label="URL"
-                  fullWidth
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  component="label"
-                  fullWidth
-                  startIcon={<FileUploadRounded />}
-                >
-                  Logo do RSS
-                  <input
-                    hidden
-                    accept="image/*"
-                    multiple
-                    type="file"
-                    onChange={handleLogotipo}
-                  />
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-          <Box width={smDown ? "100%" : "70%"} height="25rem" mt="3.5rem">
-            <DataGridPro
-              rows={rows}
-              columns={columns}
-              checkboxSelection
-              onSelectionModelChange={(e) => setCheckboxScreens(e)}
-              components={{
-                Toolbar: GridToolbar,
-              }}
-            />
-          </Box>
-        </Box>
-        <Snackbar
-          open={openAlertSucess}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertSucess}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="success">Enviado com sucesso</Alert>
-        </Snackbar>
-        <Snackbar
-          open={openAlertError}
-          autoHideDuration={3000}
-          onClose={handleCloseAlertError}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert severity="error">Falha ao enviar</Alert>
-        </Snackbar>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogCreateRss} onClose={() => setOpenDialogCreateRss(false)} title="Nova fonte RSS" description="Cadastre uma origem de noticias com selecao de telas no novo layout." actions={actions} size="xl">
+      <form id="create-rss-form" className="ds-stack" onSubmit={handleSubmit}>
+        {status === "success" ? <InlineNotice tone="success">Fonte RSS criada com sucesso.</InlineNotice> : null}
+        {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar a fonte RSS.</InlineNotice> : null}
+        <div className="ds-form-grid">
+          <Field label="Nome" required hint={`${form.name.length}/30`}><TextInput value={form.name} maxLength={30} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+          <Field label="Logo" required><TextInput type="file" accept="image/*" onChange={(e) => setLogo(e.target.files?.[0] || null)} /></Field>
+          <div className="ds-form-grid--full"><Field label="URL" required><TextInput value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} /></Field></div>
+        </div>
+        <DataTable rows={rows} selectedIds={selectedScreens} onSelectionChange={setSelectedScreens} searchPlaceholder="Buscar tela" columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]} />
+      </form>
+    </Modal>
   );
 };
 

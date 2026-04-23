@@ -1,29 +1,16 @@
-import { CloseRounded, SendRounded } from "@mui/icons-material";
-import {
-  Alert,
-  AppBar,
-  Box,
-  Dialog,
-  IconButton,
-  Slide,
-  Snackbar,
-  Tab,
-  Toolbar,
-} from "@mui/material";
-import { TabContext, TabList, TabPanel } from "@mui/lab";
-import { TransitionProps } from "@mui/material/transitions";
-import { forwardRef, useState } from "react";
+import { useState } from "react";
+import { ActionButton, Modal } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
-import { CondominiumType } from "../../../types/condominium.type";
-import { Rss } from "../../../types/rss.type";
-import { Banner } from "../../../types/banner.type";
 import { useAuthContext } from "../../../context/AuthContext";
-import { Permission } from "../../../types/users.type";
+import { Banner } from "../../../types/banner.type";
 import { CondominiumMessageType } from "../../../types/condominium-message.type";
-import ScreenTable from "./ScreensTable";
+import { CondominiumType } from "../../../types/condominium.type";
+import { Noticies } from "../../../types/noticies.type";
+import { Rss } from "../../../types/rss.type";
+import { Permission } from "../../../types/users.type";
 import AddScreens from "./AddScreens";
 import EditScreens from "./EditScreens";
-import { Noticies } from "../../../types/noticies.type";
+import ScreenTable from "./ScreensTable";
 
 type ScreenDialogProp = {
   condominium: CondominiumType;
@@ -35,144 +22,31 @@ type ScreenDialogProp = {
   setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
 };
 
-const Transition = forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
-
-const ScreensDialog: React.FC<ScreenDialogProp> = ({
-  condominium,
-  setCondominium,
-  rss,
-  noticies,
-  banner,
-  condominiumMesseger,
-  setCondominiumMesseger,
-}) => {
-  const {
-    setOpenDialogCreateScreens,
-    openDialogCreateScreens,
-    checkboxScreens,
-    setCheckboxScreens,
-    setCheckboxCondominium,
-  } = useControlerButtonPagesContext();
-
+const ScreensDialog: React.FC<ScreenDialogProp> = ({ condominium, setCondominium, rss, noticies, banner, condominiumMesseger, setCondominiumMesseger }) => {
   const { user } = useAuthContext();
-
-  const [openAlertSucess, setOpenAlertSucess] = useState(false);
-  const [openAlertError, setOpenAlertError] = useState(false);
-  const [value, setValue] = useState("1");
-
-  const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
-    setValue(newValue);
-  };
+  const { setOpenDialogCreateScreens, openDialogCreateScreens, checkboxScreens, setCheckboxScreens, setCheckboxCondominium } = useControlerButtonPagesContext();
+  const [tab, setTab] = useState("list");
 
   const handleCloseDialog = () => {
     setOpenDialogCreateScreens(false);
     setCheckboxScreens([]);
     setCheckboxCondominium([]);
-    setValue("1");
-  };
-
-  const handleCloseAlertSucess = () => {
-    setOpenAlertSucess(false);
-  };
-
-  const handleCloseAlertError = () => {
-    setOpenAlertError(false);
+    setTab("list");
   };
 
   return (
-    <Dialog
-      fullScreen
-      open={openDialogCreateScreens}
-      onClose={handleCloseDialog}
-      TransitionComponent={Transition}
-    >
-      <Box>
-        <AppBar>
-          <Toolbar>
-            <IconButton onClick={handleCloseDialog}>
-              <CloseRounded />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
-        <Box
-          width="100%"
-          height="100vh"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          gap={2}
-          p={3}
-        >
-          <Toolbar />
-
-          <Box width="100%">
-            <TabContext value={value}>
-              <TabList
-                onChange={handleChangeTab}
-                scrollButtons="auto"
-                variant="scrollable"
-                allowScrollButtonsMobile
-              >
-                <Tab label="Lista de telas" value="1" />
-                {user?.permission === Permission.ADMIN && (
-                  <Tab label="Cadastro de telas" value="2" />
-                )}
-                {checkboxScreens.length === 1 && <Tab label="Editar de telas" value="3" />}
-              </TabList>
-              <TabPanel value="1">{<ScreenTable selectedCondominium={condominium} />}</TabPanel>
-              <TabPanel value="2">
-                {
-                  <AddScreens
-                    condominium={condominium}
-                    setCondominium={setCondominium}
-                    noticies={noticies}
-                    rss={rss}
-                    banner={banner}
-                    condominiumMesseger={condominiumMesseger}
-                  />
-                }
-              </TabPanel>
-              <TabPanel value="3">
-                {
-                  <EditScreens
-                    setCondominium={setCondominium}
-                    condominium={condominium}
-                    rss={rss}
-                    noticies={noticies}
-                    banner={banner}
-                    condominiumMesseger={condominiumMesseger}
-                    setCondominiumMesseger={setCondominiumMesseger}
-                  />
-                }
-              </TabPanel>
-            </TabContext>
-          </Box>
-          <Snackbar
-            open={openAlertSucess}
-            autoHideDuration={3000}
-            onClose={handleCloseAlertSucess}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert severity="success">Enviado com sucesso</Alert>
-          </Snackbar>
-          <Snackbar
-            open={openAlertError}
-            autoHideDuration={3000}
-            onClose={handleCloseAlertError}
-            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          >
-            <Alert severity="error">Falha ao enviar</Alert>
-          </Snackbar>
-        </Box>
-      </Box>
-    </Dialog>
+    <Modal open={openDialogCreateScreens} onClose={handleCloseDialog} title={`Telas de ${condominium.name}`} description="Gerencie a lista de telas, cadastros e edicoes dentro do layout do design system." size="xl">
+      <div className="ds-stack">
+        <div className="ds-split">
+          <ActionButton type="button" variant={tab === "list" ? "primary" : "secondary"} onClick={() => setTab("list")}>Lista de telas</ActionButton>
+          {user?.permission === Permission.ADMIN ? <ActionButton type="button" variant={tab === "create" ? "primary" : "secondary"} onClick={() => setTab("create")}>Cadastro de telas</ActionButton> : null}
+          {checkboxScreens.length === 1 ? <ActionButton type="button" variant={tab === "edit" ? "primary" : "secondary"} onClick={() => setTab("edit")}>Editar tela</ActionButton> : null}
+        </div>
+        {tab === "list" ? <ScreenTable selectedCondominium={condominium} /> : null}
+        {tab === "create" ? <AddScreens condominium={condominium} setCondominium={setCondominium} noticies={noticies} rss={rss} banner={banner} condominiumMesseger={condominiumMesseger} /> : null}
+        {tab === "edit" ? <EditScreens setCondominium={setCondominium} condominium={condominium} rss={rss} noticies={noticies} banner={banner} condominiumMesseger={condominiumMesseger} setCondominiumMesseger={setCondominiumMesseger} /> : null}
+      </div>
+    </Modal>
   );
 };
 

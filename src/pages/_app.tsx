@@ -24,9 +24,9 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <title>Minha Portaria</title>
       </Head>
-      <CssBaseline />
       <AuthProvider>
         <AppThemeProvider>
+          <CssBaseline />
           <ControlerButtonPagesProvider>
             <Component {...pageProps} />
           </ControlerButtonPagesProvider>

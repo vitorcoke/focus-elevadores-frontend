@@ -1,95 +1,67 @@
-import { DataGridPro, GridColDef, GridToolbar } from "@mui/x-data-grid-pro";
-import { Avatar, Box } from "@mui/material";
+import { useMemo, useState } from "react";
+import { DataTable, PageToolbar } from "../../components/design-system";
+import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
+import { withAllPermission } from "../../hocs";
+import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
 import { getAPIClient } from "../../service";
 import { Banner } from "../../types/banner.type";
-import { useState } from "react";
-import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
-import { withAllPermission } from "../../hocs";
 import AddBannerDialog from "../../components/BannerPageComponent/AddBannerDialog";
 import EditBannerDialog from "../../components/BannerPageComponent/EditBannerDialog";
-import LayoutPage from "../../layout/AppBar";
-import BaseMainLayoutPage from "../../layout/BaseMain";
 
-type BannerProps = {
-  initialBanner: Banner[];
-};
+type BannerProps = { initialBanner: Banner[] };
+type BannerRow = Banner & { id: string };
 
-const Banner: React.FC<BannerProps> = ({ initialBanner }) => {
-  const { checkboxBanner, setCheckboxBanner } =
-    useControlerButtonPagesContext();
-
+const BannerPage: React.FC<BannerProps> = ({ initialBanner }) => {
+  const { checkboxBanner, setCheckboxBanner, setOpenDialogCreateBanner, setOpenDialogEditBanner } = useControlerButtonPagesContext();
   const [banner, setBanner] = useState(initialBanner);
-  const [editBanner, setEditBanner] = useState<Banner>();
+  const [editing, setEditing] = useState<Banner | null>(null);
 
-  const column: GridColDef[] = [
-    { field: "id", headerName: "ID", flex: 1 },
-    { field: "name", headerName: "Nome", flex: 2 },
-    {
-      field: "image",
-      headerName: "Imagem",
-      renderCell: (params) => {
-        return <Avatar src={params.row.image} sx={{ width: 50, height: 50 }} />;
-      },
-      flex: 2,
-    },
-  ];
+  const rows = useMemo<BannerRow[]>(() => banner.map((item) => ({ ...item, id: item._id })), [banner]);
 
-  const rows = banner.map((banner) => {
-    return {
-      id: banner._id,
-      _id: banner._id,
-      name: banner.name,
-      description: banner.description,
-      image: banner.image,
-      background_color: banner.background_color,
-      font_color: banner.font_color,
-    };
-  });
+  const openEdit = () => {
+    if (checkboxBanner.length !== 1) return;
+    const found = banner.find((item) => item._id === checkboxBanner[0]);
+    if (!found) return;
+    setEditing(found);
+    setOpenDialogEditBanner(true);
+  };
 
   return (
     <LayoutPage>
-      <BaseMainLayoutPage page="banner" title="Banner" setBanner={setBanner}>
-        <Box width="100%" height="60vh">
-          <DataGridPro
-            rows={rows}
-            columns={column}
-            checkboxSelection
-            onSelectionModelChange={(e) => setCheckboxBanner(e)}
-            components={{
-              Toolbar: GridToolbar,
-            }}
-            selectionModel={checkboxBanner}
-            onCellClick={(params) =>
-              checkboxBanner.length === 0
-                ? setEditBanner(params.row as Banner)
-                : setEditBanner(undefined)
-            }
-          />
-          <AddBannerDialog setBanner={setBanner} />
-          {editBanner && (
-            <EditBannerDialog banner={editBanner} setBanner={setBanner} />
-          )}
-        </Box>
-      </BaseMainLayoutPage>
+      <div className="ds-stack">
+        <PageToolbar title="Banners" onNew={() => setOpenDialogCreateBanner(true)} onEdit={openEdit} hasSelection={checkboxBanner.length === 1} />
+        <DataTable
+          rows={rows}
+          selectedIds={checkboxBanner}
+          onSelectionChange={setCheckboxBanner}
+          onRowClick={(row) => {
+            setEditing(row);
+            if (checkboxBanner.length === 0) setOpenDialogEditBanner(true);
+          }}
+          searchPlaceholder="Buscar banner por nome ou descricao"
+          columns={[
+            { key: "preview", header: "Preview", width: "140px", render: (row) => <div aria-label={row.name} style={{ width: 88, height: 48, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${row.image})`, backgroundSize: "cover", backgroundPosition: "center" }} /> },
+            { key: "name", header: "Nome", render: (row) => row.name, searchValue: (row) => row.name },
+            { key: "description", header: "Descricao", render: (row) => row.description, searchValue: (row) => row.description },
+            { key: "colors", header: "Cores", render: (row) => <div className="ds-tag-list"><span className="ds-tag">{row.background_color}</span><span className="ds-tag">{row.font_color}</span></div> },
+          ]}
+        />
+      </div>
+      <AddBannerDialog setBanner={setBanner} />
+      {editing ? <EditBannerDialog banner={editing} setBanner={setBanner} /> : null}
     </LayoutPage>
   );
 };
 
-export default withAllPermission(Banner);
+export default withAllPermission(BannerPage);
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const api = getAPIClient(ctx);
-
   try {
     const { data } = await api.get<Banner[]>("/banner");
-
-    return {
-      props: { initialBanner: data },
-    };
+    return { props: { initialBanner: data } };
   } catch {
-    return {
-      props: { initialBanner: [] },
-    };
+    return { props: { initialBanner: [] } };
   }
 };
