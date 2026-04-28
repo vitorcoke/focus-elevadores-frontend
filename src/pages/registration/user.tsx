@@ -4,7 +4,7 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { withAdminAndSindicoPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { CondominiumType } from "../../types/condominium.type";
 import { Screen } from "../../types/screens.type";
 import { Permission, UserType } from "../../types/users.type";
@@ -51,10 +51,16 @@ const UserPage: React.FC<UserProps> = ({ initialUser, initialCondominium, initia
     setOpenDialogEditUser(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(checkboxUser.map((id) => api.delete(`/users/${id}`)));
+    setUser((current) => current.filter((item) => !checkboxUser.includes(item._id)));
+    setCheckboxUser([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageToolbar title="Usuarios" onNew={() => setOpenDialogCreateUser(true)} onEdit={openEdit} hasSelection={checkboxUser.length === 1} />
+        <PageToolbar title="Usuarios" onNew={() => setOpenDialogCreateUser(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxUser.length > 0} />
         <DataTable
           rows={rows}
           selectedIds={checkboxUser}

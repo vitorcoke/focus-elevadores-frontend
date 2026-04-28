@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActionButton, Field, InlineNotice, Modal, TextArea, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { api } from "../../../service";
@@ -14,14 +14,33 @@ const AddBannerDialog: React.FC<AddBannerDialogProps> = ({ setBanner }) => {
   const [status, setStatus] = useState<"success" | "error" | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
-  const [form, setForm] = useState({ name: "", description: "", background_color: "#000000", font_color: "#ffffff" });
+  const initialForm = { name: "", description: "", background_color: "#000000", font_color: "#ffffff" };
+  const [form, setForm] = useState(initialForm);
 
   const actions = useMemo(() => (
     <>
-      <ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateBanner(false)}>Cancelar</ActionButton>
+      <ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton>
       <ActionButton type="submit" form="create-banner-form">Salvar banner</ActionButton>
     </>
   ), [setOpenDialogCreateBanner]);
+
+  const resetForm = () => {
+    setStatus(null);
+    setImage(null);
+    setPreview("");
+    setForm(initialForm);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpenDialogCreateBanner(false);
+  };
+
+  useEffect(() => {
+    if (openDialogCreateBanner) {
+      resetForm();
+    }
+  }, [openDialogCreateBanner]);
 
   const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -43,7 +62,7 @@ const AddBannerDialog: React.FC<AddBannerDialogProps> = ({ setBanner }) => {
   };
 
   return (
-    <Modal open={openDialogCreateBanner} onClose={() => setOpenDialogCreateBanner(false)} title="Novo banner" description="Crie uma nova peca visual seguindo os tokens do design system." actions={actions}>
+    <Modal open={openDialogCreateBanner} onClose={handleClose} title="Novo banner" description="Crie uma nova peca visual seguindo os tokens do design system." actions={actions}>
       <form id="create-banner-form" className="ds-stack" onSubmit={handleSubmit}>
         {status === "success" ? <InlineNotice tone="success">Banner criado com sucesso.</InlineNotice> : null}
         {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar o banner.</InlineNotice> : null}

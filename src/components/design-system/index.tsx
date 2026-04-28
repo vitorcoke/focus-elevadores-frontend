@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
@@ -43,7 +43,7 @@ export const PageToolbar: React.FC<{
         {extraActions}
         {onNew ? <ActionButton type="button" onClick={onNew}>Novo</ActionButton> : null}
         {onEdit ? <ActionButton type="button" variant="secondary" disabled={!hasSelection} onClick={onEdit}>Alterar</ActionButton> : null}
-        {onDelete ? <ActionButton type="button" variant="danger" disabled={!hasSelection} onClick={onDelete}>Excluir</ActionButton> : null}
+        {onDelete && hasSelection ? <ActionButton type="button" variant="danger" onClick={onDelete}>Excluir</ActionButton> : null}
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ export const Field: React.FC<{
   children: React.ReactNode;
 }> = ({ label, hint, error, required, children }) => {
   return (
-    <label className="ds-field">
+    <div className="ds-field">
       <span className="ds-field__label">
         {label}
         {required ? <em>*</em> : null}
@@ -65,7 +65,7 @@ export const Field: React.FC<{
       {children}
       {error ? <span className="ds-field__error">{error}</span> : null}
       {!error && hint ? <span className="ds-field__hint">{hint}</span> : null}
-    </label>
+    </div>
   );
 };
 
@@ -79,8 +79,130 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
 );
 TextArea.displayName = "TextArea";
 
-export const SelectInput = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
-  ({ className = "", children, ...props }, ref) => <select ref={ref} className={`ds-input ${className}`.trim()} {...props}>{children}</select>
+type SelectOption = {
+  value: string;
+  label: React.ReactNode;
+  disabled?: boolean;
+};
+
+type SelectInputProps = Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "children"> & {
+  children: React.ReactNode;
+};
+
+export const SelectInput = React.forwardRef<HTMLButtonElement, SelectInputProps>(
+  ({ className = "", children, value, onChange, disabled, placeholder, name, required, ...props }, ref) => {
+    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState("");
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+    const options = useMemo<SelectOption[]>(
+      () =>
+        React.Children.toArray(children)
+          .reduce<SelectOption[]>((accumulator, child) => {
+            if (!React.isValidElement(child)) return accumulator;
+            const optionProps = child.props as {
+              value?: string | number;
+              children?: React.ReactNode;
+              disabled?: boolean;
+            };
+
+            accumulator.push({
+              value: String(optionProps.value ?? ""),
+              label: optionProps.children,
+              disabled: optionProps.disabled,
+            });
+
+            return accumulator;
+          }, []),
+      [children]
+    );
+
+    const stringValue = String(value ?? "");
+    const selectedOption = options.find((option) => option.value === stringValue);
+    const displayLabel = selectedOption?.label ?? placeholder ?? options.find((option) => option.value === "")?.label ?? "Selecionar";
+    const filteredOptions = useMemo(() => {
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) return options;
+
+      return options.filter((option) =>
+        String(option.label ?? "")
+          .toLowerCase()
+          .includes(normalized)
+      );
+    }, [options, query]);
+
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (!wrapperRef.current?.contains(event.target as Node)) {
+          setOpen(false);
+          setQuery("");
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const emitChange = (nextValue: string) => {
+      onChange?.({
+        target: { value: nextValue, name },
+        currentTarget: { value: nextValue, name },
+      } as React.ChangeEvent<HTMLSelectElement>);
+      setOpen(false);
+      setQuery("");
+    };
+
+    return (
+      <div ref={wrapperRef} className={`ds-select ${className}`.trim()}>
+        <input type="hidden" name={name} value={stringValue} required={required} />
+        <button
+          {...(props as Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onChange">)}
+          ref={ref}
+          type="button"
+          className={`ds-select__trigger ${open ? "is-open" : ""}`}
+          onClick={() => {
+            if (disabled) return;
+            setOpen((current) => {
+              const next = !current;
+              if (!next) setQuery("");
+              return next;
+            });
+          }}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+        >
+          <span className={`ds-select__value ${!selectedOption ? "is-placeholder" : ""}`}>{displayLabel}</span>
+          <span className="ds-select__icon">{open ? "˄" : "˅"}</span>
+        </button>
+        {open ? (
+          <div className="ds-select-menu" role="listbox">
+            <div className="ds-select-menu__search">
+              <TextInput
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar opcao"
+                autoFocus
+              />
+            </div>
+            {filteredOptions.map((option) => (
+              <button
+                key={`${option.value}-${String(option.label)}`}
+                type="button"
+                className={`ds-select-menu__item ${option.value === stringValue ? "is-selected" : ""}`}
+                onClick={() => !option.disabled && emitChange(option.value)}
+                disabled={option.disabled}
+              >
+                <span>{option.label}</span>
+                {option.value === stringValue ? <span className="ds-select-menu__check">•</span> : null}
+              </button>
+            ))}
+            {!filteredOptions.length ? <div className="ds-select-menu__empty">Nenhuma opcao encontrada.</div> : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 );
 SelectInput.displayName = "SelectInput";
 

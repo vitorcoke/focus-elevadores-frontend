@@ -4,7 +4,7 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { Banner } from "../../types/banner.type";
 import AddBannerDialog from "../../components/BannerPageComponent/AddBannerDialog";
 import EditBannerDialog from "../../components/BannerPageComponent/EditBannerDialog";
@@ -27,10 +27,21 @@ const BannerPage: React.FC<BannerProps> = ({ initialBanner }) => {
     setOpenDialogEditBanner(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(
+      checkboxBanner.map(async (id) => {
+        await api.delete(`/banner/${id}`);
+        await api.delete(`/screens/banner/${id}`);
+      })
+    );
+    setBanner((current) => current.filter((item) => !checkboxBanner.includes(item._id)));
+    setCheckboxBanner([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageToolbar title="Banners" onNew={() => setOpenDialogCreateBanner(true)} onEdit={openEdit} hasSelection={checkboxBanner.length === 1} />
+        <PageToolbar title="Banners" onNew={() => setOpenDialogCreateBanner(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxBanner.length > 0} />
         <DataTable
           rows={rows}
           selectedIds={checkboxBanner}

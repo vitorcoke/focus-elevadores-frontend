@@ -16,17 +16,36 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
   const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
   const [logo, setLogo] = useState<File | null>(null);
   const [status, setStatus] = useState<"success" | "error" | null>(null);
-  const [form, setForm] = useState({ name: "", url: "" });
+  const initialForm = { name: "", url: "" };
+  const [form, setForm] = useState(initialForm);
 
   useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, []);
 
   const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
   const actions = useMemo(() => (
     <>
-      <ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateRss(false)}>Cancelar</ActionButton>
+      <ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton>
       <ActionButton type="submit" form="create-rss-form">Salvar fonte</ActionButton>
     </>
   ), [setOpenDialogCreateRss]);
+
+  const resetForm = () => {
+    setSelectedScreens([]);
+    setLogo(null);
+    setStatus(null);
+    setForm(initialForm);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpenDialogCreateRss(false);
+  };
+
+  useEffect(() => {
+    if (openDialogCreateRss) {
+      resetForm();
+    }
+  }, [openDialogCreateRss]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,7 +65,7 @@ const AddRss: React.FC<AddRssProps> = ({ setRss }) => {
   };
 
   return (
-    <Modal open={openDialogCreateRss} onClose={() => setOpenDialogCreateRss(false)} title="Nova fonte RSS" description="Cadastre uma origem de noticias com selecao de telas no novo layout." actions={actions} size="xl">
+    <Modal open={openDialogCreateRss} onClose={handleClose} title="Nova fonte RSS" description="Cadastre uma origem de noticias com selecao de telas no novo layout." actions={actions} size="xl">
       <form id="create-rss-form" className="ds-stack" onSubmit={handleSubmit}>
         {status === "success" ? <InlineNotice tone="success">Fonte RSS criada com sucesso.</InlineNotice> : null}
         {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar a fonte RSS.</InlineNotice> : null}

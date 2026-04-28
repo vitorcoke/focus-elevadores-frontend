@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import produce from "immer";
 import { ActionButton, Field, InlineNotice, Modal, SelectInput, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
@@ -14,7 +14,8 @@ type AddVmsDialogProps = {
 const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
   const { openDialogCreateVms, setOpenDialogCreateVms } = useControlerButtonPagesContext();
   const [status, setStatus] = useState<"success" | "error" | null>(null);
-  const [form, setForm] = useState({ name: "", server: "", port: "", username: "", password: "", receiver: "", account: "", condominium_id: "" });
+  const initialForm = { name: "", server: "", port: "", username: "", password: "", receiver: "", account: "", condominium_id: "" };
+  const [form, setForm] = useState(initialForm);
 
   const actions = useMemo(() => (
     <>
@@ -24,9 +25,17 @@ const AddVmsDialog: React.FC<AddVmsDialogProps> = ({ setVms, condominium }) => {
   ), [setOpenDialogCreateVms]);
 
   const handleClose = () => {
+    setForm(initialForm);
     setOpenDialogCreateVms(false);
     setStatus(null);
   };
+
+  useEffect(() => {
+    if (openDialogCreateVms) {
+      setForm(initialForm);
+      setStatus(null);
+    }
+  }, [openDialogCreateVms]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

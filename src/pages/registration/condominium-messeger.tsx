@@ -4,7 +4,7 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { CondominiumMessageType } from "../../types/condominium-message.type";
 import { UserType } from "../../types/users.type";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
@@ -39,10 +39,21 @@ const CondominiumMessagePage: React.FC<CondominiumMessegerProps> = ({ initialCon
     setOpenDialogEditCondominiumMessenger(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(
+      checkboxCondominiumMessenger.map(async (id) => {
+        await api.delete(`/condominium-message/${id}`);
+        await api.delete(`/screens/message/${id}`);
+      })
+    );
+    setMessages((current) => current.filter((item) => !checkboxCondominiumMessenger.includes(item._id)));
+    setCheckboxCondominiumMessenger([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageToolbar title="Mensagens" onNew={() => setOpenDialogCreateCondominiumMessenger(true)} onEdit={openEdit} hasSelection={checkboxCondominiumMessenger.length === 1} />
+        <PageToolbar title="Mensagens" onNew={() => setOpenDialogCreateCondominiumMessenger(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxCondominiumMessenger.length > 0} />
         <DataTable
           rows={rows}
           selectedIds={checkboxCondominiumMessenger}

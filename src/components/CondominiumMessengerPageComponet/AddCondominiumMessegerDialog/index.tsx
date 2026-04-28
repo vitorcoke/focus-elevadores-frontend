@@ -23,11 +23,27 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [mode, setMode] = useState("text");
-  const [form, setForm] = useState({ name: "", title: "", message: "", starttime: "", endtime: "", time_exibition: "15" });
+  const initialForm = { name: "", title: "", message: "", starttime: "", endtime: "", time_exibition: "15" };
+  const [form, setForm] = useState(initialForm);
 
   useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, []);
   const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
-  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateCondominiumMessenger(false)}>Cancelar</ActionButton><ActionButton type="submit" form="create-message-form">Salvar mensagem</ActionButton></>), [setOpenDialogCreateCondominiumMessenger]);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton><ActionButton type="submit" form="create-message-form">Salvar mensagem</ActionButton></>), [setOpenDialogCreateCondominiumMessenger]);
+
+  const resetForm = () => {
+    setSelectedScreens([]);
+    setStatus(null);
+    setImage(null);
+    setPreview("");
+    setMode("text");
+    setForm(initialForm);
+    setCheckboxCondominiumMessenger([]);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpenDialogCreateCondominiumMessenger(false);
+  };
 
   const handleImage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,6 +55,12 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
       }
     }, "file");
   };
+
+  useEffect(() => {
+    if (openDialogCreateCondominiumMessenger) {
+      resetForm();
+    }
+  }, [openDialogCreateCondominiumMessenger]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -74,7 +96,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   };
 
   return (
-    <Modal open={openDialogCreateCondominiumMessenger} onClose={() => setOpenDialogCreateCondominiumMessenger(false)} title="Nova mensagem" description="Crie uma mensagem em texto ou imagem na nova interface." actions={actions} size="xl">
+    <Modal open={openDialogCreateCondominiumMessenger} onClose={handleClose} title="Nova mensagem" description="Crie uma mensagem em texto ou imagem na nova interface." actions={actions} size="xl">
       <form id="create-message-form" className="ds-stack" onSubmit={handleSubmit}>
         {status === "success" ? <InlineNotice tone="success">Mensagem criada com sucesso.</InlineNotice> : null}
         {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar a mensagem.</InlineNotice> : null}

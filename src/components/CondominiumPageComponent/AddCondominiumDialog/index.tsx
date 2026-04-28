@@ -1,9 +1,10 @@
 import axios from "axios";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActionButton, Field, InlineNotice, Modal, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { api } from "../../../service";
 import { CondominiumType } from "../../../types/condominium.type";
+import { PatternFormat } from "react-number-format";
 
 type AddCondominiumProps = {
   setCondominium: React.Dispatch<React.SetStateAction<CondominiumType[]>>;
@@ -13,13 +14,37 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   const { openDialogCreateCondominium, setOpenDialogCreateCondominium } = useControlerButtonPagesContext();
   const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [errors, setErrors] = useState({ cnpj: "", id: "" });
-  const [form, setForm] = useState({ name: "", condominium_id_imodulo: "", cnpj: "", cep: "", address: "", district: "", complement: "", city: "", state: "" });
+  const initialForm = { name: "", condominium_id_imodulo: "", cnpj: "", cep: "", address: "", district: "", complement: "", city: "", state: "" };
+  const [form, setForm] = useState(initialForm);
 
-  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateCondominium(false)}>Cancelar</ActionButton><ActionButton type="submit" form="create-condominium-form">Salvar condominio</ActionButton></>), [setOpenDialogCreateCondominium]);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton><ActionButton type="submit" form="create-condominium-form">Salvar condominio</ActionButton></>), [setOpenDialogCreateCondominium]);
+
+  const resetForm = () => {
+    setStatus(null);
+    setErrors({ cnpj: "", id: "" });
+    setForm(initialForm);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpenDialogCreateCondominium(false);
+  };
+
+  useEffect(() => {
+    if (openDialogCreateCondominium) {
+      resetForm();
+    }
+  }, [openDialogCreateCondominium]);
 
   const validationCep = async () => {
     try {
-      const { data } = await axios.get(`https://viacep.com.br/ws/${form.cep}/json/`);
+      const cleanCep = form.cep.replace(/\D/g, "");
+      if (cleanCep.length !== 8) {
+        setStatus({ tone: "error", message: "CEP invalido ou incompleto." });
+        return;
+      }
+
+      const { data } = await axios.get(`https://viacep.com.br/ws/${cleanCep}/json/`);
       if (data.erro) return;
       setForm((current) => ({ ...current, address: data.logradouro, district: data.bairro, complement: data.complemento, city: data.localidade, state: data.uf }));
     } catch {
@@ -48,19 +73,38 @@ const AddCondominium: React.FC<AddCondominiumProps> = ({ setCondominium }) => {
   };
 
   return (
-    <Modal open={openDialogCreateCondominium} onClose={() => setOpenDialogCreateCondominium(false)} title="Novo condominio" description="Cadastre um novo condominio utilizando exclusivamente a nova camada visual." actions={actions} size="xl">
+    <Modal open={openDialogCreateCondominium} onClose={handleClose} title="Novo condominio" description="Cadastre um novo condominio utilizando exclusivamente a nova camada visual." actions={actions} size="xl">
       <form id="create-condominium-form" className="ds-stack" onSubmit={handleSubmit}>
         {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
         <div className="ds-form-grid">
-          <Field label="ID iModulo" required error={errors.id}><TextInput type="number" value={form.condominium_id_imodulo} onChange={(e) => setForm({ ...form, condominium_id_imodulo: e.target.value })} /></Field>
+          <Field label="ID iModulo" required error={errors.id}><TextInput inputMode="numeric" value={form.condominium_id_imodulo} onChange={(e) => setForm({ ...form, condominium_id_imodulo: e.target.value.replace(/\D/g, "") })} /></Field>
           <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
-          <Field label="CNPJ" required error={errors.cnpj}><TextInput value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} /></Field>
-          <Field label="CEP" required><div className="ds-split"><TextInput value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} /><ActionButton type="button" variant="secondary" onClick={validationCep}>Buscar CEP</ActionButton></div></Field>
+          <Field label="CNPJ" required error={errors.cnpj}>
+            <PatternFormat
+              customInput={TextInput as any}
+              format="##.###.###/####-##"
+              mask="_"
+              value={form.cnpj}
+              onValueChange={(values) => setForm({ ...form, cnpj: values.formattedValue })}
+            />
+          </Field>
+          <Field label="CEP" required>
+            <div className="ds-split ds-split--stretch">
+              <PatternFormat
+                customInput={TextInput as any}
+                format="#####-###"
+                mask="_"
+                value={form.cep}
+                onValueChange={(values) => setForm({ ...form, cep: values.formattedValue })}
+              />
+              <ActionButton type="button" variant="secondary" onClick={validationCep}>Buscar CEP</ActionButton>
+            </div>
+          </Field>
           <div className="ds-form-grid--full"><Field label="Endereco" required><TextInput value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></Field></div>
           <Field label="Bairro" required><TextInput value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} /></Field>
           <Field label="Numero/Complemento"><TextInput value={form.complement} onChange={(e) => setForm({ ...form, complement: e.target.value })} /></Field>
           <Field label="Cidade" required><TextInput value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></Field>
-          <Field label="Estado" required><TextInput value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></Field>
+          <Field label="Estado" required><TextInput value={form.state} maxLength={2} onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })} /></Field>
         </div>
       </form>
     </Modal>

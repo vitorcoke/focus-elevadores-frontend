@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { ActionButton, DataTable, PageHero } from "../../components/design-system";
+import { DataTable, PageToolbar } from "../../components/design-system";
 import { useControlerButtonPagesContext } from "../../context/ControlerButtonPagesContext";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { CondominiumType } from "../../types/condominium.type";
 import { VMS } from "../../types/vms.type";
 import AddVmsDialog from "../../components/VmsPageComponent/AddVmsDialog";
@@ -35,19 +35,16 @@ const VmsPage: React.FC<VmsProps> = ({ initialVms, initialCondominium }) => {
     setOpenDialogEditVms(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(checkboxVms.map((id) => api.delete(`/vms/${id}`)));
+    setVms((current) => current.filter((item) => !checkboxVms.includes(item._id)));
+    setCheckboxVms([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageHero
-          title="VMS"
-          description="Gerencie conexoes de video, credenciais e vinculos por condominio dentro do novo ecossistema visual."
-          aside={<span className="ds-tag">{rows.length} conexoes</span>}
-        />
-
-        <div className="ds-split">
-          <ActionButton type="button" onClick={() => setOpenDialogCreateVms(true)}>Novo VMS</ActionButton>
-          <ActionButton type="button" variant="secondary" disabled={checkboxVms.length !== 1} onClick={openEdit}>Editar selecionado</ActionButton>
-        </div>
+        <PageToolbar title="VMS" onNew={() => setOpenDialogCreateVms(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxVms.length > 0} extraActions={<span className="ds-tag">{rows.length} conexoes</span>} />
 
         <DataTable
           rows={rows}

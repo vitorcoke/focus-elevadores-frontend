@@ -4,7 +4,7 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { Rss } from "../../types/rss.type";
 import AddRss from "../../components/RssPageComponent/AddRssDialog";
 import EditRss from "../../components/RssPageComponent/EditRssDialog";
@@ -27,10 +27,21 @@ const RssPage: React.FC<RssProps> = ({ initialRss }) => {
     setOpenDialogEditRss(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(
+      checkboxRss.map(async (id) => {
+        await api.delete(`/source-rss/${id}`);
+        await api.delete(`/screens/rss/${id}`);
+      })
+    );
+    setRss((current) => current.filter((item) => !checkboxRss.includes(item._id)));
+    setCheckboxRss([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageToolbar title="RSS" onNew={() => setOpenDialogCreateRss(true)} onEdit={openEdit} hasSelection={checkboxRss.length === 1} />
+        <PageToolbar title="RSS" onNew={() => setOpenDialogCreateRss(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxRss.length > 0} />
         <DataTable
           rows={rows}
           selectedIds={checkboxRss}

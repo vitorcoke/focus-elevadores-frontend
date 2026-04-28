@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PatternFormat } from "react-number-format";
 import { ActionButton, Field, InlineNotice, Modal, MultiSelectChips, SelectInput, TextInput } from "../../design-system";
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
@@ -19,9 +19,27 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   const { openDialogCreateUser, setOpenDialogCreateUser } = useControlerButtonPagesContext();
   const [status, setStatus] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [emailError, setEmailError] = useState("");
-  const [form, setForm] = useState({ name: "", username: "", email: "", phone: "", password: "", condominium_id: [] as string[], screen_id: [] as string[], permission: String(Permission.ZELADOR) });
+  const initialForm = { name: "", username: "", email: "", phone: "", password: "", condominium_id: [] as string[], screen_id: [] as string[], permission: String(Permission.ZELADOR) };
+  const [form, setForm] = useState(initialForm);
 
-  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => setOpenDialogCreateUser(false)}>Cancelar</ActionButton><ActionButton type="submit" form="create-user-form">Salvar usuario</ActionButton></>), [setOpenDialogCreateUser]);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton><ActionButton type="submit" form="create-user-form">Salvar usuario</ActionButton></>), [setOpenDialogCreateUser]);
+
+  const resetForm = () => {
+    setStatus(null);
+    setEmailError("");
+    setForm(initialForm);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    setOpenDialogCreateUser(false);
+  };
+
+  useEffect(() => {
+    if (openDialogCreateUser) {
+      resetForm();
+    }
+  }, [openDialogCreateUser]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,7 +57,7 @@ const AddUser: React.FC<AddUserProps> = ({ setUser, condominium, screens }) => {
   };
 
   return (
-    <Modal open={openDialogCreateUser} onClose={() => setOpenDialogCreateUser(false)} title="Novo usuario" description="Cadastre acessos e vinculos operacionais no novo frontend." actions={actions} size="xl">
+    <Modal open={openDialogCreateUser} onClose={handleClose} title="Novo usuario" description="Cadastre acessos e vinculos operacionais no novo frontend." actions={actions} size="xl">
       <form id="create-user-form" className="ds-stack" onSubmit={handleSubmit}>
         {status ? <InlineNotice tone={status.tone}>{status.message}</InlineNotice> : null}
         <div className="ds-form-grid">

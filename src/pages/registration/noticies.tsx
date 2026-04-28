@@ -4,7 +4,7 @@ import { useControlerButtonPagesContext } from "../../context/ControlerButtonPag
 import { withAllPermission } from "../../hocs";
 import LayoutPage from "../../layout/AppBar";
 import { GetServerSideProps } from "next";
-import { getAPIClient } from "../../service";
+import { api, getAPIClient } from "../../service";
 import { Noticies } from "../../types/noticies.type";
 import AddNoticies from "../../components/NoticiesPageComponent/AddNoticiesDialog";
 import EditNoticies from "../../components/NoticiesPageComponent/EditNoticiesDialog";
@@ -27,10 +27,21 @@ const NoticiesPage: React.FC<NoticiesProps> = ({ initialNoticies }) => {
     setOpenDialogEditNoticies(true);
   };
 
+  const handleDelete = async () => {
+    await Promise.all(
+      checkboxNoticies.map(async (id) => {
+        await api.delete(`/noticies/${id}`);
+        await api.delete(`/screens/noticies/${id}`);
+      })
+    );
+    setNoticies((current) => current.filter((item) => !checkboxNoticies.includes(item._id)));
+    setCheckboxNoticies([]);
+  };
+
   return (
     <LayoutPage>
       <div className="ds-stack">
-        <PageToolbar title="Noticias" onNew={() => setOpenDialogCreateNoticies(true)} onEdit={openEdit} hasSelection={checkboxNoticies.length === 1} />
+        <PageToolbar title="Noticias" onNew={() => setOpenDialogCreateNoticies(true)} onEdit={openEdit} onDelete={handleDelete} hasSelection={checkboxNoticies.length > 0} />
         <DataTable
           rows={rows}
           selectedIds={checkboxNoticies}
