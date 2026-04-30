@@ -1,3 +1,9 @@
+export type CondominiumMessageScreenType = {
+  screen_id: string;
+  starttime?: Date;
+  endtime?: Date;
+};
+
 export type CondominiumMessageType = {
   _id: string;
   user_id?: string;
@@ -8,6 +14,6 @@ export type CondominiumMessageType = {
   starttime?: Date;
   endtime?: Date;
   jpg_file?: string;
-  screen_id?: string[];
+  screen_id?: CondominiumMessageScreenType[];
   time_exibition?: number;
 };

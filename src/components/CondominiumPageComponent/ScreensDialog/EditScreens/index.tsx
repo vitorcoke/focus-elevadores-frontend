@@ -22,6 +22,7 @@ import { CondominiumMessageType } from "../../../../types/condominium-message.ty
 import { Noticies } from "../../../../types/noticies.type";
 import { useAuthContext } from "../../../../context/AuthContext";
 import { Permission } from "../../../../types/users.type";
+import { getMessageScreenById, getMessageScreenIds, getMessageScreens, removeMessageScreen, upsertMessageScreen } from "../../../../utils/condominiumMessageScreens";
 
 type EditScreensProps = {
   condominium: CondominiumType;
@@ -165,8 +166,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
           .filter((message) => screenCondominium.condominium_message?.includes(message._id))
           .map((message) =>
             api.patch(`/condominium-message/${message._id}`, {
-              starttime: message.starttime,
-              endtime: message.endtime,
+              screen_id: getMessageScreens(message),
             })
           )
       );
@@ -190,10 +190,13 @@ const EditScreens: React.FC<EditScreensProps> = ({
       });
 
       const selectedMessage = condominiumMesseger.find((item) => item._id === newMessageId);
+      const existingScreenConfig = getMessageScreenById(selectedMessage, screenCondominium._id);
       await api.patch(`/condominium-message/${newMessageId}`, {
-        starttime: newMessageStart ? new Date(newMessageStart) : selectedMessage?.starttime,
-        endtime: newMessageEnd ? new Date(newMessageEnd) : selectedMessage?.endtime,
-        screen_id: Array.from(new Set([...(selectedMessage?.screen_id || []), screenCondominium._id])),
+        screen_id: upsertMessageScreen(getMessageScreens(selectedMessage), {
+          screen_id: screenCondominium._id,
+          starttime: newMessageStart ? new Date(newMessageStart) : existingScreenConfig?.starttime || selectedMessage?.starttime,
+          endtime: newMessageEnd ? new Date(newMessageEnd) : existingScreenConfig?.endtime || selectedMessage?.endtime,
+        }),
       });
 
       setScreenCondominium(updatedScreen.data);
@@ -202,9 +205,11 @@ const EditScreens: React.FC<EditScreensProps> = ({
           item._id === newMessageId
             ? {
                 ...item,
-                starttime: newMessageStart ? new Date(newMessageStart) : item.starttime,
-                endtime: newMessageEnd ? new Date(newMessageEnd) : item.endtime,
-                screen_id: Array.from(new Set([...(item.screen_id || []), screenCondominium._id])),
+                screen_id: upsertMessageScreen(getMessageScreens(item), {
+                  screen_id: screenCondominium._id,
+                  starttime: newMessageStart ? new Date(newMessageStart) : existingScreenConfig?.starttime || item.starttime,
+                  endtime: newMessageEnd ? new Date(newMessageEnd) : existingScreenConfig?.endtime || item.endtime,
+                }),
               }
             : item
         )
@@ -251,7 +256,7 @@ const EditScreens: React.FC<EditScreensProps> = ({
 
       const message = condominiumMesseger.find((item) => item._id === id);
       await api.patch(`/condominium-message/${id}`, {
-        screen_id: (message?.screen_id || []).filter((screenId) => screenId !== screenCondominium._id),
+        screen_id: removeMessageScreen(getMessageScreens(message), screenCondominium._id),
       });
 
       setScreenCondominium((old) => ({
@@ -425,12 +430,25 @@ const EditScreens: React.FC<EditScreensProps> = ({
               <Field label="Data inicial">
                 <TextInput
                   type="datetime-local"
-                  value={message.starttime ? dayjs(message.starttime).format("YYYY-MM-DDTHH:mm") : ""}
+                  value={
+                    getMessageScreenById(message, screenCondominium._id)?.starttime
+                      ? dayjs(getMessageScreenById(message, screenCondominium._id)?.starttime).format("YYYY-MM-DDTHH:mm")
+                      : ""
+                  }
                   onChange={(event) => {
                     const nextDate = new Date(event.target.value);
                     setCondominiumMesseger((old) =>
                       old.map((item) =>
-                        item._id === message._id ? { ...item, starttime: nextDate } : item
+                        item._id === message._id
+                          ? {
+                              ...item,
+                              screen_id: upsertMessageScreen(getMessageScreens(item), {
+                                screen_id: screenCondominium._id,
+                                starttime: nextDate,
+                                endtime: getMessageScreenById(item, screenCondominium._id)?.endtime,
+                              }),
+                            }
+                          : item
                       )
                     );
                   }}
@@ -440,12 +458,25 @@ const EditScreens: React.FC<EditScreensProps> = ({
               <Field label="Data final">
                 <TextInput
                   type="datetime-local"
-                  value={message.endtime ? dayjs(message.endtime).format("YYYY-MM-DDTHH:mm") : ""}
+                  value={
+                    getMessageScreenById(message, screenCondominium._id)?.endtime
+                      ? dayjs(getMessageScreenById(message, screenCondominium._id)?.endtime).format("YYYY-MM-DDTHH:mm")
+                      : ""
+                  }
                   onChange={(event) => {
                     const nextDate = new Date(event.target.value);
                     setCondominiumMesseger((old) =>
                       old.map((item) =>
-                        item._id === message._id ? { ...item, endtime: nextDate } : item
+                        item._id === message._id
+                          ? {
+                              ...item,
+                              screen_id: upsertMessageScreen(getMessageScreens(item), {
+                                screen_id: screenCondominium._id,
+                                starttime: getMessageScreenById(item, screenCondominium._id)?.starttime,
+                                endtime: nextDate,
+                              }),
+                            }
+                          : item
                       )
                     );
                   }}

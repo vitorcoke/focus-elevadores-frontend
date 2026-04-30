@@ -5,9 +5,10 @@ import { ActionButton, DataTable, Field, InlineNotice, Modal, SelectInput, TextA
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { useAuthContext } from "../../../context/AuthContext";
 import { api } from "../../../service";
-import { CondominiumMessageType } from "../../../types/condominium-message.type";
+import { CondominiumMessageScreenType, CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { Permission } from "../../../types/users.type";
+import { getMessageScreenIds, getMessageScreens, removeMessageScreen, syncSelectedMessageScreens } from "../../../utils/condominiumMessageScreens";
 
 type EditCondominiumMessegerProps = {
   condominiumMesseger: CondominiumMessageType;
@@ -21,6 +22,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
   const { openDialogEditCondominiumMessenger, setOpenDialogEditCondominiumMessenger, setCheckboxCondominiumMessenger } = useControlerButtonPagesContext();
   const [screen, setScreen] = useState<Screen[]>([]);
   const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
+  const [selectedScreenConfigs, setSelectedScreenConfigs] = useState<CondominiumMessageScreenType[]>([]);
   const [status, setStatus] = useState<"success" | "error" | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -28,7 +30,8 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
 
   useEffect(() => {
     setForm(condominiumMesseger);
-    setSelectedScreens(condominiumMesseger.screen_id || []);
+    setSelectedScreens(getMessageScreenIds(condominiumMesseger));
+    setSelectedScreenConfigs(getMessageScreens(condominiumMesseger));
     setPreview(condominiumMesseger.jpg_file || "");
     setImage(null);
   }, [condominiumMesseger]);
@@ -60,7 +63,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         imageName = upload.data;
       }
 
-      const previousScreens = form.screen_id || [];
+      const previousScreens = getMessageScreenIds(form);
       const addedScreens = selectedScreens.filter((id) => !previousScreens.includes(id));
       const removedScreens = previousScreens.filter((id) => !selectedScreens.includes(id));
 
@@ -69,7 +72,7 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
         title: mode === "text" ? form.title : undefined,
         message: mode === "text" ? form.message : undefined,
         jpg_file: mode === "image" ? imageName : undefined,
-        screen_id: selectedScreens,
+        screen_id: selectedScreenConfigs,
         time_exibition: form.time_exibition,
       });
 
@@ -105,7 +108,69 @@ const EditCondominiumMessegerDialog: React.FC<EditCondominiumMessegerProps> = ({
           {mode === "text" ? <div className="ds-form-grid--full"><Field label="Mensagem" required><TextArea value={form.message || ""} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field></div> : null}
         </div>
         {mode === "image" && preview ? <div aria-label="preview" style={{ width: 260, height: 180, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
-        <DataTable rows={rows} selectedIds={selectedScreens} onSelectionChange={setSelectedScreens} searchPlaceholder="Buscar tela" columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]} />
+        <DataTable
+          rows={rows}
+          selectedIds={selectedScreens}
+          onSelectionChange={(ids) => {
+            setSelectedScreens(ids);
+            setSelectedScreenConfigs((current) =>
+              syncSelectedMessageScreens(
+                ids,
+                current,
+                form.starttime,
+                form.endtime
+              )
+            );
+          }}
+          searchPlaceholder="Buscar tela"
+          columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]}
+        />
+        {selectedScreenConfigs.length > 0 ? (
+          <div className="ds-stack">
+            <h3 className="ds-section-title">Horarios por tela</h3>
+            {selectedScreenConfigs.map((screenConfig) => {
+              const selectedScreen = screen.find((item) => item._id === screenConfig.screen_id);
+
+              return (
+                <div key={screenConfig.screen_id} className="ds-form-grid">
+                  <Field label="Tela">
+                    <TextInput value={selectedScreen?.name || screenConfig.screen_id} disabled />
+                  </Field>
+                  <Field label="Inicio" required>
+                    <TextInput
+                      type="datetime-local"
+                      value={screenConfig.starttime ? new Date(screenConfig.starttime).toISOString().slice(0, 16) : ""}
+                      onChange={(e) =>
+                        setSelectedScreenConfigs((current) =>
+                          current.map((item) =>
+                            item.screen_id === screenConfig.screen_id
+                              ? { ...item, starttime: e.target.value ? new Date(e.target.value) : undefined }
+                              : item
+                          )
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Fim" required>
+                    <TextInput
+                      type="datetime-local"
+                      value={screenConfig.endtime ? new Date(screenConfig.endtime).toISOString().slice(0, 16) : ""}
+                      onChange={(e) =>
+                        setSelectedScreenConfigs((current) =>
+                          current.map((item) =>
+                            item.screen_id === screenConfig.screen_id
+                              ? { ...item, endtime: e.target.value ? new Date(e.target.value) : undefined }
+                              : item
+                          )
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </form>
     </Modal>
   );

@@ -10,6 +10,7 @@ import { UserType } from "../../types/users.type";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
 import dayjs from "dayjs";
+import { getMessageScreens } from "../../utils/condominiumMessageScreens";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessageType[];
@@ -27,7 +28,7 @@ const CondominiumMessagePage: React.FC<CondominiumMessegerProps> = ({ initialCon
     ...message,
     id: message._id,
     createdBy: initialUsers.find((user) => user._id === message.user_id)?.name || "Sistema",
-    screens: message.screen_id?.length || 0,
+    screens: getMessageScreens(message).length,
     window: `${message.starttime ? dayjs(message.starttime).format("DD/MM HH:mm") : "-"} - ${message.endtime ? dayjs(message.endtime).format("DD/MM HH:mm") : "-"}`,
   })), [initialUsers, messages]);
 

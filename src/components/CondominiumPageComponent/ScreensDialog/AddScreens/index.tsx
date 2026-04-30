@@ -18,6 +18,7 @@ import { Noticies } from "../../../../types/noticies.type";
 import { Rss } from "../../../../types/rss.type";
 import { State } from "../../../../types/state.type";
 import { VMS } from "../../../../types/vms.type";
+import { getMessageScreenById } from "../../../../utils/condominiumMessageScreens";
 
 type AddScreensProps = {
   condominium: CondominiumType;
@@ -48,6 +49,8 @@ const AddScreens: React.FC<AddScreensProps> = ({
   const [selectedNoticies, setSelectedNoticies] = useState<string[]>([]);
   const [selectedBanner, setSelectedBanner] = useState("");
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
+  const [messageStarttime, setMessageStarttime] = useState<Record<string, string>>({});
+  const [messageEndtime, setMessageEndtime] = useState<Record<string, string>>({});
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [stateValue, setStateValue] = useState("");
@@ -126,11 +129,22 @@ const AddScreens: React.FC<AddScreensProps> = ({
       });
 
       await Promise.all(
-        selectedMessages.map((id) =>
+        selectedMessages.map((id) => {
+          const selectedMessage = condominiumMesseger.find((item) => item._id === id);
+          const existingConfig = getMessageScreenById(selectedMessage, screenUpdate.data._id);
+
+          return (
           api.patch(`/condominium-message/${id}/screen`, {
             screen_id: screenUpdate.data._id,
+            starttime: messageStarttime[id]
+              ? new Date(messageStarttime[id])
+              : existingConfig?.starttime || selectedMessage?.starttime,
+            endtime: messageEndtime[id]
+              ? new Date(messageEndtime[id])
+              : existingConfig?.endtime || selectedMessage?.endtime,
           })
-        )
+          );
+        })
       );
 
       await Promise.all(
@@ -276,9 +290,40 @@ const AddScreens: React.FC<AddScreensProps> = ({
       ) : null}
 
       {messageOptions.length > 0 ? (
-        <Field label="Mensagens do condominio">
-          <MultiSelectChips options={messageOptions} values={selectedMessages} onChange={setSelectedMessages} />
-        </Field>
+        <>
+          <Field label="Mensagens do condominio">
+            <MultiSelectChips options={messageOptions} values={selectedMessages} onChange={setSelectedMessages} />
+          </Field>
+          {selectedMessages.map((messageId) => {
+            const selectedMessage = condominiumMesseger.find((item) => item._id === messageId);
+
+            return (
+              <div key={messageId} className="ds-form-grid">
+                <Field label="Mensagem">
+                  <TextInput value={selectedMessage?.name || messageId} disabled />
+                </Field>
+                <Field label="Inicio">
+                  <TextInput
+                    type="datetime-local"
+                    value={messageStarttime[messageId] || ""}
+                    onChange={(event) =>
+                      setMessageStarttime((current) => ({ ...current, [messageId]: event.target.value }))
+                    }
+                  />
+                </Field>
+                <Field label="Fim">
+                  <TextInput
+                    type="datetime-local"
+                    value={messageEndtime[messageId] || ""}
+                    onChange={(event) =>
+                      setMessageEndtime((current) => ({ ...current, [messageId]: event.target.value }))
+                    }
+                  />
+                </Field>
+              </div>
+            );
+          })}
+        </>
       ) : null}
 
       <SurfaceCard className="ds-form-actions">

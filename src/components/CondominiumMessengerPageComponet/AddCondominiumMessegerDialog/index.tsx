@@ -4,9 +4,10 @@ import { ActionButton, DataTable, Field, InlineNotice, Modal, SelectInput, TextA
 import { useControlerButtonPagesContext } from "../../../context/ControlerButtonPagesContext";
 import { useAuthContext } from "../../../context/AuthContext";
 import { api } from "../../../service";
-import { CondominiumMessageType } from "../../../types/condominium-message.type";
+import { CondominiumMessageScreenType, CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { Permission } from "../../../types/users.type";
+import { syncSelectedMessageScreens } from "../../../utils/condominiumMessageScreens";
 
 type AddCondominiumMessegerProps = {
   setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
@@ -19,6 +20,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   const { openDialogCreateCondominiumMessenger, setOpenDialogCreateCondominiumMessenger, setCheckboxCondominiumMessenger } = useControlerButtonPagesContext();
   const [screen, setScreen] = useState<Screen[]>([]);
   const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
+  const [screenConfigs, setScreenConfigs] = useState<CondominiumMessageScreenType[]>([]);
   const [status, setStatus] = useState<"success" | "error" | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -37,6 +39,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
     setPreview("");
     setMode("text");
     setForm(initialForm);
+    setScreenConfigs([]);
     setCheckboxCondominiumMessenger([]);
   };
 
@@ -79,7 +82,7 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         jpg_file: mode === "image" ? imageName : undefined,
         starttime: new Date(form.starttime),
         endtime: new Date(form.endtime),
-        screen_id: selectedScreens,
+        screen_id: screenConfigs,
         time_exibition: Number(form.time_exibition || "15") * 1000,
       });
       if (selectedScreens.length) {
@@ -110,7 +113,69 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
           {mode === "text" ? <div className="ds-form-grid--full"><Field label="Mensagem" required><TextArea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field></div> : null}
         </div>
         {mode === "image" && preview ? <div aria-label="preview" style={{ width: 260, height: 180, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundImage: `url(${preview})`, backgroundSize: "cover", backgroundPosition: "center" }} /> : null}
-        <DataTable rows={rows} selectedIds={selectedScreens} onSelectionChange={setSelectedScreens} searchPlaceholder="Buscar tela" columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]} />
+        <DataTable
+          rows={rows}
+          selectedIds={selectedScreens}
+          onSelectionChange={(ids) => {
+            setSelectedScreens(ids);
+            setScreenConfigs((current) =>
+              syncSelectedMessageScreens(
+                ids,
+                current,
+                form.starttime ? new Date(form.starttime) : undefined,
+                form.endtime ? new Date(form.endtime) : undefined
+              )
+            );
+          }}
+          searchPlaceholder="Buscar tela"
+          columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]}
+        />
+        {screenConfigs.length > 0 ? (
+          <div className="ds-stack">
+            <h3 className="ds-section-title">Horarios por tela</h3>
+            {screenConfigs.map((screenConfig) => {
+              const selectedScreen = screen.find((item) => item._id === screenConfig.screen_id);
+
+              return (
+                <div key={screenConfig.screen_id} className="ds-form-grid">
+                  <Field label="Tela">
+                    <TextInput value={selectedScreen?.name || screenConfig.screen_id} disabled />
+                  </Field>
+                  <Field label="Inicio" required>
+                    <TextInput
+                      type="datetime-local"
+                      value={screenConfig.starttime ? new Date(screenConfig.starttime).toISOString().slice(0, 16) : ""}
+                      onChange={(e) =>
+                        setScreenConfigs((current) =>
+                          current.map((item) =>
+                            item.screen_id === screenConfig.screen_id
+                              ? { ...item, starttime: e.target.value ? new Date(e.target.value) : undefined }
+                              : item
+                          )
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field label="Fim" required>
+                    <TextInput
+                      type="datetime-local"
+                      value={screenConfig.endtime ? new Date(screenConfig.endtime).toISOString().slice(0, 16) : ""}
+                      onChange={(e) =>
+                        setScreenConfigs((current) =>
+                          current.map((item) =>
+                            item.screen_id === screenConfig.screen_id
+                              ? { ...item, endtime: e.target.value ? new Date(e.target.value) : undefined }
+                              : item
+                          )
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
       </form>
     </Modal>
   );
