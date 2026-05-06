@@ -10,7 +10,7 @@ import { UserType } from "../../types/users.type";
 import AddCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/AddCondominiumMessegerDialog";
 import EditCondominiumMessegerDialog from "../../components/CondominiumMessengerPageComponet/EditCondominiumMessegerDialog";
 import dayjs from "dayjs";
-import { getMessageScreens } from "../../utils/condominiumMessageScreens";
+import { getMessageDateRange, getMessageScreens } from "../../utils/condominiumMessageScreens";
 
 type CondominiumMessegerProps = {
   initialCondominiumMessege: CondominiumMessageType[];
@@ -24,13 +24,21 @@ const CondominiumMessagePage: React.FC<CondominiumMessegerProps> = ({ initialCon
   const [messages, setMessages] = useState(initialCondominiumMessege);
   const [editing, setEditing] = useState<CondominiumMessageType | null>(null);
 
-  const rows = useMemo<MessageRow[]>(() => messages.map((message) => ({
-    ...message,
-    id: message._id,
-    createdBy: initialUsers.find((user) => user._id === message.user_id)?.name || "Sistema",
-    screens: getMessageScreens(message).length,
-    window: `${message.starttime ? dayjs(message.starttime).format("DD/MM HH:mm") : "-"} - ${message.endtime ? dayjs(message.endtime).format("DD/MM HH:mm") : "-"}`,
-  })), [initialUsers, messages]);
+  const rows = useMemo<MessageRow[]>(
+    () =>
+      messages.map((message) => {
+        const dateRange = getMessageDateRange(message);
+
+        return {
+          ...message,
+          id: message._id,
+          createdBy: initialUsers.find((user) => user._id === message.user_id)?.name || "Sistema",
+          screens: getMessageScreens(message).length,
+          window: `${dateRange.starttime ? dayjs(dateRange.starttime).format("DD/MM HH:mm") : "-"} - ${dateRange.endtime ? dayjs(dateRange.endtime).format("DD/MM HH:mm") : "-"}`,
+        };
+      }),
+    [initialUsers, messages]
+  );
 
   const openEdit = () => {
     if (checkboxCondominiumMessenger.length !== 1) return;

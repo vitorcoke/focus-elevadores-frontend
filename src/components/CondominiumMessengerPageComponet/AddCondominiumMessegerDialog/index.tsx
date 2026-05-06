@@ -7,7 +7,7 @@ import { api } from "../../../service";
 import { CondominiumMessageScreenType, CondominiumMessageType } from "../../../types/condominium-message.type";
 import { Screen } from "../../../types/screens.type";
 import { Permission } from "../../../types/users.type";
-import { syncSelectedMessageScreens } from "../../../utils/condominiumMessageScreens";
+import { getMessageDateRange, hasIncompleteMessageScreens, syncSelectedMessageScreens } from "../../../utils/condominiumMessageScreens";
 
 type AddCondominiumMessegerProps = {
   setCondominiumMesseger: React.Dispatch<React.SetStateAction<CondominiumMessageType[]>>;
@@ -21,16 +21,17 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
   const [screen, setScreen] = useState<Screen[]>([]);
   const [selectedScreens, setSelectedScreens] = useState<string[]>([]);
   const [screenConfigs, setScreenConfigs] = useState<CondominiumMessageScreenType[]>([]);
-  const [status, setStatus] = useState<"success" | "error" | null>(null);
+  const [status, setStatus] = useState<"success" | "error" | "validation" | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
   const [mode, setMode] = useState("text");
-  const initialForm = { name: "", title: "", message: "", starttime: "", endtime: "", time_exibition: "15" };
+  const initialForm = { name: "", title: "", message: "", time_exibition: "15" };
   const [form, setForm] = useState(initialForm);
+  const isScreenScheduleInvalid = selectedScreens.length > 0 && hasIncompleteMessageScreens(screenConfigs);
+  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton><ActionButton type="submit" form="create-message-form" disabled={isScreenScheduleInvalid}>Salvar mensagem</ActionButton></>), [isScreenScheduleInvalid]);
 
   useEffect(() => { api.get("/screens").then((response) => setScreen(response.data)); }, []);
   const rows = useMemo<ScreenRow[]>(() => screen.map((item) => ({ id: item._id, name: item.name })), [screen]);
-  const actions = useMemo(() => (<><ActionButton type="button" variant="ghost" onClick={() => handleClose()}>Cancelar</ActionButton><ActionButton type="submit" form="create-message-form">Salvar mensagem</ActionButton></>), [setOpenDialogCreateCondominiumMessenger]);
 
   const resetForm = () => {
     setSelectedScreens([]);
@@ -67,6 +68,10 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isScreenScheduleInvalid) {
+      setStatus("validation");
+      return;
+    }
     try {
       let imageName = "";
       if (mode === "image" && image) {
@@ -75,13 +80,14 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
         const upload = await api.post("/condominium-message/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
         imageName = upload.data;
       }
+      const dateRange = getMessageDateRange({ screen_id: screenConfigs });
       const response = await api.post("/condominium-message", {
         name: form.name,
         title: mode === "text" ? form.title : undefined,
         message: mode === "text" ? form.message : undefined,
         jpg_file: mode === "image" ? imageName : undefined,
-        starttime: new Date(form.starttime),
-        endtime: new Date(form.endtime),
+        starttime: dateRange.starttime,
+        endtime: dateRange.endtime,
         screen_id: screenConfigs,
         time_exibition: Number(form.time_exibition || "15") * 1000,
       });
@@ -103,12 +109,11 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
       <form id="create-message-form" className="ds-stack" onSubmit={handleSubmit}>
         {status === "success" ? <InlineNotice tone="success">Mensagem criada com sucesso.</InlineNotice> : null}
         {status === "error" ? <InlineNotice tone="error">Nao foi possivel criar a mensagem.</InlineNotice> : null}
+        {status === "validation" ? <InlineNotice tone="error">Preencha inicio e fim para todas as telas selecionadas antes de salvar.</InlineNotice> : null}
         <div className="ds-form-grid">
           <Field label="Tipo"><SelectInput value={mode} onChange={(e) => setMode(e.target.value)}><option value="text">Texto</option><option value="image">Imagem</option></SelectInput></Field>
           <Field label="Nome" required><TextInput value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
           {mode === "text" ? <Field label="Titulo" required><TextInput value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></Field> : <Field label="Arquivo" required><TextInput type="file" accept="image/jpeg" onChange={handleImage} /></Field>}
-          <Field label="Inicio" required><TextInput type="datetime-local" value={form.starttime} onChange={(e) => setForm({ ...form, starttime: e.target.value })} /></Field>
-          <Field label="Fim" required><TextInput type="datetime-local" value={form.endtime} onChange={(e) => setForm({ ...form, endtime: e.target.value })} /></Field>
           {user?.permission === Permission.ADMIN ? <Field label="Exibicao (s)"><TextInput type="number" value={form.time_exibition} onChange={(e) => setForm({ ...form, time_exibition: e.target.value.slice(0, 3) })} /></Field> : null}
           {mode === "text" ? <div className="ds-form-grid--full"><Field label="Mensagem" required><TextArea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field></div> : null}
         </div>
@@ -117,15 +122,9 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
           rows={rows}
           selectedIds={selectedScreens}
           onSelectionChange={(ids) => {
+            setStatus(null);
             setSelectedScreens(ids);
-            setScreenConfigs((current) =>
-              syncSelectedMessageScreens(
-                ids,
-                current,
-                form.starttime ? new Date(form.starttime) : undefined,
-                form.endtime ? new Date(form.endtime) : undefined
-              )
-            );
+            setScreenConfigs((current) => syncSelectedMessageScreens(ids, current));
           }}
           searchPlaceholder="Buscar tela"
           columns={[{ key: "name", header: "Tela", render: (row) => row.name, searchValue: (row) => row.name }]}
@@ -146,13 +145,14 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                       type="datetime-local"
                       value={screenConfig.starttime ? new Date(screenConfig.starttime).toISOString().slice(0, 16) : ""}
                       onChange={(e) =>
-                        setScreenConfigs((current) =>
-                          current.map((item) =>
+                        setScreenConfigs((current) => {
+                          setStatus(null);
+                          return current.map((item) =>
                             item.screen_id === screenConfig.screen_id
                               ? { ...item, starttime: e.target.value ? new Date(e.target.value) : undefined }
                               : item
-                          )
-                        )
+                          );
+                        })
                       }
                     />
                   </Field>
@@ -161,13 +161,14 @@ const AddCondominiumMessegerDialog: React.FC<AddCondominiumMessegerProps> = ({ s
                       type="datetime-local"
                       value={screenConfig.endtime ? new Date(screenConfig.endtime).toISOString().slice(0, 16) : ""}
                       onChange={(e) =>
-                        setScreenConfigs((current) =>
-                          current.map((item) =>
+                        setScreenConfigs((current) => {
+                          setStatus(null);
+                          return current.map((item) =>
                             item.screen_id === screenConfig.screen_id
                               ? { ...item, endtime: e.target.value ? new Date(e.target.value) : undefined }
                               : item
-                          )
-                        )
+                          );
+                        })
                       }
                     />
                   </Field>
